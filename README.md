@@ -87,6 +87,60 @@ flowchart LR
 | **Settings** *(optional)* | Choose language and analysis mode. |
 
 ---
+## Sitemap
+
+> Planned navigation and routes. Paths and endpoints may change during development.
+
+```mermaid
+flowchart TD
+    D["🏠 Dashboard<br/>/"]
+    M["⚽ Match Analysis<br/>/matches/:matchId"]
+    X["🎯 Decision Explorer<br/>/matches/:matchId/decisions/:decisionId"]
+    I["📊 Match Insights<br/>/matches/:matchId/insights"]
+    R["📝 Match Recap<br/>/matches/:matchId/recap"]
+    S["📈 System Metrics<br/>/metrics"]
+    T["⚙️ Settings<br/>/settings"]
+    E(["🔍 Evidence Drawer<br/>(side panel, not a page)"])
+
+    D -->|open a match| M
+    M -->|select a key moment| X
+    M --> I
+    M --> R
+    M -.->|view evidence| E
+    X -.->|view evidence| E
+    I -.->|view evidence| E
+    X -->|back to timeline| M
+    D --> S
+    D --> T
+    T -.->|language and mode apply everywhere| M
+```
+
+### Routes
+
+| Route | Page | Purpose | Planned API |
+|-------|------|---------|-------------|
+| `/` | Dashboard | Browse sample matches and open an analysis | `GET /api/matches` |
+| `/matches/:matchId` | Match Analysis | 2D pitch, score, event timeline, key moments, live event stream | `GET /api/matches/{id}`, `GET /api/matches/{id}/events`, stream endpoint |
+| `/matches/:matchId/decisions/:decisionId` | Decision Explorer | Compare the actual action with plausible alternatives, with explanation | `GET /api/decisions/{id}` |
+| `/matches/:matchId/insights` | Match Insights | Summaries, player metrics, momentum charts, Player Focus mode | `GET /api/matches/{id}/insights` |
+| `/matches/:matchId/recap` | Match Recap | Automated recap in English and Arabic | `GET /api/matches/{id}/recap` |
+| `/metrics` | System Metrics | Evidence support rate, verifier outcomes, latency (from recorded runs) | `GET /api/metrics` |
+| `/settings` | Settings | Language (EN/AR), Fan/Analyst mode, favorite club and player | stored client-side |
+| *(panel)* | Evidence Drawer | Events and calculations behind any claim | `GET /api/evidence/{claimId}` |
+
+### Navigation Tree
+
+```text
+Rematch
+├── Dashboard                      /
+│   └── Match Analysis             /matches/:matchId
+│       ├── Decision Explorer      /matches/:matchId/decisions/:decisionId
+│       ├── Match Insights         /matches/:matchId/insights
+│       ├── Match Recap            /matches/:matchId/recap
+│       └── Evidence Drawer        (opens from any analysis page)
+├── System Metrics                 /metrics
+└── Settings                       /settings
+```
 
 ## Tech Stack
 
