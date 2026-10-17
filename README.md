@@ -272,10 +272,10 @@ Contributions and feedback are welcome. Open an issue to discuss your idea befor
 
 | Name | Role | GitHub |
 |------|------|--------|
-| Omar Alnajjar | _Role_ | [@omar-hady](https://github.com/omar-hady) |
-| Adamm Ahmed | _Role_ | [@Adamzuckk](https://github.com/Adamzuckk) |
-| _Name_ | _Role_ | [@Captain10Joe](https://github.com/Captain10Joe) |
-| _Name_ | _Role_ | [@Youssef-3bas](https://github.com/Youssef-3bas) |
+| Omar Alnajjar | backend engineer | [@omar-hady](https://github.com/omar-hady) |
+| Adamm Ahmed | software engineer| [@Adamzuckk](https://github.com/Adamzuckk) |
+| youssef mohamed | pentester | [@Captain10Joe](https://github.com/Captain10Joe) |
+| yousef abass | ai engineer | [@Youssef-3bas](https://github.com/Youssef-3bas) |
 ---
 
 ## License
