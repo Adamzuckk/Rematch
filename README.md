@@ -272,8 +272,10 @@ Contributions and feedback are welcome. Open an issue to discuss your idea befor
 
 | Name | Role | GitHub |
 |------|------|--------|
-| _Your name_ | _Role_ | [@username](https://github.com/username) |
-
+| Omar Alnajjar | _Role_ | [@omar-hady](https://github.com/omar-hady) |
+| Adamm Ahmed | _Role_ | [@Adamzuckk](https://github.com/Adamzuckk) |
+| _Name_ | _Role_ | [@Captain10Joe](https://github.com/Captain10Joe) |
+| _Name_ | _Role_ | [@Youssef-3bas](https://github.com/Youssef-3bas) |
 ---
 
 ## License
