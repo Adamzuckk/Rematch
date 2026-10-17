@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚽ Rematch
+# Rematch
 
 ### Don't just watch what happened. Understand why it happened.
 
@@ -39,15 +39,15 @@ For any key moment (a pass, a shot, or a carry), Rematch compares the action the
 
 > Features below are **planned**. A feature is marked done only after it is implemented and tested in this repository (see [Current Status](#current-status)).
 
-- 🎯 **Decision Explorer:** compare an actual action with plausible alternatives.
-- 🗺️ **Interactive Match View:** 2D pitch, score, event timeline, and key moments.
-- 🔍 **Evidence Drawer:** inspect the exact events and calculations behind any claim.
-- 📊 **Match Insights:** summaries, player metrics, and match-momentum charts.
-- 👥 **Fan & Analyst Modes:** accessible explanations or detailed analysis.
-- 🌍 **English & Arabic UI:** interface and explanations in both languages.
-- ✅ **Verified Explanations:** unsupported claims are rejected, corrected, or replaced with a safe fallback.
-- 📈 **System Metrics:** evidence support, verifier outcomes, and explanation latency.
-- 🧪 **Synthetic Match Simulator:** fictional match events for repeatable demos and tests.
+- **Decision Explorer:** compare an actual action with plausible alternatives.
+- **Interactive Match View:** 2D pitch, score, event timeline, and key moments.
+- **Evidence Drawer:** inspect the exact events and calculations behind any claim.
+- **Match Insights:** summaries, player metrics, and match-momentum charts.
+- **Fan & Analyst Modes:** accessible explanations or detailed analysis.
+- **English & Arabic UI:** interface and explanations in both languages.
+- **Verified Explanations:** unsupported claims are rejected, corrected, or replaced with a safe fallback.
+- **System Metrics:** evidence support, verifier outcomes, and explanation latency.
+- **Synthetic Match Simulator:** fictional match events for repeatable demos and tests.
 
 ---
 
@@ -71,7 +71,7 @@ flowchart LR
 | **5. Verify** | Check every claim against available event IDs and calculations. |
 | **6. Render** | Show the analysis, evidence, and events in the UI. |
 
-> ⚠️ Decision values are **model estimates**, not objective probabilities or guaranteed predictions of real-world outcomes.
+> **Note:** Decision values are **model estimates**, not objective probabilities or guaranteed predictions of real-world outcomes.
 
 ---
 
@@ -87,20 +87,21 @@ flowchart LR
 | **Settings** *(optional)* | Choose language and analysis mode. |
 
 ---
+
 ## Sitemap
 
 > Planned navigation and routes. Paths and endpoints may change during development.
 
 ```mermaid
 flowchart TD
-    D["🏠 Dashboard<br/>/"]
-    M["⚽ Match Analysis<br/>/matches/:matchId"]
-    X["🎯 Decision Explorer<br/>/matches/:matchId/decisions/:decisionId"]
-    I["📊 Match Insights<br/>/matches/:matchId/insights"]
-    R["📝 Match Recap<br/>/matches/:matchId/recap"]
-    S["📈 System Metrics<br/>/metrics"]
-    T["⚙️ Settings<br/>/settings"]
-    E(["🔍 Evidence Drawer<br/>(side panel, not a page)"])
+    D["Dashboard<br/>/"]
+    M["Match Analysis<br/>/matches/:matchId"]
+    X["Decision Explorer<br/>/matches/:matchId/decisions/:decisionId"]
+    I["Match Insights<br/>/matches/:matchId/insights"]
+    R["Match Recap<br/>/matches/:matchId/recap"]
+    S["System Metrics<br/>/metrics"]
+    T["Settings<br/>/settings"]
+    E(["Evidence Drawer<br/>(side panel, not a page)"])
 
     D -->|open a match| M
     M -->|select a key moment| X
@@ -142,6 +143,8 @@ Rematch
 └── Settings                       /settings
 ```
 
+---
+
 ## Tech Stack
 
 > This is the **intended** architecture. It will be updated to match what is actually used.
@@ -161,7 +164,7 @@ Rematch
 
 ## Getting Started
 
-> 🚧 Setup will be finalized once the repository structure and dependencies are settled. The steps below show the intended workflow; commands are placeholders until then.
+> **Note:** Setup will be finalized once the repository structure and dependencies are settled. The steps below show the intended workflow; commands are placeholders until then.
 
 **Prerequisites:** Python 3.11+, Node.js 20+, Git
 
@@ -186,7 +189,7 @@ npm run dev
 
 Open the local URL shown by the dev server and select a sample match.
 
-🔐 **Never commit secrets, API keys, credentials, or `.env` files.**
+**Never commit secrets, API keys, credentials, or `.env` files.**
 
 ---
 
@@ -239,7 +242,7 @@ cd backend && pytest
 
 ## Current Status
 
-**Status: 🚧 In development**
+**Status: In development**
 
 - [ ] Repository and API foundation
 - [ ] Frontend core pages
@@ -253,9 +256,9 @@ cd backend && pytest
 
 ## Demo
 
-- 🌐 **Live demo:** _coming soon_
-- 🎬 **Demo video:** _coming soon_
-- 🖼️ **Screenshots:** _to be added from the working application_
+- **Live demo:** _coming soon_
+- **Demo video:** _coming soon_
+- **Screenshots:** _to be added from the working application_
 
 ---
 
