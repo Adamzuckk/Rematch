@@ -1,4 +1,4 @@
-# MatchMind ⚽
+# Rematch
 
 > **Don't just watch what happened. Understand why it happened.**
 
