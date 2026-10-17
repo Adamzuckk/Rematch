@@ -1,227 +1,236 @@
-# Rematch
+<div align="center">
 
-> **Don't just watch what happened. Understand why it happened.**
+# ⚽ Rematch
 
-MatchMind is an explainable football intelligence platform designed to
-help fans and analysts understand the decisions behind key moments in a
-match. Instead of showing statistics alone, MatchMind aims to compare a
-player's actual action with plausible alternatives and explain the
-difference using calculated values and traceable evidence.
+### Don't just watch what happened. Understand why it happened.
 
-Built as a project for the **Microsoft Inside the Game Hackathon**.
+**An explainable football intelligence platform that compares what a player actually did with what they could have done, and shows the evidence.**
 
-## The Problem
+![Status](https://img.shields.io/badge/status-in%20development-orange)
+![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20TypeScript-61DAFB)
+![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
+![Data](https://img.shields.io/badge/data-synthetic-blueviolet)
+![Hackathon](https://img.shields.io/badge/Microsoft-Inside%20the%20Game%20Hackathon-0078D4)
 
-Traditional match dashboards show events and statistics, but they often
-do not explain why a decision mattered. AI-generated commentary can also
-sound convincing without being grounded in match evidence.
+[Live Demo](#demo) · [Demo Video](#demo) · [How It Works](#how-it-works) · [Getting Started](#getting-started)
 
-MatchMind aims to bridge that gap by combining deterministic football
-analytics with evidence-grounded explanations.
+<!-- Add a screenshot or GIF of the Decision Explorer here -->
+<!-- ![Rematch Decision Explorer](docs/images/decision-explorer.png) -->
 
-## Our Approach
+</div>
 
-MatchMind is designed around one key question:
+---
 
-**"What could have happened if the player had chosen differently?"**
+## Why Rematch?
 
-For a selected decision---such as a pass, shot, or carry---the system
-aims to:
+Match dashboards show **what** happened: passes, shots, possession. They rarely explain **why a decision mattered**. AI-generated commentary can sound convincing while inventing facts.
 
-1.  Identify the action that actually happened.
-2.  Evaluate the resulting state using the project's decision-value
-    model.
-3.  Identify plausible alternatives where the available data allows it.
-4.  Compare the actual action with those alternatives.
-5.  Explain the comparison in clear language.
-6.  Let users inspect the events and calculations supporting the
-    explanation.
+Rematch is built around one question:
 
-Values produced by the system are estimates from our model. They should
-not be interpreted as objective probabilities or guaranteed predictions
-about real-world outcomes.
+> **"What could have happened if the player had chosen differently?"**
 
-## Planned Features
+For any key moment (a pass, a shot, or a carry), Rematch compares the action the player took against plausible alternatives, scores each one with a transparent decision-value model, and explains the difference in plain language. Every claim links back to the events and calculations behind it.
 
--   **Interactive Match View:** A 2D pitch, match score, event timeline,
-    and key moments.
--   **Decision Explorer:** Compare an actual action with plausible
-    alternatives.
--   **Match Insights:** Summaries, player metrics, and match-momentum
-    visualizations.
--   **Evidence Drawer:** Inspect the events and calculations behind an
-    analytical claim.
--   **Fan and Analyst Modes:** Choose between accessible explanations
-    and more detailed analysis.
--   **English and Arabic UI:** Language support planned for the user
-    interface and explanations.
--   **System Metrics:** Measure evidence support, verifier outcomes, and
-    explanation latency.
--   **Synthetic Match Simulation:** Generate fictional match events for
-    repeatable demos and testing.
+> **Code calculates the values. AI explains them.** Rematch never asks a language model to invent match statistics.
 
-> Features are planned and may change during development. Only mark a
-> feature as complete when it has been implemented and tested in the
-> repository.
+---
+
+## Features
+
+> Features below are **planned**. A feature is marked done only after it is implemented and tested in this repository (see [Current Status](#current-status)).
+
+- 🎯 **Decision Explorer:** compare an actual action with plausible alternatives.
+- 🗺️ **Interactive Match View:** 2D pitch, score, event timeline, and key moments.
+- 🔍 **Evidence Drawer:** inspect the exact events and calculations behind any claim.
+- 📊 **Match Insights:** summaries, player metrics, and match-momentum charts.
+- 👥 **Fan & Analyst Modes:** accessible explanations or detailed analysis.
+- 🌍 **English & Arabic UI:** interface and explanations in both languages.
+- ✅ **Verified Explanations:** unsupported claims are rejected, corrected, or replaced with a safe fallback.
+- 📈 **System Metrics:** evidence support, verifier outcomes, and explanation latency.
+- 🧪 **Synthetic Match Simulator:** fictional match events for repeatable demos and tests.
+
+---
 
 ## How It Works
 
-The intended processing pipeline is:
+```mermaid
+flowchart LR
+    A[Ingest<br/>synthetic events] --> B[Interpret<br/>match state + stats]
+    B --> C[Evaluate<br/>decision values]
+    C --> D[Explain<br/>AI-written summary]
+    D --> E[Verify<br/>claims vs evidence]
+    E --> F[Render<br/>frontend + evidence]
+```
 
-1.  **Ingest:** Receive synthetic match events such as passes, shots,
-    tackles, pressure events, and possession changes.
-2.  **Interpret:** Update match state and calculate statistics using
-    deterministic code.
-3.  **Evaluate:** Calculate decision values and compare plausible
-    alternatives.
-4.  **Explain:** Generate a human-readable explanation based on
-    calculated results.
-5.  **Verify:** Check that claims are supported by available event IDs
-    and calculations.
-6.  **Render:** Display the analysis, evidence, and match events in the
-    frontend.
+| Step | What happens |
+|------|--------------|
+| **1. Ingest** | Receive synthetic events: passes, shots, tackles, pressure, possession changes. |
+| **2. Interpret** | Update match state and compute statistics with deterministic code. |
+| **3. Evaluate** | Score the actual action and plausible alternatives with the decision-value model. |
+| **4. Explain** | Generate a readable explanation from the calculated results only. |
+| **5. Verify** | Check every claim against available event IDs and calculations. |
+| **6. Render** | Show the analysis, evidence, and events in the UI. |
 
-The core principle is that **code calculates the values; AI helps
-explain them**. The system should not ask a language model to invent
-match statistics.
+> ⚠️ Decision values are **model estimates**, not objective probabilities or guaranteed predictions of real-world outcomes.
+
+---
 
 ## Pages
 
-  -----------------------------------------------------------------------
-  Page                                Purpose
-  ----------------------------------- -----------------------------------
-  Dashboard                           Browse matches and open a match
-                                      analysis
+| Page | Purpose |
+|------|---------|
+| **Dashboard** | Browse matches and open an analysis. |
+| **Match Analysis** | Explore the pitch, score, timeline, and key moments. |
+| **Decision Explorer** | Compare a player's decision with alternatives. |
+| **Match Insights** | Review summaries and performance insights. |
+| **System Metrics** | Inspect reliability and performance measurements. |
+| **Settings** *(optional)* | Choose language and analysis mode. |
 
-  Match Analysis                      Explore the pitch, score, timeline,
-                                      and key moments
+---
 
-  Decision Explorer                   Compare a player's actual decision
-                                      with alternatives
+## Tech Stack
 
-  Match Insights                      Review match summaries and
-                                      performance insights
+> This is the **intended** architecture. It will be updated to match what is actually used.
 
-  System Metrics                      Inspect reliability and performance
-                                      measurements
+| Layer | Technology |
+|-------|------------|
+| Frontend | React, TypeScript, SVG pitch visualizations |
+| Backend API | Python, FastAPI |
+| Live updates | WebSockets (if needed for the event stream) |
+| Storage | SQLite (PostgreSQL only if required) |
+| Analytics & simulation | Python, NumPy, Pandas |
+| AI orchestration | Microsoft Foundry and Microsoft Agent Framework *(subject to availability)* |
+| Testing | pytest |
+| Automation | Git, GitHub, GitHub Actions |
 
-  Settings (optional)                 Choose language and analysis mode
-  -----------------------------------------------------------------------
-
-## Technology Stack
-
-The planned stack is:
-
--   **Frontend:** React, TypeScript, and SVG-based pitch visualizations
--   **Backend API:** Python and FastAPI
--   **Live updates:** WebSockets, if needed for the event stream
--   **Data storage:** SQLite initially; PostgreSQL only if required
--   **Analytics and simulation:** Python, with NumPy/Pandas where useful
--   **AI orchestration:** Microsoft Foundry and Microsoft Agent
-    Framework, subject to implementation and availability
--   **Testing:** pytest for backend and analytics tests
--   **Version control and automation:** Git, GitHub, and GitHub Actions
-
-This list describes the intended architecture. Update it to reflect the
-technologies actually used in the final implementation.
-
-## Data and Responsible Use
-
--   The demo is intended to use **synthetic football data**.
--   Fictional teams and players should be used unless data rights and
-    hackathon rules permit otherwise.
--   Decision values are model estimates, not certainties.
--   Explanations should link back to supporting events and calculations.
--   Unsupported claims should be rejected, corrected, or replaced with a
-    safe fallback.
--   MatchMind is an analytics and explanation prototype, not a betting
-    or gambling product.
+---
 
 ## Getting Started
 
-Setup instructions will be added once the repository structure and
-dependencies are finalized.
+> 🚧 Setup will be finalized once the repository structure and dependencies are settled. The steps below show the intended workflow; commands are placeholders until then.
 
-The intended development workflow is:
+**Prerequisites:** Python 3.11+, Node.js 20+, Git
 
-1.  Clone the repository.
-2.  Install frontend and backend dependencies separately.
-3.  Configure environment variables using an example file.
-4.  Start the backend API.
-5.  Start the frontend development server.
-6.  Open the local application and select a sample match.
+```bash
+# 1. Clone the repository
+git clone https://github.com/<your-username>/rematch.git
+cd rematch
 
-Do not commit secrets, API keys, credentials, or local environment
-files.
+# 2. Backend
+cd backend
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env             # then fill in your own values
+uvicorn app.main:app --reload
+
+# 3. Frontend (in a second terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+Open the local URL shown by the dev server and select a sample match.
+
+🔐 **Never commit secrets, API keys, credentials, or `.env` files.**
+
+---
 
 ## Project Structure
 
-The repository is expected to evolve toward a structure similar to:
-
-``` text
-MatchMind/
-├── frontend/
-├── backend/
-├── docs/
-├── tests/
+```text
+rematch/
+├── frontend/     # React + TypeScript UI
+├── backend/      # FastAPI service, simulator, decision-value engine
+├── docs/         # Architecture notes and extended documentation
+├── tests/        # pytest suites
 ├── .gitignore
 └── README.md
 ```
 
-Adjust this tree to match the actual repository. Do not create empty
-folders just to match the example.
+> Adjust this tree to match the real repository.
 
-## Evaluation and Testing
+---
 
-Planned measurements include:
+## Evaluation & Testing
 
--   **Evidence support rate:** How many explanation claims are supported
-    by the referenced events and calculations?
--   **Verifier rejection rate:** How often are unsupported claims
-    rejected?
--   **Correction success rate:** How often does a corrected explanation
-    pass verification?
--   **Explanation latency:** How long does it take to display an
-    explanation after an event arrives?
--   **Key-moment coverage:** How many important moments receive
-    analysis?
+Rematch is measured, not just described. Planned metrics:
 
-Metrics should be calculated from recorded test runs and reported
-honestly. Do not publish placeholder numbers as measured results.
+| Metric | Question it answers |
+|--------|---------------------|
+| **Evidence support rate** | How many explanation claims are backed by referenced events and calculations? |
+| **Verifier rejection rate** | How often are unsupported claims caught? |
+| **Correction success rate** | How often does a corrected explanation pass verification? |
+| **Explanation latency** | How long from an event arriving to an explanation on screen? |
+| **Key-moment coverage** | How many important moments receive analysis? |
+
+Metrics come from recorded test runs and are reported honestly. **No placeholder numbers are published as measured results.**
+
+```bash
+# Run backend tests
+cd backend && pytest
+```
+
+---
+
+## Responsible Use
+
+- The demo uses **synthetic football data** with fictional teams and players, unless data rights and hackathon rules permit otherwise.
+- Decision values are estimates, never certainties.
+- Every explanation links back to supporting events and calculations.
+- Unsupported claims are rejected, corrected, or replaced with a safe fallback.
+- Rematch is an analytics and explanation prototype, **not** a betting or gambling product.
+
+---
 
 ## Current Status
 
-**Status: In development.**
+**Status: 🚧 In development**
 
-This README describes the project direction and planned architecture.
-Replace this section with an accurate implementation checklist as
-features are completed.
+- [ ] Repository and API foundation
+- [ ] Frontend core pages
+- [ ] Frontend/backend integration
+- [ ] Synthetic match simulator and validation tests
+- [ ] Decision-value calculations and alternative comparison
+- [ ] Evidence-linked explanations and verification
+- [ ] Demo deployment and final testing
 
--   [ ] Repository and API foundation
--   [ ] Frontend core pages
--   [ ] Frontend/backend integration
--   [ ] Synthetic match simulator and validation tests
--   [ ] Decision-value calculations and alternative comparison
--   [ ] Evidence-linked explanations and verification
--   [ ] Demo deployment and final testing
+---
 
 ## Demo
 
--   **Live demo:** Add the public demo URL when available.
--   **Demo video:** Add the video URL when available.
--   **Screenshots:** Add screenshots of the actual working application.
+- 🌐 **Live demo:** _coming soon_
+- 🎬 **Demo video:** _coming soon_
+- 🖼️ **Screenshots:** _to be added from the working application_
+
+---
+
+## Contributing
+
+Contributions and feedback are welcome. Open an issue to discuss your idea before sending a pull request, and keep changes focused and tested.
+
+---
 
 ## Team
 
-Add the team members and their contributions here.
+| Name | Role | GitHub |
+|------|------|--------|
+| _Your name_ | _Role_ | [@username](https://github.com/username) |
+
+---
+
+## License
+
+_Add a license (e.g. MIT) and a `LICENSE` file before the final submission._
+
+---
 
 ## Acknowledgements
 
-Developed for the Microsoft Inside the Game Hackathon. Microsoft, the
-Premier League, and their respective marks belong to their owners. This
-project is an independent hackathon submission and does not imply
-official endorsement.
+Developed for the **Microsoft Inside the Game Hackathon**. Microsoft, the Premier League, and their respective marks belong to their owners. Rematch is an independent hackathon submission and does not imply official endorsement.
 
-------------------------------------------------------------------------
+<div align="center">
 
-**MatchMind --- Every explanation should have evidence.**
+**Rematch: every explanation should have evidence.**
+
+</div>
