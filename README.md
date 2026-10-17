@@ -274,7 +274,7 @@ Contributions and feedback are welcome. Open an issue to discuss your idea befor
 |------|------|--------|
 | Omar Alnajjar | backend engineer | [@omar-hady](https://github.com/omar-hady) |
 | Adamm Ahmed | software engineer| [@Adamzuckk](https://github.com/Adamzuckk) |
-| youssef mohamed | pentester | [@Captain10Joe](https://github.com/Captain10Joe) |
+| youssef mohammed | pentester | [@Captain10Joe](https://github.com/Captain10Joe) |
 | yousef abass | ai engineer | [@Youssef-3bas](https://github.com/Youssef-3bas) |
 ---
 
