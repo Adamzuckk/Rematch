@@ -1,0 +1,46 @@
+import { useEffect, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
+import { Sidebar } from './Sidebar'
+import { TopBar } from './TopBar'
+import styles from './AppShell.module.css'
+
+export function AppShell() {
+  const location = useLocation()
+  const [navOpen, setNavOpen] = useState(false)
+  const [pathForNav, setPathForNav] = useState(location.pathname)
+
+  // Close the mobile drawer when the route changes (React "adjust state on prop change").
+  if (location.pathname !== pathForNav) {
+    setPathForNav(location.pathname)
+    setNavOpen(false)
+  }
+
+  useEffect(() => {
+    if (!navOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setNavOpen(false)
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [navOpen])
+
+  return (
+    <div className={styles.shell}>
+      <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
+      {navOpen ? (
+        <button
+          type="button"
+          className={styles.backdrop}
+          aria-label="Close navigation overlay"
+          onClick={() => setNavOpen(false)}
+        />
+      ) : null}
+      <div className={styles.mainColumn}>
+        <TopBar onOpenNav={() => setNavOpen(true)} navOpen={navOpen} />
+        <main className={styles.content} id="main">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  )
+}

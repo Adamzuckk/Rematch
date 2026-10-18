@@ -1,0 +1,56 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  text-align: start;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: 40rem;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.title {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+}
+
+.lead {
+  color: var(--color-text-secondary);
+}
+
+.panel {
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 40rem;
+}
+
+.panelTitle {
+  font-size: 1.05rem;
+}
+
+.panelBody {
+  color: var(--color-text-secondary);
+}
+
+.list {
+  margin: 0;
+  padding-inline-start: 1.2rem;
+  color: var(--color-text-muted);
+  display: grid;
+  gap: var(--space-1);
+}

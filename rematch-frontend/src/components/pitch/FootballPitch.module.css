@@ -1,0 +1,126 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 105 / 68;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-pitch-turf);
+  overflow: visible;
+}
+
+.stripeA {
+  fill: var(--color-pitch-turf);
+}
+
+.stripeB {
+  fill: var(--color-pitch-turf-stripe);
+}
+
+.line {
+  stroke: var(--color-pitch-line);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.spot {
+  fill: var(--color-pitch-line);
+}
+
+.goal {
+  fill: none;
+  stroke: var(--color-pitch-line);
+  stroke-width: 3;
+}
+
+.eventPath {
+  stroke: var(--color-pitch-path);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 10 8;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.eventHalo {
+  fill: rgba(240, 199, 94, 0.22);
+  stroke: none;
+}
+
+.eventMarker {
+  fill: var(--color-pitch-event);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.playerHome {
+  fill: var(--color-pitch-home);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.playerAway {
+  fill: var(--color-pitch-away);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.playerUnknown {
+  fill: var(--color-text-muted);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.ball {
+  fill: var(--color-pitch-ball);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border-strong);
+}
+
+.swatchHome {
+  background: var(--color-pitch-home);
+}
+
+.swatchAway {
+  background: var(--color-pitch-away);
+}
+
+.swatchEvent {
+  background: var(--color-pitch-event);
+}
+
+.legendNote {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}

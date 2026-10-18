@@ -1,0 +1,44 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.loading {
+  margin: 0;
+  padding: var(--space-8) 0;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+.notice {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-demo);
+  background: var(--color-demo-bg);
+  color: var(--color-demo);
+  font-size: 0.85rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(16rem, 0.9fr);
+  gap: var(--space-5);
+  align-items: start;
+  min-width: 0;
+}
+
+.pitchColumn,
+.inspectorColumn {
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

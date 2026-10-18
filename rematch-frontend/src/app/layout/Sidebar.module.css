@@ -1,0 +1,148 @@
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  height: 100svh;
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border-inline-end: 1px solid var(--color-border);
+  z-index: 40;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  text-align: start;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.logoMark {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  display: block;
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+}
+
+.brandName {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.brandTag {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  line-height: 1.35;
+  max-width: 18rem;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.navLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  padding: var(--space-2);
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
+}
+
+.link:hover {
+  background: var(--color-surface-hover);
+  color: var(--color-text);
+}
+
+.linkActive {
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-border);
+}
+
+.footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.demoNote {
+  font-size: 0.75rem;
+  color: var(--color-demo);
+  line-height: 1.4;
+}
+
+.langRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.langButton {
+  flex: 1;
+}
+
+.closeRow {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .sidebar {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: min(86vw, var(--sidebar-width));
+    transform: translateX(-105%);
+    transition: transform var(--duration-normal) var(--ease-out);
+    box-shadow: var(--shadow-md);
+  }
+
+  :global([dir='rtl']) .sidebar {
+    transform: translateX(105%);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  :global([dir='rtl']) .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .closeRow {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
