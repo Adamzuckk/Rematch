@@ -51,6 +51,18 @@
   vector-effect: non-scaling-stroke;
 }
 
+.selectedPath {
+  stroke: var(--color-accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.playerSelectable { cursor: pointer; stroke-width: 4; }
+.playerSelected { stroke: var(--color-accent); stroke-width: 6; }
+.playerSelectable:focus-visible { outline: 4px solid var(--color-focus); outline-offset: 3px; }
+
 .eventHalo {
   fill: rgba(240, 199, 94, 0.22);
   stroke: none;

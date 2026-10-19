@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { Activity, LayoutDashboard, X } from 'lucide-react'
-import rematchMark from '../../assets/brand/rematch-mark.svg'
+import rematchLogo from '../../assets/brand/rematch_logo_transparent.png'
 import { useLocale } from '../../i18n/locale'
 import { Button } from '../../components/ui/Button'
 import styles from './Sidebar.module.css'
@@ -38,14 +38,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className={styles.brand}>
         <div className={styles.brandMark}>
           <img
-            src={rematchMark}
-            alt=""
+            src={rematchLogo}
+            alt={t('appName')}
             className={styles.logoMark}
-            width={40}
-            height={40}
             decoding="async"
           />
-          <span className={styles.brandName}>{t('appName')}</span>
         </div>
         <p className={styles.brandTag}>{t('tagline')}</p>
       </div>

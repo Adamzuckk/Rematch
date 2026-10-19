@@ -70,6 +70,22 @@ describe('FootballPitch', () => {
     expect(screen.getByTestId('event-location')).toBeInTheDocument()
   })
 
+  it('highlights a selected hypothetical path and exposes a selectable player marker', () => {
+    render(
+      <FootballPitch
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        frame={frameWithPlayers}
+        highlightedPath={{ start: { x: 20, y: 40 }, end: { x: 30, y: 50 } }}
+        selectablePlayerIds={['player-home-1']}
+        selectedPlayerId="player-home-1"
+        selectPlayerLabel={(id) => `Pass to ${id}`}
+      />,
+    )
+    expect(screen.getByTestId('selected-pass-path')).toHaveAttribute('x1', '210')
+    expect(screen.getByRole('button', { name: 'Pass to player-home-1' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('omits player and ball markers when frame data is missing', () => {
     render(
       <FootballPitch

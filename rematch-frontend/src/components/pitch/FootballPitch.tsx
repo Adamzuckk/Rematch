@@ -1,4 +1,6 @@
+import type { KeyboardEvent } from 'react'
 import type { MatchEvent, MatchFrame, Team } from '../../types'
+import type { PitchPoint } from '../../types/coordinates'
 import {
   getEventGeometry,
   mapPitchPointToSvg,
@@ -15,6 +17,11 @@ export interface FootballPitchProps {
   /** Accessible name for the pitch diagram */
   label?: string
   className?: string
+  highlightedPath?: { start: PitchPoint; end: PitchPoint } | null
+  selectablePlayerIds?: string[]
+  selectedPlayerId?: string | null
+  onSelectPlayer?: (playerId: string) => void
+  selectPlayerLabel?: (playerId: string) => string
 }
 
 const { width: W, height: H } = PITCH_VIEWBOX
@@ -49,6 +56,11 @@ export function FootballPitch({
   frame = null,
   label = 'Football pitch',
   className,
+  highlightedPath = null,
+  selectablePlayerIds = [],
+  selectedPlayerId = null,
+  onSelectPlayer,
+  selectPlayerLabel = (playerId) => `Select pass to player ${playerId}`,
 }: FootballPitchProps) {
   const geometry = selectedEvent ? getEventGeometry(selectedEvent) : {}
   const locationSvg = geometry.location
@@ -59,6 +71,12 @@ export function FootballPitch({
     : null
   const pathEnd = geometry.path
     ? mapPitchPointToSvgClamped(geometry.path.end)
+    : null
+  const selectedStart = highlightedPath
+    ? mapPitchPointToSvgClamped(highlightedPath.start)
+    : null
+  const selectedEnd = highlightedPath
+    ? mapPitchPointToSvgClamped(highlightedPath.end)
     : null
 
   const players = frame?.players ?? []
@@ -221,6 +239,16 @@ export function FootballPitch({
             data-testid="event-path"
           />
         ) : null}
+        {selectedStart && selectedEnd ? (
+          <line
+            x1={selectedStart.x}
+            y1={selectedStart.y}
+            x2={selectedEnd.x}
+            y2={selectedEnd.y}
+            className={styles.selectedPath}
+            data-testid="selected-pass-path"
+          />
+        ) : null}
 
         {/* Event location */}
         {locationSvg ? (
@@ -249,22 +277,44 @@ export function FootballPitch({
               : side === 'away'
                 ? awayTeam.name
                 : 'Unknown team'
+          const selectable = selectablePlayerIds.includes(player.playerId)
+          const markerProps = selectable
+            ? {
+                role: 'button' as const,
+                tabIndex: 0,
+                'aria-label': selectPlayerLabel(player.playerId),
+                'aria-pressed': selectedPlayerId === player.playerId,
+                onClick: () => onSelectPlayer?.(player.playerId),
+                onKeyDown: (event: KeyboardEvent<SVGGElement>) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onSelectPlayer?.(player.playerId)
+                  }
+                },
+              }
+            : {}
           return (
             <g
               key={`${player.playerId}-${player.teamId}`}
               transform={`translate(${svgPoint.x}, ${svgPoint.y})`}
               data-testid="player-marker"
               data-team={side}
+              data-selectable={selectable || undefined}
+              {...markerProps}
             >
               <circle
                 r={11}
-                className={
+                className={[
                   side === 'home'
                     ? styles.playerHome
                     : side === 'away'
                       ? styles.playerAway
-                      : styles.playerUnknown
-                }
+                      : styles.playerUnknown,
+                  selectable ? styles.playerSelectable : '',
+                  selectedPlayerId === player.playerId ? styles.playerSelected : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 role="img"
                 aria-label={`Player ${player.playerId}, ${teamLabel}`}
               >

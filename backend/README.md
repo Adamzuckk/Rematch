@@ -117,6 +117,8 @@ Stored and returned as the same 0–100 `PitchPoint` space as `rematch-frontend/
 
 See [docs/decision-engine.md](../docs/decision-engine.md). Scoring is `geometric_progression_v1` (deterministic Python). Alternatives require an aligned frame. Unsupported event types / missing coordinates return `422 insufficient_evidence`.
 
+Pick Your Pass uses the alternatives returned by `GET /api/v1/matches/{id}/events/{event_id}/decision-analysis`. Each frame-backed alternative already includes its candidate geometry, backend-computed metrics/composite score and ranking entry. The client selects among those returned records; there is no candidate submission/evaluation endpoint and the client does not calculate scores. Alternatives are sparse-frame hypotheticals and do not predict pass completion.
+
 ## Known limitations
 
 - No auth / authz

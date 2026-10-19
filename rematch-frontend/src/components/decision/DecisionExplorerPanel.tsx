@@ -7,6 +7,10 @@ import type {
   RankingEntry,
   VerificationStatus,
 } from '../../types'
+import type { MatchFrame, MatchSummary } from '../../types'
+import { useState } from 'react'
+import { FootballPitch } from '../pitch/FootballPitch'
+import { isValidPitchPoint } from '../../types/coordinates'
 import { useLocale } from '../../i18n/locale'
 import type { MessageKey } from '../../i18n/strings'
 import styles from './DecisionExplorer.module.css'
@@ -140,13 +144,32 @@ function ClaimCard({ claim }: { claim: DecisionClaim }) {
 export interface DecisionExplorerPanelProps {
   analysis: DecisionAnalysis
   matchLabel?: string
+  match?: MatchSummary
+  frame?: MatchFrame | null
 }
 
 export function DecisionExplorerPanel({
   analysis,
   matchLabel,
+  match,
+  frame,
 }: DecisionExplorerPanelProps) {
   const { t } = useLocale()
+  const [selection, setSelection] = useState<{
+    analysisKey: string
+    actionId: string
+  } | null>(null)
+  const analysisKey = `${analysis.matchId}:${analysis.eventId}`
+  const selectedActionId = selection?.analysisKey === analysisKey ? selection.actionId : null
+  const selectAction = (actionId: string | null) =>
+    setSelection(actionId ? { analysisKey, actionId } : null)
+  const eligibleAlternatives = analysis.alternatives.filter(
+    (alt) => alt.kind === 'hypothetical_pass' && alt.start && alt.end && isValidPitchPoint(alt.start) && isValidPitchPoint(alt.end),
+  )
+  const selected = eligibleAlternatives.find((alt) => alt.actionId === selectedActionId) ?? null
+  const selectedRank = selected ? analysis.ranking.find((entry) => entry.actionId === selected.actionId)?.rank : null
+  const observedRank = analysis.ranking.find((entry) => entry.actionId === analysis.observed.actionId)?.rank
+  const selectedClaim = selected ? analysis.claims.find((claim) => claim.id === `claim-alt-score:${selected.actionId}`) : null
   const ranking = sortRanking(analysis.ranking)
   const isSynthetic = analysis.provenance === 'synthetic'
   const contextOutcome =
@@ -324,6 +347,51 @@ export function DecisionExplorerPanel({
         </div>
 
         <div className={styles.stack}>
+          <section className={styles.panel} aria-labelledby="pick-your-pass">
+            <h2 id="pick-your-pass" className={styles.panelTitle}>{t('pickPassHeading')}</h2>
+            <p className={styles.panelNote}>{t('pickPassNote')}</p>
+            {isMockFixture ? <p className={styles.banner} role="note">{t('pickPassSynthetic')}</p> : null}
+            {eligibleAlternatives.length === 0 ? (
+              <p className={styles.panelNote} role="status">
+                {analysis.alternatives.length === 0 ? t('pickPassUnavailable') : t('pickPassMissingCoordinates')}
+              </p>
+            ) : (
+              <>
+                <label className={styles.panelNote} htmlFor="pick-pass-select">{t('pickPassSelect')}</label>
+                <select id="pick-pass-select" value={selected?.actionId ?? ''} onChange={(event) => selectAction(event.target.value || null)}>
+                  <option value="">{t('pickPassChoose')}</option>
+                  {eligibleAlternatives.map((alt) => <option key={alt.actionId} value={alt.actionId}>{alt.label}</option>)}
+                </select>
+                {match && frame ? (
+                  <FootballPitch
+                    homeTeam={match.homeTeam}
+                    awayTeam={match.awayTeam}
+                    frame={frame}
+                    label={t('pickPassPitch')}
+                    highlightedPath={selected ? { start: selected.start!, end: selected.end! } : null}
+                    selectablePlayerIds={eligibleAlternatives.map((alt) => alt.targetPlayerId).filter((id): id is string => Boolean(id))}
+                    selectedPlayerId={selected?.targetPlayerId}
+                    selectPlayerLabel={(playerId) => `${t('pickPassSelectPlayer')} ${playerId}`}
+                    onSelectPlayer={(playerId) => {
+                      const target = eligibleAlternatives.find((alt) => alt.targetPlayerId === playerId)
+                      selectAction(target?.actionId ?? null)
+                    }}
+                  />
+                ) : <p className={styles.panelNote} role="status">{t('pickPassPitchUnavailable')}</p>}
+              </>
+            )}
+            {selected ? (
+              <div aria-live="polite" data-testid="pick-pass-result">
+                <p className={styles.panelNote}>{t('pickPassHypothetical')}</p>
+                <p className={styles.panelNote}>{t('decisionCompositeLabel')}: {formatScore(selected.compositeScore) ?? t('decisionMetricUnavailable')} {selected.compositeScore == null ? '' : t('decisionUnitPitchPercent')}</p>
+                <p className={styles.panelNote}>{t('decisionRankLabel')}: {selectedRank == null ? t('decisionMetricUnavailable') : `#${selectedRank}`}</p>
+                <p className={styles.panelNote}>{t('pickPassObservedRank')}: {observedRank == null ? t('decisionMetricUnavailable') : `#${observedRank}`}</p>
+                <p className={styles.panelNote}>{t('pickPassObservedCompare')}: {observedScore ?? t('decisionMetricUnavailable')} {observedScore == null ? '' : t('decisionUnitPitchPercent')}</p>
+                {selectedClaim ? <ul className={styles.claims}><ClaimCard claim={selectedClaim} /></ul> : <p className={styles.panelNote}>{t('pickPassNoClaim')}</p>}
+                <button type="button" onClick={() => selectAction(null)}>{t('pickPassReset')}</button>
+              </div>
+            ) : null}
+          </section>
           <section className={styles.panel} aria-labelledby="decision-ranking">
             <h2 id="decision-ranking" className={styles.panelTitle}>
               {t('decisionRankingHeading')}

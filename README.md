@@ -276,7 +276,7 @@ cd backend && source .venv/bin/activate && pytest
 
 ## Current Status
 
-**Status: In development — Phase 6 complete (Decision Explorer UI + API integration)**
+**Status: In development — Phase 7 complete (Pick Your Pass interaction)**
 
 - [x] Frontend foundation: Dark Pro shell, routing, dashboard with synthetic demo matches
 - [x] Typed service boundaries and richer mock/event data (Phase 2)
@@ -284,7 +284,8 @@ cd backend && source .venv/bin/activate && pytest
 - [x] Backend / API foundation (Phase 4)
 - [x] Decision-value calculations, alternative comparison, and evidence verification (Phase 5)
 - [x] Decision Explorer UI + typed `/api/v1` client integration (Phase 6)
-- [ ] AI / Foundry explanations and Pick Your Pass (later)
+- [x] Pick Your Pass selection of backend-scored frame alternatives (Phase 7)
+- [ ] AI / Foundry explanations
 - [ ] Demo deployment and final testing
 
 ### Decision metrics (`geometric_progression_v1`)
@@ -311,6 +312,13 @@ A **higher geometric composite score does not establish a better real-world foot
 - Service: `getDecisionAnalysis` on mock + API (`GET …/decision-analysis`). Claims/statuses come from that response; UI does not call `…/evidence` or `…/verify` yet.
 - States: loading, ready, 404, 422 insufficient evidence, network error + retry, empty alternatives, missing frames. Stale-response guard + success cache in `useDecisionAnalysis`.
 - EN/AR + RTL. See [docs/decision-engine.md](docs/decision-engine.md).
+
+**Phase 7 notes**
+
+- Pick Your Pass is available inside Decision Explorer (also from the existing `/pick-your-pass` route).
+- It selects only alternatives returned by `GET .../decision-analysis`, displays the backend score, rank and matching evidence claim, and highlights the returned path on the existing SVG pitch when coordinates and an aligned frame are available.
+- There is no selection submission endpoint: the backend already computes and returns scores/ranks for all frame-backed alternatives. The UI does not rescore or post hypothetical geometry.
+- No API contract change was needed. With no alternatives or usable coordinates, the UI reports the unavailable state. Mock selections are explicitly labelled synthetic.
 
 **Phase 5 notes**
 

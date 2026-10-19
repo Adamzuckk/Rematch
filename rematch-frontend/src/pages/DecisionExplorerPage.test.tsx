@@ -360,7 +360,37 @@ describe('DecisionExplorerPage', () => {
       ).toBeInTheDocument()
     })
     expect(screen.getByText(STRINGS.en.decisionMockBanner)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.pickPassSynthetic)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.pickPassUnavailable)).toBeInTheDocument()
     expect(screen.getByText(/aligned_frame/i)).toBeInTheDocument()
+  })
+
+  it('selects and changes a backend-scored pass and displays returned values', async () => {
+    const user = userEvent.setup()
+    const second = {
+      ...SAMPLE_ANALYSIS.alternatives[0],
+      actionId: 'alt-pass:evt-ng-carry-64:player-northgate-10',
+      label: 'Hypothetical pass to player-northgate-10',
+      targetPlayerId: 'player-northgate-10',
+      end: { x: 75, y: 60 },
+      compositeScore: 72.5,
+    }
+    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue({
+      ...SAMPLE_ANALYSIS,
+      alternatives: [...SAMPLE_ANALYSIS.alternatives, second],
+      ranking: [...SAMPLE_ANALYSIS.ranking, { ...SAMPLE_ANALYSIS.ranking[1], actionId: second.actionId, label: second.label, targetPlayerId: second.targetPlayerId, compositeScore: second.compositeScore, rank: 1 }],
+    })
+    renderExplorer('m-northgate-riverside-2401', 'evt-ng-carry-64')
+    const selection = await screen.findByLabelText(STRINGS.en.pickPassSelect)
+    await user.selectOptions(selection, SAMPLE_ANALYSIS.alternatives[0].actionId)
+    expect(screen.getByText(STRINGS.en.pickPassHypothetical)).toBeInTheDocument()
+    expect(within(screen.getByTestId('pick-pass-result')).getByText(/68\.62/)).toBeInTheDocument()
+    expect(within(screen.getByTestId('pick-pass-result')).getByText(/Rank: #1/)).toBeInTheDocument()
+    await user.selectOptions(selection, second.actionId)
+    expect(selection).toHaveValue(second.actionId)
+    expect(within(screen.getByTestId('pick-pass-result')).getByText(/72\.50/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: STRINGS.en.pickPassReset }))
+    expect(selection).toHaveValue('')
   })
 
   it('loads mock-mode fixture for a known synthetic event', async () => {

@@ -14,40 +14,41 @@
 .brand {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2);
-  text-align: start;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-2) var(--space-2);
+  text-align: center;
 }
 
 .brandMark {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
 }
 
 .logoMark {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border-radius: var(--radius-sm);
   display: block;
-  object-fit: cover;
-  box-shadow: var(--shadow-sm);
-}
-
-.brandName {
-  font-family: var(--font-display);
-  font-size: 1.45rem;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  line-height: 1.1;
+  width: min(100%, 230px);
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: center;
+  flex-shrink: 1;
 }
 
 .brandTag {
+  margin: 0;
   font-size: 0.78rem;
   color: var(--color-text-secondary);
-  line-height: 1.35;
+  line-height: 1.4;
   max-width: 18rem;
+}
+
+@media (max-width: 380px) {
+  .logoMark {
+    width: min(100%, 210px);
+  }
 }
 
 .nav {

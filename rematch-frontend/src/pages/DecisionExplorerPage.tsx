@@ -4,6 +4,7 @@ import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useDecisionAnalysis } from '../hooks/useDecisionAnalysis'
 import { useMatchSummary, formatMatchLabel } from '../hooks/useMatchSummary'
+import { useMatchAnalysis } from '../hooks/useMatchAnalysis'
 import { useLocale } from '../i18n/locale'
 import styles from './DecisionExplorerPage.module.css'
 
@@ -12,6 +13,7 @@ export function DecisionExplorerPage() {
   const { t } = useLocale()
   const { state, retry } = useDecisionAnalysis(matchId, eventId)
   const matchState = useMatchSummary(matchId)
+  const matchAnalysis = useMatchAnalysis(matchId)
 
   const matchLabel =
     matchState.status === 'ready'
@@ -120,6 +122,8 @@ export function DecisionExplorerPage() {
       <DecisionExplorerPanel
         analysis={state.analysis}
         matchLabel={matchLabel}
+        match={matchAnalysis.state.status === 'ready' ? matchAnalysis.state.match : undefined}
+        frame={matchAnalysis.state.status === 'ready' ? matchAnalysis.state.frames.find((item) => item.eventId === eventId) ?? null : null}
       />
     </div>
   )
