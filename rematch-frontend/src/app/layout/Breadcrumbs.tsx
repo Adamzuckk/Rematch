@@ -39,7 +39,7 @@ function useCrumbs(): Crumb[] {
       { label: t('navDashboard'), to: '/dashboard' },
       { label: matchLabel, to: `/matches/${params.matchId}` },
       {
-        label: 'Decision',
+        label: t('breadcrumbDecisionExplorer'),
         to: `/matches/${params.matchId}/decisions/${params.eventId}`,
       },
       { label: 'Pick Your Pass' },
@@ -50,7 +50,7 @@ function useCrumbs(): Crumb[] {
     return [
       { label: t('navDashboard'), to: '/dashboard' },
       { label: matchLabel, to: `/matches/${params.matchId}` },
-      { label: 'Decision Explorer' },
+      { label: t('breadcrumbDecisionExplorer') },
     ]
   }
 

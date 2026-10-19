@@ -52,7 +52,7 @@ describe('MatchAnalysisPage', () => {
     expect(screen.getByText(STRINGS.en.matchAnalysisInspector)).toBeInTheDocument()
     expect(screen.getByText(/Jamie Cole/i)).toBeInTheDocument()
     expect(
-      screen.getByText(STRINGS.en.matchAnalysisDecisionPlaceholder),
+      screen.getByText(STRINGS.en.matchAnalysisDecisionHint),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: STRINGS.en.matchAnalysisDecisionCta }),

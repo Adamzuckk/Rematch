@@ -133,7 +133,7 @@ export function MatchAnalysisPage() {
               empty: t('matchAnalysisInspectorEmpty'),
               missing: t('matchAnalysisMissing'),
               decisionCta: t('matchAnalysisDecisionCta'),
-              decisionPlaceholder: t('matchAnalysisDecisionPlaceholder'),
+              decisionHint: t('matchAnalysisDecisionHint'),
             }}
           />
         </aside>

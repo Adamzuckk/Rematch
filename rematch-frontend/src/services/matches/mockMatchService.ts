@@ -1,13 +1,18 @@
 import {
+  DECISION_CANDIDATE_TYPES,
   SYNTHETIC_DATASET_INFO,
+  SYNTHETIC_DECISION_ANALYSES,
   SYNTHETIC_MATCHES,
   SYNTHETIC_OVERVIEW_STATS,
   SYNTHETIC_PLAYER_LIST,
+  decisionFixtureKey,
   getSyntheticEventsForMatch,
   getSyntheticFramesForMatch,
 } from '../../mocks'
 import type { MatchSummary, Player } from '../../types'
 import {
+  DecisionInsufficientEvidenceError,
+  DecisionNotFoundError,
   MatchNotFoundError,
   type MatchListFilters,
   type MatchService,
@@ -94,5 +99,49 @@ export const mockMatchService: MatchService = {
   async getMatchFrames(matchId) {
     requireMatch(matchId)
     return getSyntheticFramesForMatch(matchId)
+  },
+
+  async getDecisionAnalysis(matchId, eventId) {
+    const match = SYNTHETIC_MATCHES.find((item) => item.id === matchId)
+    if (!match) {
+      throw new DecisionNotFoundError(
+        'match_not_found',
+        `Match not found: ${matchId}`,
+        matchId,
+        eventId,
+      )
+    }
+
+    const events = getSyntheticEventsForMatch(matchId)
+    const event = events.find((item) => item.id === eventId)
+    if (!event) {
+      throw new DecisionNotFoundError(
+        'event_not_found',
+        `Event not found: ${eventId} in match ${matchId}`,
+        matchId,
+        eventId,
+      )
+    }
+
+    if (!DECISION_CANDIDATE_TYPES.has(event.type)) {
+      throw new DecisionInsufficientEvidenceError(
+        `Event type '${event.type}' is not a decision candidate. Supported types: ['carry', 'pass', 'shot']`,
+        matchId,
+        eventId,
+      )
+    }
+
+    const fixture =
+      SYNTHETIC_DECISION_ANALYSES[decisionFixtureKey(matchId, eventId)]
+    if (!fixture) {
+      // Candidate type but no authored fixture (e.g. shot without offline scores)
+      throw new DecisionInsufficientEvidenceError(
+        'No synthetic decision fixture for this event in mock mode. Use API mode against the seeded backend for live analysis.',
+        matchId,
+        eventId,
+      )
+    }
+
+    return fixture
   },
 }

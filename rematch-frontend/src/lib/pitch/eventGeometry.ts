@@ -41,7 +41,7 @@ export function getEventGeometry(event: MatchEvent): EventGeometry {
   }
 }
 
-/** Events that can later open the Decision Explorer (still a placeholder). */
+/** Events that open Decision Explorer (pass / shot / carry). */
 export function isDecisionCandidate(event: MatchEvent): boolean {
   return (
     event.type === 'pass' || event.type === 'shot' || event.type === 'carry'

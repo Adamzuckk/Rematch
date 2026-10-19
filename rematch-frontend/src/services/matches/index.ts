@@ -13,6 +13,8 @@ export {
   MatchApiError,
   MatchNotFoundError,
   MatchServiceConfigError,
+  DecisionNotFoundError,
+  DecisionInsufficientEvidenceError,
 } from './types'
 export { mockMatchService, filterSyntheticMatches } from './mockMatchService'
 export { createApiMatchService } from './apiMatchService'

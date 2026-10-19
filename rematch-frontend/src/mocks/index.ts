@@ -22,3 +22,8 @@ export {
   SYNTHETIC_OVERVIEW_STATS,
   DEMO_OVERVIEW_STATS,
 } from './overview'
+export {
+  SYNTHETIC_DECISION_ANALYSES,
+  DECISION_CANDIDATE_TYPES,
+  decisionFixtureKey,
+} from './decisionAnalysis'

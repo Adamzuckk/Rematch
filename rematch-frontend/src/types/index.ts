@@ -23,3 +23,19 @@ export type {
   DashboardOverviewStat,
   MatchDatasetInfo,
 } from './match'
+export type {
+  MetricStatus,
+  VerificationStatus,
+  EvidenceRefKind,
+  ConfidenceLevel,
+  CompletenessLevel,
+  ActionKind,
+  MetricValue,
+  ActionScore,
+  RankingEntry,
+  EvidenceReference,
+  DecisionClaim,
+  DataCompleteness,
+  DecisionAnalysis,
+  EvidenceBundle,
+} from './decision'

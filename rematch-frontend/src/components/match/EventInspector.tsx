@@ -20,7 +20,7 @@ export interface EventInspectorProps {
     empty?: string
     missing?: string
     decisionCta?: string
-    decisionPlaceholder?: string
+    decisionHint?: string
   }
 }
 
@@ -81,9 +81,9 @@ export function EventInspector({
   const empty = labels.empty ?? 'Select an event to inspect its details.'
   const missing = labels.missing ?? 'Not available'
   const decisionCta = labels.decisionCta ?? 'Open Decision Explorer'
-  const decisionPlaceholder =
-    labels.decisionPlaceholder ??
-    'Decision analysis is not implemented yet (placeholder route).'
+  const decisionHint =
+    labels.decisionHint ??
+    'Compare the observed action with geometric alternatives from the decision engine.'
 
   if (!event) {
     return (
@@ -219,7 +219,7 @@ export function EventInspector({
 
       {showDecision ? (
         <div className={styles.decision}>
-          <p className={styles.decisionNote}>{decisionPlaceholder}</p>
+          <p className={styles.decisionNote}>{decisionHint}</p>
           <Button
             variant="secondary"
             to={`/matches/${matchId}/decisions/${event.id}`}

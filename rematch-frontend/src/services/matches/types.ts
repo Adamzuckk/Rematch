@@ -1,5 +1,6 @@
 import type {
   DashboardOverviewStat,
+  DecisionAnalysis,
   MatchDatasetInfo,
   MatchEvent,
   MatchFrame,
@@ -43,6 +44,17 @@ export interface MatchService {
    * (current synthetic scenario ships no frames). Throws when unknown.
    */
   getMatchFrames(matchId: string): Promise<MatchFrame[]>
+
+  /**
+   * Decision analysis for a match event.
+   * Backend is the source of truth for scores and ranking.
+   * Throws DecisionNotFoundError (404), DecisionInsufficientEvidenceError (422),
+   * or MatchApiError (network / other HTTP failures).
+   */
+  getDecisionAnalysis(
+    matchId: string,
+    eventId: string,
+  ): Promise<DecisionAnalysis>
 }
 
 export class MatchNotFoundError extends Error {
@@ -64,10 +76,57 @@ export class MatchServiceConfigError extends Error {
 
 export class MatchApiError extends Error {
   readonly status?: number
+  readonly code?: string
 
-  constructor(message: string, status?: number) {
+  constructor(message: string, status?: number, code?: string) {
     super(message)
     this.name = 'MatchApiError'
     this.status = status
+    this.code = code
+  }
+}
+
+/** 404 match_not_found or event_not_found from decision-analysis. */
+export class DecisionNotFoundError extends Error {
+  readonly status = 404 as const
+  readonly code: 'match_not_found' | 'event_not_found'
+  readonly matchId: string
+  readonly eventId?: string
+
+  constructor(
+    code: 'match_not_found' | 'event_not_found',
+    message: string,
+    matchId: string,
+    eventId?: string,
+  ) {
+    super(message)
+    this.name = 'DecisionNotFoundError'
+    this.code = code
+    this.matchId = matchId
+    this.eventId = eventId
+  }
+}
+
+/** 422 insufficient_evidence — event exists but cannot be analysed. */
+export class DecisionInsufficientEvidenceError extends Error {
+  readonly status = 422 as const
+  readonly code = 'insufficient_evidence' as const
+  readonly matchId: string
+  readonly eventId: string
+
+  constructor(message: string, matchId: string, eventId: string) {
+    super(message)
+    this.name = 'DecisionInsufficientEvidenceError'
+    this.matchId = matchId
+    this.eventId = eventId
+  }
+}
+
+/** Shared API error envelope from the backend. */
+export interface ApiErrorBody {
+  error?: {
+    code?: string
+    message?: string
+    details?: unknown
   }
 }

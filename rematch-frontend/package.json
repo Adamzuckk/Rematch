@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "smoke:decision": "node scripts/decision-smoke.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.59.0",

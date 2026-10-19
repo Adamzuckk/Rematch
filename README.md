@@ -96,51 +96,37 @@ flowchart LR
 flowchart TD
     D["Dashboard<br/>/"]
     M["Match Analysis<br/>/matches/:matchId"]
-    X["Decision Explorer<br/>/matches/:matchId/decisions/:decisionId"]
+    X["Decision Explorer<br/>/matches/:matchId/decisions/:eventId"]
     I["Match Insights<br/>/matches/:matchId/insights"]
-    R["Match Recap<br/>/matches/:matchId/recap"]
     S["System Metrics<br/>/metrics"]
-    T["Settings<br/>/settings"]
-    E(["Evidence Drawer<br/>(side panel, not a page)"])
 
     D -->|open a match| M
-    M -->|select a key moment| X
+    M -->|select pass / shot / carry| X
     M --> I
-    M --> R
-    M -.->|view evidence| E
-    X -.->|view evidence| E
-    I -.->|view evidence| E
-    X -->|back to timeline| M
+    X -->|back to match| M
     D --> S
-    D --> T
-    T -.->|language and mode apply everywhere| M
 ```
 
 ### Routes
 
 | Route | Page | Purpose | Planned API |
 |-------|------|---------|-------------|
-| `/` | Dashboard | Browse sample matches and open an analysis | `GET /api/matches` |
-| `/matches/:matchId` | Match Analysis | 2D pitch, score, event timeline, key moments, live event stream | `GET /api/matches/{id}`, `GET /api/matches/{id}/events`, stream endpoint |
-| `/matches/:matchId/decisions/:decisionId` | Decision Explorer | Compare the actual action with plausible alternatives, with explanation | `GET /api/decisions/{id}` |
-| `/matches/:matchId/insights` | Match Insights | Summaries, player metrics, momentum charts, Player Focus mode | `GET /api/matches/{id}/insights` |
-| `/matches/:matchId/recap` | Match Recap | Automated recap in English and Arabic | `GET /api/matches/{id}/recap` |
-| `/metrics` | System Metrics | Evidence support rate, verifier outcomes, latency (from recorded runs) | `GET /api/metrics` |
-| `/settings` | Settings | Language (EN/AR), Fan/Analyst mode, favorite club and player | stored client-side |
-| *(panel)* | Evidence Drawer | Events and calculations behind any claim | `GET /api/evidence/{claimId}` |
+| `/dashboard` (and `/` → redirect) | Dashboard | Browse sample matches and open an analysis | `GET /api/v1/matches` |
+| `/matches/:matchId` | Match Analysis | 2D pitch, score, event timeline, inspector | `GET /api/v1/matches/{id}`, `…/events`, `…/frames`, `…/players` |
+| `/matches/:matchId/decisions/:eventId` | Decision Explorer | Compare observed action with geometric alternatives + evidence claims | `GET /api/v1/matches/{id}/events/{eventId}/decision-analysis` |
+| `/matches/:matchId/insights` | Match Insights | Summaries, player metrics *(placeholder)* | — |
+| `/metrics` | System Metrics | Reliability measurements *(placeholder)* | — |
+| Language toggle | Sidebar EN/AR | Interface locale + RTL | client-side |
 
 ### Navigation Tree
 
 ```text
 Rematch
-├── Dashboard                      /
+├── Dashboard                      /dashboard
 │   └── Match Analysis             /matches/:matchId
-│       ├── Decision Explorer      /matches/:matchId/decisions/:decisionId
-│       ├── Match Insights         /matches/:matchId/insights
-│       ├── Match Recap            /matches/:matchId/recap
-│       └── Evidence Drawer        (opens from any analysis page)
-├── System Metrics                 /metrics
-└── Settings                       /settings
+│       ├── Decision Explorer      /matches/:matchId/decisions/:eventId
+│       └── Match Insights         /matches/:matchId/insights (placeholder)
+└── System Metrics                 /metrics (placeholder)
 ```
 
 ---
@@ -157,37 +143,83 @@ Rematch
 | Storage | SQLite (PostgreSQL only if required) |
 | Analytics & simulation | Python, NumPy, Pandas |
 | AI orchestration | Microsoft Foundry and Microsoft Agent Framework *(subject to availability)* |
-| Testing | pytest |
+| Testing | Vitest + React Testing Library (frontend); pytest + HTTPX (backend) |
 | Automation | Git, GitHub, GitHub Actions |
 
 ---
 
 ## Getting Started
 
-> **Note:** Setup will be finalized once the repository structure and dependencies are settled. The steps below show the intended workflow; commands are placeholders until then.
+**Prerequisites:** Node.js 20+, npm 10+, Git, Python 3.11+ (3.12 recommended for the backend).
 
-**Prerequisites:** Python 3.11+, Node.js 20+, Git
+### End-to-end (Decision Explorer with live engine)
+
+**1. Backend**
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/<your-username>/rematch.git
-cd rematch
-
-# 2. Backend
 cd backend
-python -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env             # then fill in your own values
-uvicorn app.main:app --reload
+pip install -e ".[dev]"
+cp .env.example .env
+alembic upgrade head
+rematch-seed
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-# 3. Frontend (in a second terminal)
-cd frontend
+- Health: http://localhost:8000/api/v1/health  
+- OpenAPI: http://localhost:8000/docs  
+- CORS defaults allow `http://localhost:5173` (`CORS_ORIGINS` in `backend/.env`)
+
+**2. Frontend (API mode)**
+
+```bash
+cd rematch-frontend
 npm install
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```bash
+VITE_MATCH_DATA_SOURCE=api
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+```bash
 npm run dev
 ```
 
-Open the local URL shown by the dev server and select a sample match.
+Open http://localhost:5173 → Dashboard → **Northgate FC vs Riverside Athletic** → select carry at 64' → **Open Decision Explorer**.
+
+**3. Frontend (mock mode — default, offline)**
+
+```bash
+VITE_MATCH_DATA_SOURCE=mock
+# VITE_API_BASE_URL can stay empty
+npm run dev
+```
+
+Mock Decision Explorer fixtures are static and labelled synthetic. Alternatives are empty (no frames in `rematch-phase2-v1`). There is **no** silent fallback from API failures to mock data.
+
+### Verify
+
+```bash
+# Frontend
+cd rematch-frontend
+npm run test
+npm run lint
+npm run typecheck
+npm run build
+
+# Optional live-backend smoke (backend must be running + seeded)
+npm run smoke:decision
+
+# Backend
+cd ../backend && source .venv/bin/activate && pytest
+```
+
+Details: [backend/README.md](backend/README.md) · [rematch-frontend/README.md](rematch-frontend/README.md) · [docs/api-contract.md](docs/api-contract.md) · [docs/decision-engine.md](docs/decision-engine.md)
 
 **Never commit secrets, API keys, credentials, or `.env` files.**
 
@@ -196,16 +228,15 @@ Open the local URL shown by the dev server and select a sample match.
 ## Project Structure
 
 ```text
-rematch/
-├── frontend/     # React + TypeScript UI
-├── backend/      # FastAPI service, simulator, decision-value engine
-├── docs/         # Architecture notes and extended documentation
-├── tests/        # pytest suites
-├── .gitignore
+Rematch/
+├── rematch-frontend/   # React + TypeScript + Vite UI (Phase 1–3, 6)
+├── backend/            # FastAPI + SQLAlchemy + Alembic (Phase 4–5)
+├── docs/               # Data model, API contract, decision engine
+│   ├── data-model.md
+│   ├── api-contract.md
+│   └── decision-engine.md
 └── README.md
 ```
-
-> Adjust this tree to match the real repository.
 
 ---
 
@@ -224,8 +255,11 @@ Rematch is measured, not just described. Planned metrics:
 Metrics come from recorded test runs and are reported honestly. **No placeholder numbers are published as measured results.**
 
 ```bash
-# Run backend tests
-cd backend && pytest
+# Frontend tests
+cd rematch-frontend && npm run test
+
+# Backend tests
+cd backend && source .venv/bin/activate && pytest
 ```
 
 ---
@@ -242,15 +276,51 @@ cd backend && pytest
 
 ## Current Status
 
-**Status: In development**
+**Status: In development — Phase 6 complete (Decision Explorer UI + API integration)**
 
-- [ ] Repository and API foundation
-- [ ] Frontend core pages
-- [ ] Frontend/backend integration
-- [ ] Synthetic match simulator and validation tests
-- [ ] Decision-value calculations and alternative comparison
-- [ ] Evidence-linked explanations and verification
+- [x] Frontend foundation: Dark Pro shell, routing, dashboard with synthetic demo matches
+- [x] Typed service boundaries and richer mock/event data (Phase 2)
+- [x] Interactive match pitch and timeline (Phase 3)
+- [x] Backend / API foundation (Phase 4)
+- [x] Decision-value calculations, alternative comparison, and evidence verification (Phase 5)
+- [x] Decision Explorer UI + typed `/api/v1` client integration (Phase 6)
+- [ ] AI / Foundry explanations and Pick Your Pass (later)
 - [ ] Demo deployment and final testing
+
+### Decision metrics (`geometric_progression_v1`)
+
+| Metric | Meaning |
+|--------|---------|
+| `progressive_distance` | Attack-direction Δx in pitch-percent units |
+| `goal_proximity_gain` | Reduction in Euclidean distance to opponent goal centre |
+| `path_length` | Euclidean start→end length |
+| `start_distance_to_goal` / `end_distance_to_goal` | Distances to goal centre |
+| `composite_score` | `progressive_distance + goal_proximity_gain` |
+
+A **higher geometric composite score does not establish a better real-world football decision**. It only ranks actions under this transparent geometry method. It is not xG, probability, or proof of correctness. Outcomes (`complete`, `goal`, …) are context only and are not mixed into the score.
+
+### Synthetic-data limitations
+
+- Frontend mock (`rematch-phase2-v1`): no frames → Decision Explorer fixtures have empty alternatives and show a mock banner.
+- Backend seed (`rematch-phase4-v1`): three Northgate frames only; sparse player counts; fictional clubs.
+- Alternatives exist only for teammates present in an aligned frame — absent options are not evaluated.
+
+**Phase 6 notes**
+
+- Route: `/matches/:matchId/decisions/:eventId` via Match Analysis CTA on pass/shot/carry.
+- Service: `getDecisionAnalysis` on mock + API (`GET …/decision-analysis`). Claims/statuses come from that response; UI does not call `…/evidence` or `…/verify` yet.
+- States: loading, ready, 404, 422 insufficient evidence, network error + retry, empty alternatives, missing frames. Stale-response guard + success cache in `useDecisionAnalysis`.
+- EN/AR + RTL. See [docs/decision-engine.md](docs/decision-engine.md).
+
+**Phase 5 notes**
+
+- Deterministic engine under `backend/app/services/decision/`.
+- Endpoints: `…/decision-analysis`, `…/evidence`, `…/verify`.
+
+**Phase 4 notes**
+
+- FastAPI + SQLAlchemy + Alembic + seed `rematch-phase4-v1` (includes sample frames).
+- Versioned REST under `/api/v1` with paginated list envelopes.
 
 ---
 

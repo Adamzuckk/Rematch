@@ -1,5 +1,6 @@
 import type {
   DashboardOverviewStat,
+  DecisionAnalysis,
   MatchDatasetInfo,
   MatchEvent,
   MatchFrame,
@@ -7,12 +8,24 @@ import type {
   Player,
 } from '../../types'
 import {
+  DecisionInsufficientEvidenceError,
+  DecisionNotFoundError,
   MatchApiError,
   MatchNotFoundError,
   MatchServiceConfigError,
+  type ApiErrorBody,
   type MatchListFilters,
   type MatchService,
 } from './types'
+
+const API_PREFIX = '/api/v1'
+
+interface Paginated<T> {
+  items: T[]
+  total: number
+  limit: number
+  offset: number
+}
 
 function trimBaseUrl(baseUrl: string): string {
   return baseUrl.replace(/\/+$/, '')
@@ -41,9 +54,18 @@ async function parseJson<T>(response: Response): Promise<T> {
   }
 }
 
+async function readErrorBody(response: Response): Promise<ApiErrorBody | null> {
+  try {
+    return (await response.json()) as ApiErrorBody
+  } catch {
+    return null
+  }
+}
+
 /**
  * HTTP match service. Requires VITE_API_BASE_URL.
  * Errors are explicit — this never falls back to mock data.
+ * Paths use the Phase 4/5 `/api/v1` contract and unwrap paginated `items`.
  */
 export function createApiMatchService(baseUrl: string | undefined): MatchService {
   if (!baseUrl?.trim()) {
@@ -54,50 +76,63 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
 
   const root = trimBaseUrl(baseUrl.trim())
 
-  async function request<T>(path: string): Promise<T> {
+  async function request<T>(
+    path: string,
+    init?: RequestInit,
+  ): Promise<{ response: Response; body: T }> {
     let response: Response
     try {
-      response = await fetch(`${root}${path}`)
+      response = await fetch(`${root}${path}`, init)
     } catch (cause) {
       const detail =
         cause instanceof Error ? cause.message : 'network request failed'
       throw new MatchApiError(`Failed to reach match API: ${detail}`)
     }
 
-    if (response.status === 404) {
-      throw new MatchNotFoundError(path)
-    }
-
     if (!response.ok) {
-      throw new MatchApiError(
-        `Match API error (${response.status}) for ${path}`,
-        response.status,
-      )
+      const errorBody = await readErrorBody(response)
+      const code = errorBody?.error?.code
+      const message =
+        errorBody?.error?.message ??
+        `Match API error (${response.status}) for ${path}`
+      throw new MatchApiError(message, response.status, code)
     }
 
-    return parseJson<T>(response)
+    const body = await parseJson<T>(response)
+    return { response, body }
+  }
+
+  async function getJson<T>(path: string): Promise<T> {
+    const { body } = await request<T>(path)
+    return body
   }
 
   return {
     async getDatasetInfo() {
-      return request<MatchDatasetInfo>('/api/matches/dataset')
+      return getJson<MatchDatasetInfo>(`${API_PREFIX}/matches/dataset`)
     },
 
     async getOverviewStats() {
-      return request<DashboardOverviewStat[]>('/api/matches/overview')
+      return getJson<DashboardOverviewStat[]>(`${API_PREFIX}/matches/overview`)
     },
 
     async getMatches(filters) {
-      return request<MatchSummary[]>(`/api/matches${buildQuery(filters)}`)
+      const page = await getJson<Paginated<MatchSummary>>(
+        `${API_PREFIX}/matches${buildQuery(filters)}`,
+      )
+      return page.items
     },
 
     async getMatchById(matchId) {
       try {
-        return await request<MatchSummary>(
-          `/api/matches/${encodeURIComponent(matchId)}`,
+        return await getJson<MatchSummary>(
+          `${API_PREFIX}/matches/${encodeURIComponent(matchId)}`,
         )
       } catch (error) {
-        if (error instanceof MatchNotFoundError) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'match_not_found')
+        ) {
           return null
         }
         throw error
@@ -106,11 +141,15 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
 
     async getMatchEvents(matchId) {
       try {
-        return await request<MatchEvent[]>(
-          `/api/matches/${encodeURIComponent(matchId)}/events`,
+        const page = await getJson<Paginated<MatchEvent>>(
+          `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/events`,
         )
+        return page.items
       } catch (error) {
-        if (error instanceof MatchNotFoundError) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'match_not_found')
+        ) {
           throw new MatchNotFoundError(matchId)
         }
         throw error
@@ -119,11 +158,14 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
 
     async getMatchPlayers(matchId) {
       try {
-        return await request<Player[]>(
-          `/api/matches/${encodeURIComponent(matchId)}/players`,
+        return await getJson<Player[]>(
+          `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/players`,
         )
       } catch (error) {
-        if (error instanceof MatchNotFoundError) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'match_not_found')
+        ) {
           throw new MatchNotFoundError(matchId)
         }
         throw error
@@ -132,12 +174,58 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
 
     async getMatchFrames(matchId) {
       try {
-        return await request<MatchFrame[]>(
-          `/api/matches/${encodeURIComponent(matchId)}/frames`,
+        const page = await getJson<Paginated<MatchFrame>>(
+          `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/frames`,
         )
+        return page.items
       } catch (error) {
-        if (error instanceof MatchNotFoundError) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'match_not_found')
+        ) {
           throw new MatchNotFoundError(matchId)
+        }
+        throw error
+      }
+    },
+
+    async getDecisionAnalysis(matchId, eventId) {
+      const path = `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/events/${encodeURIComponent(eventId)}/decision-analysis`
+      try {
+        return await getJson<DecisionAnalysis>(path)
+      } catch (error) {
+        if (!(error instanceof MatchApiError)) {
+          throw error
+        }
+
+        if (
+          error.status === 404 &&
+          (error.code === 'match_not_found' || !error.code)
+        ) {
+          throw new DecisionNotFoundError(
+            'match_not_found',
+            error.message,
+            matchId,
+            eventId,
+          )
+        }
+        if (error.status === 404 && error.code === 'event_not_found') {
+          throw new DecisionNotFoundError(
+            'event_not_found',
+            error.message,
+            matchId,
+            eventId,
+          )
+        }
+        if (
+          error.status === 422 &&
+          (error.code === 'insufficient_evidence' || !error.code)
+        ) {
+          throw new DecisionInsufficientEvidenceError(
+            error.message,
+            matchId,
+            eventId,
+          )
         }
         throw error
       }
