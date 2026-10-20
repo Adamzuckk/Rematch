@@ -133,6 +133,37 @@ def _player_name(db: Session, player_id: str | None) -> str | None:
     return player.name if player else None
 
 
+def _has_full_xi_frame(db: Session, match: Match, frame: MatchFrame | None) -> bool:
+    """Return true only when the frame covers the match's two known 11-player rosters."""
+    if frame is None:
+        return False
+
+    roster_rows = db.execute(
+        select(Player.id, Player.team_id).where(
+            Player.team_id.in_((match.home_team_id, match.away_team_id))
+        )
+    ).all()
+    roster_ids: dict[str, set[str]] = {
+        match.home_team_id: set(),
+        match.away_team_id: set(),
+    }
+    for player_id, team_id in roster_rows:
+        roster_ids[team_id].add(player_id)
+
+    if any(len(roster_ids[team_id]) != 11 for team_id in roster_ids):
+        return False
+
+    frame_ids: dict[str, set[str]] = {
+        match.home_team_id: set(),
+        match.away_team_id: set(),
+    }
+    for position in frame.players:
+        if position.team_id in frame_ids:
+            frame_ids[position.team_id].add(position.player_id)
+
+    return all(frame_ids[team_id] == roster_ids[team_id] for team_id in roster_ids)
+
+
 def _score_observed(event: MatchEvent, *, is_home: bool) -> ActionScore:
     if event.type == "pass":
         start = _point_from_xy(event.start_x, event.start_y)
@@ -271,6 +302,7 @@ def _build_claims(
     frame: MatchFrame | None,
     calc_payloads: dict[str, dict[str, Any]],
     context_metrics: dict[str, Any],
+    full_xi_frame: bool,
 ) -> list[Claim]:
     claims: list[Claim] = []
     match_id = event.match_id
@@ -400,7 +432,11 @@ def _build_claims(
                 calculation=calc_payloads.get(calc_id),
                 limitations=[
                     "Ranking uses only evaluable actions with available geometry.",
-                    "Sparse frames omit most players; missing options are not ranked.",
+                    (
+                        "Full-XI roster coverage applies only to this snapshot and does not model pass-lane clearance or success."
+                        if full_xi_frame
+                        else "Sparse frames omit most players; missing options are not ranked."
+                    ),
                 ],
             )
         )
@@ -455,32 +491,64 @@ def _build_claims(
                     "formula": "min(distance(origin, opponent_i))",
                 },
                 limitations=[
-                    "Based only on opponents present in the sparse frame, not a full XI."
+                    (
+                        "Measured in one full-XI synthetic snapshot; this does not establish pressure, "
+                        "passing-lane clearance, or continuous movement."
+                        if full_xi_frame
+                        else "Based only on opponents present in the sparse frame, not a full XI."
+                    )
                 ],
             )
         )
 
-    # Exhaustiveness claim — frame may support some alternatives, not all teammates.
+    # Full-XI frames support a roster-bounded claim. Sparse frames only support
+    # that destinations in the observed frame were considered.
     if frame is not None:
+        if full_xi_frame:
+            frame_evidence = [
+                EvidenceReference(
+                    kind="frame",
+                    id=frame.id,
+                    match_id=match_id,
+                    detail="Aligned frame with every player in both seeded XI rosters",
+                ),
+                *[
+                    EvidenceReference(
+                        kind="player_position",
+                        id=position.id,
+                        match_id=match_id,
+                        detail=f"Roster position for teammate {position.player_id}",
+                    )
+                    for position in frame.players
+                    if position.team_id == event.team_id
+                ],
+            ]
+            limitations = [
+                "Covers the seeded roster positions in this one snapshot only; it does not evaluate pass-lane clearance or success."
+            ]
+        else:
+            frame_evidence = [
+                EvidenceReference(
+                    kind="frame",
+                    id=frame.id,
+                    match_id=match_id,
+                    detail="Only players present in this sparse frame were scored",
+                )
+            ]
+            limitations = [
+                "Only teammates whose positions are present in the sparse frame can be considered."
+            ]
         claims.append(
             Claim(
                 id=f"claim-exhaustive-alternatives:{event.id}",
                 statement=(
-                    "Every teammate passing option at this moment was evaluated"
+                    "Every teammate destination in the aligned full-XI frame was evaluated"
+                    if full_xi_frame
+                    else "Every teammate destination represented in the aligned frame was evaluated"
                 ),
-                evidence=[
-                    EvidenceReference(
-                        kind="frame",
-                        id=frame.id,
-                        match_id=match_id,
-                        detail="Only players present in this sparse frame were scored",
-                    )
-                ],
-                limitations=[
-                    "Aligned frames are sparse samples, not full tracking; "
-                    "absent teammates cannot be evaluated."
-                ],
-                require_full_support=True,
+                evidence=frame_evidence,
+                limitations=limitations,
+                require_full_support=not full_xi_frame,
             )
         )
 
@@ -623,6 +691,7 @@ def analyze_decision(
     assert origin is not None  # guaranteed when rankable
 
     frame = _load_aligned_frame(db, event)
+    full_xi_frame = _has_full_xi_frame(db, match, frame)
     alternatives = _build_alternatives(
         event=event,
         origin=origin,
@@ -699,6 +768,7 @@ def analyze_decision(
         frame=frame,
         calc_payloads=calc_payloads,
         context_metrics=context,
+        full_xi_frame=full_xi_frame,
     )
     verified = verify_claims(claims, catalog)
 
@@ -716,8 +786,18 @@ def analyze_decision(
         f"Scoring method {SCORING_METHOD_ID} uses geometric progression only; "
         "it is not xG, probability, or an objective quality judgment.",
         "Alternatives exist only for teammates present in an aligned frame.",
-        "Sparse frames omit most players; absent options are not evaluated.",
     ]
+    if full_xi_frame:
+        limitations.append(
+            "The aligned frame covers both seeded 11-player rosters in one snapshot; "
+            "it does not model continuous movement, passing lanes, or pass success."
+        )
+    elif frame is not None:
+        limitations.append(
+            "The aligned frame is sparse; teammates without a recorded position are not evaluated."
+        )
+    else:
+        limitations.append("No aligned frame is available for alternative destinations.")
     limitations.extend(observed.limitations)
     limitations.extend(completeness.notes)
 

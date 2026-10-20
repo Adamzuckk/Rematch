@@ -169,28 +169,17 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 - Health: http://localhost:8000/api/v1/health  
 - OpenAPI: http://localhost:8000/docs  
-- CORS defaults allow `http://localhost:5173` (`CORS_ORIGINS` in `backend/.env`)
+- CORS defaults allow the local Vite origins on ports `5173` and `5174` (`CORS_ORIGINS` in `backend/.env`)
 
 **2. Frontend (API mode)**
 
 ```bash
 cd rematch-frontend
 npm install
-cp .env.example .env
+npm run dev:api -- --host 127.0.0.1 --port 5173
 ```
 
-Edit `.env`:
-
-```bash
-VITE_MATCH_DATA_SOURCE=api
-VITE_API_BASE_URL=http://localhost:8000
-```
-
-```bash
-npm run dev
-```
-
-Open http://localhost:5173 → Dashboard → **Northgate FC vs Riverside Athletic** → select carry at 64' → **Open Decision Explorer**.
+The `dev:api` script loads the checked-in `.env.api` (`VITE_MATCH_DATA_SOURCE=api`, API at `http://127.0.0.1:8000`). Vite uses `5173` when free and may fall back to `5174` if another process already owns it. Both local ports are allowed by the backend CORS defaults. Open the URL Vite prints, then choose a Phase 8 match and an event with an aligned frame to inspect the available alternatives.
 
 **3. Frontend (mock mode — default, offline)**
 
@@ -276,7 +265,7 @@ cd backend && source .venv/bin/activate && pytest
 
 ## Current Status
 
-**Status: In development — Phase 7 complete (Pick Your Pass interaction)**
+**Status: In development — Phase 9 local production-readiness validation complete**
 
 - [x] Frontend foundation: Dark Pro shell, routing, dashboard with synthetic demo matches
 - [x] Typed service boundaries and richer mock/event data (Phase 2)
@@ -285,8 +274,11 @@ cd backend && source .venv/bin/activate && pytest
 - [x] Decision-value calculations, alternative comparison, and evidence verification (Phase 5)
 - [x] Decision Explorer UI + typed `/api/v1` client integration (Phase 6)
 - [x] Pick Your Pass selection of backend-scored frame alternatives (Phase 7)
+- [x] Deterministic synthetic match generator + full-XI decision frames (Phase 8)
+- [x] Phase 8 data integrated in API catalogue and validated through match → event/frame → decision analysis (Phase 9)
+- [x] Coordinate-backed dashboard moment count; repeatable API journey smoke and Arabic/English UI coverage
 - [ ] AI / Foundry explanations
-- [ ] Demo deployment and final testing
+- [ ] Demo deployment and production operations review
 
 ### Decision metrics (`geometric_progression_v1`)
 
@@ -303,7 +295,7 @@ A **higher geometric composite score does not establish a better real-world foot
 ### Synthetic-data limitations
 
 - Frontend mock (`rematch-phase2-v1`): no frames → Decision Explorer fixtures have empty alternatives and show a mock banner.
-- Backend seed (`rematch-phase4-v1`): three Northgate frames only; sparse player counts; fictional clubs.
+- Backend seeds (`rematch-phase4-v1` + `rematch-phase8-v1`): Phase 4 remains for compatibility; Phase 8 adds three generated matches and 43 aligned full-XI frames.
 - Alternatives exist only for teammates present in an aligned frame — absent options are not evaluated.
 
 **Phase 6 notes**
@@ -312,6 +304,21 @@ A **higher geometric composite score does not establish a better real-world foot
 - Service: `getDecisionAnalysis` on mock + API (`GET …/decision-analysis`). Claims/statuses come from that response; UI does not call `…/evidence` or `…/verify` yet.
 - States: loading, ready, 404, 422 insufficient evidence, network error + retry, empty alternatives, missing frames. Stale-response guard + success cache in `useDecisionAnalysis`.
 - EN/AR + RTL. See [docs/decision-engine.md](docs/decision-engine.md).
+
+**Phase 8 notes**
+
+- Deterministic generator (`rematch-phase8-generator` v1.0.0) under `backend/app/simulation/generator/`.
+- Scenario `rematch-phase8-v1`: three full matches, each with ≥10 eligible decision moments and 22-player frames.
+- Optional event metric columns: `distance_m`, `duration_s`, `ball_speed_mps`, `shot_speed_mps` (`path_metrics_v1`).
+- See [docs/data-generator.md](docs/data-generator.md). Canonical club name: **Riverside United**.
+
+**Phase 9 notes**
+
+- `rematch-seed` applies both the Phase 4 compatibility fixtures and Phase 8 generated dataset. The dataset endpoint prefers Phase 8 when available; the match list includes both.
+- Dashboard decision-moment count is derived from seeded pass/carry/shot events with the required coordinates. It is not an outcome or match-importance metric.
+- Backend integration tests and the live API journey smoke cover dataset → match → events/frames/players → decision analysis, plus missing and insufficient-evidence cases.
+- The default frontend remains explicit mock mode. Use `VITE_MATCH_DATA_SOURCE=api` to browse Phase 8; API failures never silently fall back to static mock data.
+- Local validation does not constitute a deployment, security, load, or real-world match-data review. See [PHASE9_REPORT.md](PHASE9_REPORT.md) for exact commands and results.
 
 **Phase 7 notes**
 

@@ -33,8 +33,8 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version=__version__,
         description=(
-            "ReMatch Phase 5 API — match catalogue, events, frames, and "
-            "deterministic decision analysis with evidence verification. "
+            "ReMatch API — seeded synthetic match catalogue, events, frames, "
+            "and deterministic decision analysis with evidence verification. "
             "Synthetic demo data only; no LLM or Foundry integration."
         ),
         lifespan=lifespan,

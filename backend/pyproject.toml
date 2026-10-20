@@ -1,7 +1,7 @@
 [project]
 name = "rematch-backend"
-version = "0.5.0"
-description = "ReMatch Phase 5 — match catalogue API, decision analysis, and synthetic seed"
+version = "0.8.0"
+description = "ReMatch Phase 8 — match catalogue API, decision analysis, synthetic generator and seed"
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
 dependencies = [

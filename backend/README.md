@@ -1,11 +1,11 @@
-# ReMatch Backend (Phase 5; consumed by Phase 6 UI)
+# ReMatch Backend (Phases 4–9)
 
-FastAPI match catalogue API with SQLAlchemy models, Alembic migrations, a deterministic synthetic seed (`rematch-phase4-v1`), and an on-demand decision-analysis engine with evidence verification.
+FastAPI match catalogue API with SQLAlchemy models, Alembic migrations, the deterministic Phase 4 + Phase 8 synthetic seeds, and an on-demand decision-analysis engine with evidence verification. Phase 8 is the preferred dataset context; both scenarios remain in the catalogue for compatibility.
 
 **Python:** 3.11–3.14 (developed/tested on 3.12).  
 **Stack:** FastAPI, Pydantic v2, SQLAlchemy 2.x, Alembic, SQLite (local) / PostgreSQL-compatible URL.
 
-This phase does **not** include AI explanations, Microsoft Foundry, streaming, or authentication.
+The local demo uses synthetic data only. It does **not** include AI explanations, Microsoft Foundry, streaming, or authentication.
 
 ## Quick start
 
@@ -19,7 +19,7 @@ cp .env.example .env
 # Create schema
 alembic upgrade head
 
-# Seed synthetic scenario (idempotent)
+# Seed both synthetic scenarios (idempotent; Phase 8 is the preferred dataset)
 rematch-seed
 # or: python -m app.services.seed
 
@@ -66,12 +66,11 @@ Production code must not rely on `Base.metadata.create_all`; tests may create ta
 rematch-seed
 ```
 
-- Scenario ID: `rematch-phase4-v1`
-- Version: `1.0.0`
-- Provenance: `synthetic`
-- Idempotent: re-running updates the same primary keys; it does not duplicate teams, players, matches, events, or frames
-- Fictional clubs only (aligned with frontend Phase 2 IDs where possible)
-- Includes sparse events plus three Northgate–Riverside player/ball frames
+- `rematch-phase4-v1`: sparse compatibility fixtures, including Northgate–Riverside frame samples.
+- `rematch-phase8-v1`: three generated matches, full 11v11 rosters, 67 events, and 43 aligned decision frames.
+- Both have version `1.0.0` and `synthetic` provenance.
+- Re-running the seed updates stable IDs rather than duplicating teams, players, matches, events, or frames.
+- All clubs and competitions are fictional.
 
 ## API prefix
 
@@ -85,8 +84,8 @@ All routes live under `/api/v1`. See [docs/api-contract.md](../docs/api-contract
 | GET | `/api/v1/matches/{match_id}/events` | Paginated events |
 | GET | `/api/v1/matches/{match_id}/frames` | Paginated frames |
 | GET | `/api/v1/matches/{match_id}/players` | Players referenced by events/frames |
-| GET | `/api/v1/matches/dataset` | Active scenario metadata |
-| GET | `/api/v1/matches/overview` | Demo overview chips |
+| GET | `/api/v1/matches/dataset` | Phase 8 metadata when seeded; otherwise latest available scenario |
+| GET | `/api/v1/matches/overview` | Counts from seeded data; the analysis moment count requires scoring coordinates |
 | GET | `/api/v1/matches/{id}/events/{event_id}/decision-analysis` | Geometric decision analysis |
 | GET | `/api/v1/matches/{id}/events/{event_id}/decision-analysis/evidence` | Verified claims + evidence catalog |
 | POST | `/api/v1/matches/{id}/events/{event_id}/decision-analysis/verify` | Validate caller-supplied claims |
@@ -107,7 +106,7 @@ Local Vite origins are listed in `.env.example`. Leaving `CORS_ORIGINS` empty di
 - List endpoints wrap items in `{ items, total, limit, offset }` — the Phase 6 API client unwraps `.items`.
 - Frontend `createApiMatchService` calls `/api/v1/…`. Set `VITE_MATCH_DATA_SOURCE=api` and `VITE_API_BASE_URL=http://localhost:8000` to use the live engine.
 - Mock mode remains the frontend default; API errors must not silently fall back to mocks.
-- Decision Explorer demo: `GET /api/v1/matches/m-northgate-riverside-2401/events/evt-ng-carry-64/decision-analysis`
+- Phase 8 Decision Explorer demo: choose an event-aligned frame from `m-p8-harbor-eastbridge-002`, then request its `…/decision-analysis` endpoint. The live smoke script does this dynamically.
 
 ## Coordinate convention
 

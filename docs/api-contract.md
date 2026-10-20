@@ -1,4 +1,4 @@
-# ReMatch API contract (Phase 5–6)
+# ReMatch API contract (Phases 4–9)
 
 Base URL (local): `http://localhost:8000`  
 Versioned prefix: `/api/v1`  
@@ -50,7 +50,7 @@ Query params: `limit` (1…`MAX_PAGE_LIMIT`, default `DEFAULT_PAGE_LIMIT`), `off
 {
   "status": "ok",
   "service": "rematch-backend",
-  "version": "0.5.0"
+  "version": "0.8.0"
 }
 ```
 
@@ -85,11 +85,11 @@ Players referenced by the match’s events or frames. Unknown match → **404**.
 
 ### `GET /api/v1/matches/dataset`
 
-Active seeded scenario metadata (`MatchDatasetInfo`).
+Returns `MatchDatasetInfo` for `rematch-phase8-v1` when it is seeded, otherwise the most recently updated available scenario. The match catalogue continues to include both Phase 4 compatibility fixtures and Phase 8 generated fixtures.
 
 ### `GET /api/v1/matches/overview`
 
-Demo dashboard chips (`DashboardOverviewStat[]`). Values are labelled demo placeholders.
+Dashboard catalogue counts and the count of pass/carry events with start/end coordinates plus shots with location coordinates (`DashboardOverviewStat[]`). All values are explicitly labelled as synthetic/demo data; the analysis-moment count is a count of coordinate-backed candidates, not a count of completed analyses or match importance.
 
 ---
 
@@ -271,7 +271,7 @@ Seeded entities return `"provenance": "synthetic"`. Decision analysis inherits t
 | `getOverviewStats` | `GET /api/v1/matches/overview` | Compatible |
 | `getDecisionAnalysis` | `GET …/decision-analysis` | Maps 404 → `DecisionNotFoundError`; 422 → `DecisionInsufficientEvidenceError` |
 
-**Phase 6:** `createApiMatchService` calls versioned `/api/v1/…` paths. Set `VITE_MATCH_DATA_SOURCE=api` and `VITE_API_BASE_URL=http://localhost:8000` to use the live engine. Mock mode remains the default and stays independently usable.
+**Phase 9:** `createApiMatchService` calls versioned `/api/v1/…` paths. Set `VITE_MATCH_DATA_SOURCE=api` and `VITE_API_BASE_URL=http://localhost:8000` to use the seeded engine and Phase 8 dataset. Mock mode remains the default and stays independently usable.
 
 The Decision Explorer UI calls **only** `getDecisionAnalysis`. Claims and verification statuses arrive inside that document. Separate `…/evidence` and `…/verify` endpoints remain available for tooling and later phases; they are not required for the explorer panel.
 
@@ -279,6 +279,6 @@ The Decision Explorer UI calls **only** `getDecisionAnalysis`. Claims and verifi
 
 Configure `CORS_ORIGINS` (comma-separated). Local defaults: `http://localhost:5173`, `http://127.0.0.1:5173`. Allowed methods: `GET`, `POST`, `OPTIONS`. Empty value disables CORS middleware.
 
-## Out of scope (later phases)
+## Out of scope
 
-AI-generated explanations, Microsoft Foundry, Pick Your Pass, streaming, authentication, and unsupported football metrics (xG, possession %, etc.).
+AI-generated explanations, Microsoft Foundry, streaming, authentication, and unsupported football metrics (xG, possession %, etc.). Pick Your Pass consumes returned backend alternatives; there is no candidate-submission endpoint.

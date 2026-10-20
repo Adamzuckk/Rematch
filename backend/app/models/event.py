@@ -94,6 +94,11 @@ class MatchEvent(Base):
         String(64),
         ForeignKey("teams.id", ondelete="SET NULL"),
     )
+    # Phase 8 generator-derived model estimates (nullable; not real measurements).
+    distance_m: Mapped[float | None] = mapped_column(Float)
+    duration_s: Mapped[float | None] = mapped_column(Float)
+    ball_speed_mps: Mapped[float | None] = mapped_column(Float)
+    shot_speed_mps: Mapped[float | None] = mapped_column(Float)
     provenance: Mapped[str] = mapped_column(String(32), nullable=False, default="synthetic")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

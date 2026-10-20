@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session, aliased, joinedload, selectinload
 
 from app.models.event import MatchEvent
@@ -26,13 +26,14 @@ from app.services.serializers import (
     match_to_summary,
     player_to_schema,
 )
+from app.simulation.generator.match_generator import PHASE8_SCENARIO_ID
 
 SCENARIO_LIMITATIONS = [
     "Not official fixtures, standings, or league records.",
     "No possession, xG, or aggregate match statistics.",
     "Events exist only for a subset of matches and are sparse sample timelines.",
-    "Player/ball frames are illustrative samples for one live match only.",
-    "Overview decision-moment figures are labelled demo placeholders.",
+    "Player/ball frames are synthetic snapshots for selected decision moments, not a continuous tracking feed.",
+    "Overview decision-moment figures count events with the coordinates required for geometric scoring.",
     "Decision analysis uses geometric_progression_v1 only; not probabilities or xG.",
     "Alternatives require an aligned frame; many events have no frame-backed options.",
 ]
@@ -198,9 +199,15 @@ def list_players_for_match(db: Session, match_id: str) -> list[PlayerSchema]:
 
 
 def get_dataset_info(db: Session) -> MatchDatasetInfoSchema | None:
-    scenario = db.scalars(
-        select(Scenario).order_by(Scenario.updated_at.desc(), Scenario.id)
-    ).first()
+    # Phase 8 is the richest shipped dataset and is the default dataset context
+    # for the application. Keep Phase 4 discoverable in the match catalogue and
+    # use it as a fallback for existing installations that have not been seeded
+    # with Phase 8 yet.
+    scenario = db.get(Scenario, PHASE8_SCENARIO_ID)
+    if scenario is None:
+        scenario = db.scalars(
+            select(Scenario).order_by(Scenario.updated_at.desc(), Scenario.id.desc())
+        ).first()
     if scenario is None:
         return None
     match_count = (
@@ -224,6 +231,25 @@ def get_overview_stats(db: Session) -> list[DashboardOverviewStatSchema]:
         db.scalar(select(func.count()).select_from(Match).where(Match.status == "live"))
         or 0
     )
+    scorable = and_(
+        or_(
+            and_(
+                MatchEvent.type.in_(("pass", "carry")),
+                MatchEvent.start_x.is_not(None),
+                MatchEvent.start_y.is_not(None),
+                MatchEvent.end_x.is_not(None),
+                MatchEvent.end_y.is_not(None),
+            ),
+            and_(
+                MatchEvent.type == "shot",
+                MatchEvent.location_x.is_not(None),
+                MatchEvent.location_y.is_not(None),
+            ),
+        )
+    )
+    decision_moments = db.scalar(
+        select(func.count()).select_from(MatchEvent).where(scorable)
+    ) or 0
     return [
         DashboardOverviewStatSchema(
             id="stat-matches",
@@ -240,8 +266,8 @@ def get_overview_stats(db: Session) -> list[DashboardOverviewStatSchema]:
         DashboardOverviewStatSchema(
             id="stat-decisions",
             label="Decision moments",
-            value="12",
-            hint="Placeholder demo count — not a measured engine output",
+            value=str(decision_moments),
+            hint="Passes, shots, and carries with the coordinates required for geometric scoring",
         ),
         DashboardOverviewStatSchema(
             id="stat-coverage",
