@@ -1,0 +1,54 @@
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  background: var(--surface-elevated, #12181f);
+  border: 1px solid var(--border-subtle, #243041);
+  margin-bottom: 1rem;
+}
+
+.play {
+  min-width: 4.5rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle, #334155);
+  background: var(--accent, #0ea5e9);
+  color: #041018;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.slider {
+  flex: 1 1 12rem;
+  min-width: 8rem;
+}
+
+.pos {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+.speeds {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.speed,
+.speedActive {
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle, #334155);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.speedActive {
+  background: rgba(14, 165, 233, 0.2);
+  border-color: var(--accent, #0ea5e9);
+}

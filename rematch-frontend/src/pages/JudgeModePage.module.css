@@ -1,0 +1,56 @@
+.page {
+  max-width: 40rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #7dd3fc;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.75rem;
+}
+
+.steps {
+  padding-inline-start: 1.2rem;
+  line-height: 1.55;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.cta {
+  display: inline-block;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: #0ea5e9;
+  color: #041018;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+
+.secondary {
+  text-align: center;
+  color: #7dd3fc;
+}
+
+.note {
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle, #243041);
+  background: var(--surface-elevated, #12181f);
+}
+
+.error {
+  color: #fca5a5;
+}
+
+.muted {
+  opacity: 0.8;
+}

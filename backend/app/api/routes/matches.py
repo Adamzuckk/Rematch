@@ -15,6 +15,8 @@ from app.schemas.match import (
     MatchSummarySchema,
 )
 from app.services import matches as match_service
+from app.services import intelligence as intelligence_service
+from app.schemas.intelligence import MatchIntelligenceSchema
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
@@ -204,3 +206,25 @@ def get_match_players(
                 "message": f"Match not found: {exc.match_id}",
             },
         ) from None
+
+@router.get(
+    "/{match_id}/intelligence",
+    response_model=MatchIntelligenceSchema,
+    responses={404: {"model": ErrorResponse}},
+)
+def get_match_intelligence(
+    match_id: str,
+    db: Annotated[Session, Depends(get_db_dep)],
+) -> MatchIntelligenceSchema:
+    """Aggregates derived only from seeded synthetic events/frames for this match."""
+    try:
+        return intelligence_service.get_match_intelligence(db, match_id)
+    except match_service.MatchNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "match_not_found",
+                "message": f"Match not found: {exc.match_id}",
+            },
+        ) from None
+

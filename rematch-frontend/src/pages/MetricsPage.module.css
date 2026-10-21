@@ -1,0 +1,64 @@
+.page {
+  max-width: 52rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7dd3fc;
+}
+
+.lead {
+  opacity: 0.85;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.85rem;
+}
+
+.card {
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle, #243041);
+  background: var(--surface-elevated, #12181f);
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.value {
+  margin: 0.4rem 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.note {
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px dashed var(--border-subtle, #334155);
+}
+
+.muted,
+.error {
+  opacity: 0.85;
+}
+
+.error {
+  color: #fca5a5;
+}
