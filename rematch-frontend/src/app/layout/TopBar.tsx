@@ -1,6 +1,7 @@
 import { Menu } from 'lucide-react'
 import rematchMark from '../../assets/brand/rematch-mark.svg'
 import { useLocale } from '../../i18n/locale'
+import { usePersona } from '../../context/PersonaContext'
 import { Button } from '../../components/ui/Button'
 import { Breadcrumbs } from './Breadcrumbs'
 import styles from './TopBar.module.css'
@@ -12,6 +13,7 @@ interface TopBarProps {
 
 export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
   const { t } = useLocale()
+  const { mode, setMode } = usePersona()
 
   return (
     <header className={styles.topbar}>
@@ -41,6 +43,22 @@ export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
         </span>
       </div>
       <div className={styles.end}>
+        <div className={styles.modeSwitch} role="group" aria-label="View mode">
+          <button
+            type="button"
+            className={mode === 'fan' ? styles.modeActive : styles.modeBtn}
+            onClick={() => setMode('fan')}
+          >
+            {t('modeFan')}
+          </button>
+          <button
+            type="button"
+            className={mode === 'analyst' ? styles.modeActive : styles.modeBtn}
+            onClick={() => setMode('analyst')}
+          >
+            {t('modeAnalyst')}
+          </button>
+        </div>
         <span className={styles.badge}>{t('demoData')}</span>
       </div>
     </header>
