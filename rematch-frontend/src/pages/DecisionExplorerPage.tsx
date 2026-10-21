@@ -3,6 +3,7 @@ import { DecisionExplorerPanel } from '../components/decision/DecisionExplorerPa
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { useDecisionAnalysis } from '../hooks/useDecisionAnalysis'
+import { useDecisionNarrative } from '../hooks/useDecisionNarrative'
 import { useMatchSummary, formatMatchLabel } from '../hooks/useMatchSummary'
 import { useMatchAnalysis } from '../hooks/useMatchAnalysis'
 import { useLocale } from '../i18n/locale'
@@ -12,6 +13,11 @@ export function DecisionExplorerPage() {
   const { matchId, eventId } = useParams()
   const { t } = useLocale()
   const { state, retry } = useDecisionAnalysis(matchId, eventId)
+  const narrative = useDecisionNarrative(
+    matchId,
+    eventId,
+    state.status === 'ready',
+  )
   const matchState = useMatchSummary(matchId)
   const matchAnalysis = useMatchAnalysis(matchId)
 
@@ -124,6 +130,8 @@ export function DecisionExplorerPage() {
         matchLabel={matchLabel}
         match={matchAnalysis.state.status === 'ready' ? matchAnalysis.state.match : undefined}
         frame={matchAnalysis.state.status === 'ready' ? matchAnalysis.state.frames.find((item) => item.eventId === eventId) ?? null : null}
+        narrativeState={narrative.state}
+        onNarrativeRetry={narrative.retry}
       />
     </div>
   )

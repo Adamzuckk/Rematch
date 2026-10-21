@@ -48,7 +48,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       </div>
 
       <nav className={styles.nav} aria-label="Main">
-        <p className={styles.navLabel}>Explore</p>
+        <p className={styles.navLabel}>{t('navExplore')}</p>
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon
           return (
@@ -69,7 +69,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
       <div className={styles.footer}>
         <p className={styles.demoNote}>
-          Synthetic demo catalogue — not official match data.
+          {t('syntheticDemoNotice')}
         </p>
         <div
           className={styles.langRow}

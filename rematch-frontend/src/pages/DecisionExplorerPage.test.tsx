@@ -1,10 +1,15 @@
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DecisionExplorerPanel } from '../components/decision/DecisionExplorerPanel'
 import { STRINGS } from '../i18n/strings'
 import { SYNTHETIC_DECISION_ANALYSES } from '../mocks/decisionAnalysis'
-import type { ActionScore, MatchFrame, MatchSummary } from '../types'
+import type {
+  ActionScore,
+  DecisionNarrativeResponse,
+  MatchFrame,
+  MatchSummary,
+} from '../types'
 import { renderWithProviders } from '../test/render'
 
 afterEach(() => {
@@ -108,6 +113,42 @@ const frame: MatchFrame = {
   provenance: 'synthetic',
 }
 
+const narrativeResponse: DecisionNarrativeResponse = {
+  matchId: base.matchId,
+  eventId: base.eventId,
+  provenance: 'synthetic',
+  analysis: base,
+  verificationResults: [
+    {
+      claimId: 'claim-observed-score',
+      submittedStatement: 'A score was returned.',
+      evidenceValidationStatus: 'verified',
+      claimSupportStatus: 'not_assessed',
+      reason: 'References exist.',
+      evidence: [],
+      limitations: ['Natural-language claim truth was not assessed.'],
+      validationMethod: 'match_event_evidence_catalog_v1',
+      validationScope:
+        'evidence_reference_membership_and_registered_calculation_consistency',
+    },
+  ],
+  narrative: {
+    matchId: base.matchId,
+    eventId: base.eventId,
+    provenance: 'synthetic',
+    english: {
+      headline: 'Northgate FC vs Riverside United: Carry decision',
+      keyObservations: ['The backend returned a geometric score.'],
+      limitations: ['Synthetic match data only.'],
+    },
+    arabic: {
+      headline: 'نورثغيت ضد ريفرسايد: تحليل حمل الكرة',
+      keyObservations: ['أعاد الخادم نتيجة هندسية.'],
+      limitations: ['بيانات مباراة اصطناعية فقط.'],
+    },
+  },
+}
+
 describe('DecisionExplorerPanel Pick Your Pass', () => {
   it('selects and changes an eligible backend candidate, highlighting its path and returned values', async () => {
     const user = userEvent.setup()
@@ -185,5 +226,78 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
       expect(document.documentElement).toHaveAttribute('dir', 'rtl')
       expect(document.documentElement).toHaveAttribute('lang', 'ar')
     })
+  })
+
+  it('renders backend-returned English and Arabic narrative without treating reference checks as claim truth', async () => {
+    renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        narrativeState={{
+          status: 'ready',
+          matchId: base.matchId,
+          eventId: base.eventId,
+          response: narrativeResponse,
+        }}
+      />,
+    )
+
+    expect(screen.getByText(narrativeResponse.narrative.english.headline)).toBeInTheDocument()
+    expect(screen.getByText('The backend returned a geometric score.')).toBeInTheDocument()
+    expect(screen.getByText('Synthetic match data only.')).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionNarrativeVerificationScope)).toBeInTheDocument()
+    expect(screen.getByText(/Narrative provenance: Synthetic data/)).toBeInTheDocument()
+
+    window.localStorage.setItem('rematch.locale', 'ar')
+    cleanup()
+    renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        narrativeState={{
+          status: 'ready',
+          matchId: base.matchId,
+          eventId: base.eventId,
+          response: narrativeResponse,
+        }}
+      />,
+    )
+    await waitFor(() => {
+      expect(screen.getByText(narrativeResponse.narrative.arabic.headline)).toBeInTheDocument()
+      expect(screen.getByText(STRINGS.ar.decisionNarrativeVerificationScope)).toBeInTheDocument()
+    })
+  })
+
+  it('shows narrative unavailability explicitly and lets API errors retry', async () => {
+    const retry = vi.fn()
+    const { rerender } = renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        narrativeState={{
+          status: 'unavailable',
+          matchId: base.matchId,
+          eventId: base.eventId,
+          message: 'Mock mode has no backend narrative.',
+        }}
+      />,
+    )
+    expect(screen.getByText(/backend narrative is unavailable/i)).toHaveAttribute('role', 'status')
+    expect(screen.getByText(/Mock mode has no backend narrative/)).toBeInTheDocument()
+
+    rerender(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        narrativeState={{
+          status: 'error',
+          matchId: base.matchId,
+          eventId: base.eventId,
+          message: 'Network request failed.',
+        }}
+        onNarrativeRetry={retry}
+      />,
+    )
+    expect(screen.getByRole('alert')).toHaveTextContent('Network request failed.')
+    await userEvent.setup().click(
+      screen.getByRole('button', { name: STRINGS.en.decisionNarrativeRetry }),
+    )
+    expect(retry).toHaveBeenCalledOnce()
   })
 })

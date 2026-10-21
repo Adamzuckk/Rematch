@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
+import { useLocale } from '../../i18n/locale'
 import styles from './AppShell.module.css'
 
 export function AppShell() {
+  const { t } = useLocale()
   const location = useLocation()
   const [navOpen, setNavOpen] = useState(false)
   const [pathForNav, setPathForNav] = useState(location.pathname)
@@ -31,7 +33,7 @@ export function AppShell() {
         <button
           type="button"
           className={styles.backdrop}
-          aria-label="Close navigation overlay"
+          aria-label={t('closeMenu')}
           onClick={() => setNavOpen(false)}
         />
       ) : null}

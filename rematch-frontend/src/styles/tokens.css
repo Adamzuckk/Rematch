@@ -1,80 +1,49 @@
 :root {
-  /* Surfaces */
-  --color-bg: #111411;
-  --color-surface: #171b17;
-  --color-surface-raised: #1c221c;
-  --color-surface-hover: #222a22;
-
-  /* Accent */
-  --color-accent: #7fe36a;
-  --color-accent-strong: #65bd45;
-  --color-accent-muted: rgba(127, 227, 106, 0.12);
-  --color-accent-border: rgba(127, 227, 106, 0.35);
-
-  /* Text */
-  --color-text: #f2f4f2;
-  --color-text-secondary: #9aa39a;
-  --color-text-muted: #6f786f;
-
-  /* Borders & focus */
-  --color-border: #2a322a;
-  --color-border-strong: #3a453a;
-  --color-focus: #7fe36a;
-
-  /* Status */
-  --color-live: #ff5c5c;
-  --color-live-bg: rgba(255, 92, 92, 0.12);
-  --color-finished: #8fa08f;
-  --color-finished-bg: rgba(143, 160, 143, 0.12);
-  --color-upcoming: #7fe36a;
-  --color-upcoming-bg: rgba(127, 227, 106, 0.12);
-  --color-demo: #c9b27a;
-  --color-demo-bg: rgba(201, 178, 122, 0.12);
-
-  /* Pitch teams (accessible contrast on dark turf) */
-  --color-pitch-turf: #152418;
-  --color-pitch-turf-stripe: #18301c;
-  --color-pitch-line: rgba(232, 240, 232, 0.78);
-  --color-pitch-home: #7fe36a;
-  --color-pitch-away: #6ec8ff;
-  --color-pitch-ball: #f4f0e6;
-  --color-pitch-event: #f0c75e;
-  --color-pitch-path: rgba(240, 199, 94, 0.9);
-
-  /* Typography */
-  --font-sans: 'Manrope', 'Segoe UI', sans-serif;
-  --font-display: 'Sora', 'Manrope', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
-
-  /* Spacing scale */
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-
-  /* Radii & shadows */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --shadow-sm: 0 1px 0 rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.28);
-
-  /* Layout */
-  --sidebar-width: 260px;
-  --topbar-height: 56px;
-  --content-max: 1120px;
-
-  /* Breakpoints (documentation; media queries use raw values) */
-  --bp-tablet: 768px;
-  --bp-desktop: 1024px;
-
-  /* Motion */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 220ms;
+  /* ReMatch brand: black pitch, chalk white, player green, and signal accents. */
+  --color-bg: #0c0e0d;
+  --color-surface: #131715;
+  --color-surface-raised: #191f1b;
+  --color-surface-hover: #202820;
+  --color-surface-strong: #252e26;
+  --color-field-ink: #101912;
+  --color-accent: #7bd143;
+  --color-accent-strong: #6bbd45;
+  --color-accent-ink: #10200d;
+  --color-accent-muted: rgba(123, 209, 67, 0.12);
+  --color-accent-border: rgba(123, 209, 67, 0.46);
+  --color-chalk: #f1f4ed;
+  --color-text: #f1f4ed;
+  --color-text-secondary: #afb8af;
+  --color-text-muted: #778177;
+  --color-border: #2b342d;
+  --color-border-strong: #455047;
+  --color-focus: #a5ec72;
+  --color-live: #ff6b5d;
+  --color-live-bg: rgba(255, 107, 93, 0.12);
+  --color-finished: #a2afa4;
+  --color-finished-bg: rgba(162, 175, 164, 0.1);
+  --color-upcoming: #7bd143;
+  --color-upcoming-bg: rgba(123, 209, 67, 0.12);
+  --color-demo: #d9b568;
+  --color-demo-bg: rgba(217, 181, 104, 0.11);
+  --color-opposition: #78c7e8;
+  --color-pitch-turf: #142319;
+  --color-pitch-turf-stripe: #19301e;
+  --color-pitch-line: rgba(241, 244, 237, 0.76);
+  --color-pitch-home: #7bd143;
+  --color-pitch-away: #78c7e8;
+  --color-pitch-ball: #f1f4ed;
+  --color-pitch-event: #d9b568;
+  --color-pitch-path: rgba(217, 181, 104, 0.92);
+  --font-sans: 'Manrope', 'Segoe UI', Tahoma, Arial, sans-serif;
+  --font-display: 'Sora', 'Manrope', 'Segoe UI', Tahoma, Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
+  --radius-sm: 3px; --radius-md: 6px; --radius-lg: 10px;
+  --shadow-sm: 0 1px 0 rgba(255,255,255,.035), 0 6px 18px rgba(0,0,0,.14);
+  --shadow-md: 0 18px 48px rgba(0,0,0,.34);
+  --sidebar-width: 276px; --topbar-height: 60px; --content-max: 1240px;
+  --bp-tablet: 768px; --bp-desktop: 1024px;
+  --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --duration-fast: 150ms; --duration-normal: 220ms; --duration-slow: 420ms;
 }

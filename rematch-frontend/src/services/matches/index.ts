@@ -15,6 +15,7 @@ export {
   MatchServiceConfigError,
   DecisionNotFoundError,
   DecisionInsufficientEvidenceError,
+  DecisionNarrativeUnavailableError,
 } from './types'
 export { mockMatchService, filterSyntheticMatches } from './mockMatchService'
 export { createApiMatchService } from './apiMatchService'

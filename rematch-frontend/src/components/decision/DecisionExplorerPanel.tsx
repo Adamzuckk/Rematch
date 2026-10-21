@@ -9,7 +9,9 @@ import type {
 } from '../../types'
 import type { MatchFrame, MatchSummary } from '../../types'
 import { useState } from 'react'
+import type { DecisionNarrativeState } from '../../hooks/useDecisionNarrative'
 import { FootballPitch } from '../pitch/FootballPitch'
+import { Button } from '../ui/Button'
 import { isValidPitchPoint } from '../../types/coordinates'
 import { useLocale } from '../../i18n/locale'
 import type { MessageKey } from '../../i18n/strings'
@@ -146,6 +148,8 @@ export interface DecisionExplorerPanelProps {
   matchLabel?: string
   match?: MatchSummary
   frame?: MatchFrame | null
+  narrativeState?: DecisionNarrativeState
+  onNarrativeRetry?: () => void
 }
 
 export function DecisionExplorerPanel({
@@ -153,8 +157,10 @@ export function DecisionExplorerPanel({
   matchLabel,
   match,
   frame,
+  narrativeState,
+  onNarrativeRetry,
 }: DecisionExplorerPanelProps) {
-  const { t } = useLocale()
+  const { locale, t } = useLocale()
   const [selection, setSelection] = useState<{
     analysisKey: string
     actionId: string
@@ -187,6 +193,16 @@ export function DecisionExplorerPanel({
   const isMockFixture = analysis.context.mockFixture === true
 
   const observedScore = formatScore(analysis.observed.compositeScore)
+  const localizedNarrative =
+    narrativeState?.status === 'ready'
+      ? locale === 'ar'
+        ? narrativeState.response.narrative.arabic
+        : narrativeState.response.narrative.english
+      : null
+  const narrativeProvenance =
+    narrativeState?.status === 'ready'
+      ? narrativeState.response.provenance
+      : null
 
   return (
     <article className={styles.root} aria-labelledby="decision-explorer-title">
@@ -540,6 +556,61 @@ export function DecisionExplorerPanel({
               ))}
             </ul>
           </section>
+
+          {narrativeState ? (
+            <section className={styles.panel} aria-labelledby="decision-narrative">
+              <h2 id="decision-narrative" className={styles.panelTitle}>
+                {t('decisionNarrativeHeading')}
+              </h2>
+              {narrativeState.status === 'loading' ? (
+                <p className={styles.panelNote} role="status">
+                  {t('decisionNarrativeLoading')}
+                </p>
+              ) : null}
+              {narrativeState.status === 'unavailable' ? (
+                <p className={styles.panelNote} role="status">
+                  {t('decisionNarrativeUnavailable')} {narrativeState.message}
+                </p>
+              ) : null}
+              {narrativeState.status === 'error' ? (
+                <div>
+                  <p className={styles.panelNote} role="alert">
+                    {t('decisionNarrativeError')} {narrativeState.message}
+                  </p>
+                  {onNarrativeRetry ? (
+                    <Button variant="secondary" onClick={onNarrativeRetry}>
+                      {t('decisionNarrativeRetry')}
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+              {localizedNarrative ? (
+                <div data-testid="decision-narrative-content">
+                  <p className={styles.panelNote}>
+                    {t('decisionNarrativeProvenance')}: {narrativeProvenance === 'synthetic'
+                      ? t('decisionProvenanceSynthetic')
+                      : t('decisionProvenanceApi')}
+                  </p>
+                  <h3 className={styles.panelTitle}>{localizedNarrative.headline}</h3>
+                  <h4 className={styles.panelTitle}>{t('decisionNarrativeObservations')}</h4>
+                  <ul className={styles.limitList}>
+                    {localizedNarrative.keyObservations.map((observation) => (
+                      <li key={observation}>{observation}</li>
+                    ))}
+                  </ul>
+                  <h4 className={styles.panelTitle}>{t('decisionLimitationsHeading')}</h4>
+                  <ul className={styles.limitList}>
+                    {localizedNarrative.limitations.map((limitation) => (
+                      <li key={limitation}>{limitation}</li>
+                    ))}
+                  </ul>
+                  <p className={styles.panelNote}>
+                    {t('decisionNarrativeVerificationScope')}
+                  </p>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           <section
             className={styles.panel}

@@ -12,6 +12,7 @@ import {
 import type { MatchSummary, Player } from '../../types'
 import {
   DecisionInsufficientEvidenceError,
+  DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
   MatchNotFoundError,
   type MatchListFilters,
@@ -143,5 +144,13 @@ export const mockMatchService: MatchService = {
     }
 
     return fixture
+  },
+
+  async getDecisionNarrative(matchId, eventId) {
+    throw new DecisionNarrativeUnavailableError(
+      'Narrative is unavailable in mock mode. Use API mode with the seeded backend; no narrative is fabricated from static fixtures.',
+      matchId,
+      eventId,
+    )
   },
 }

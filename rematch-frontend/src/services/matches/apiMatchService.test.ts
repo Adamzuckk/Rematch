@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApiMatchService } from './apiMatchService'
 import {
   DecisionInsufficientEvidenceError,
+  DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
   MatchApiError,
   MatchServiceConfigError,
@@ -138,6 +139,57 @@ describe('createApiMatchService decision analysis', () => {
     await expect(
       service.getDecisionAnalysis('m-1', 'evt-1'),
     ).rejects.toBeInstanceOf(MatchApiError)
+  })
+
+  it('GETs the composed narrative endpoint without recalculating its nested analysis', async () => {
+    const narrative = {
+      matchId: 'm-1',
+      eventId: 'evt-1',
+      provenance: 'synthetic',
+      analysis: { eventId: 'evt-1', ranking: [{ rank: 1, compositeScore: 15 }] },
+      verificationResults: [
+        {
+          claimId: 'c-1',
+          evidenceValidationStatus: 'verified',
+          claimSupportStatus: 'not_assessed',
+        },
+      ],
+      narrative: {
+        matchId: 'm-1',
+        eventId: 'evt-1',
+        provenance: 'synthetic',
+        english: { headline: 'English headline', keyObservations: [], limitations: [] },
+        arabic: { headline: 'عنوان عربي', keyObservations: [], limitations: [] },
+      },
+    }
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(narrative))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const service = createApiMatchService('http://localhost:8000')
+    const result = await service.getDecisionNarrative('m-1', 'evt-1')
+
+    expect(result).toEqual(narrative)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/matches/m-1/events/evt-1/decision-analysis/narrative',
+      undefined,
+    )
+  })
+
+  it('marks unavailable narrative responses explicitly', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          { error: { code: 'insufficient_evidence', message: 'No narrative input' } },
+          422,
+        ),
+      ),
+    )
+
+    const service = createApiMatchService('http://localhost:8000')
+    await expect(
+      service.getDecisionNarrative('m-1', 'evt-1'),
+    ).rejects.toBeInstanceOf(DecisionNarrativeUnavailableError)
   })
 
   it('unwraps paginated match list items from /api/v1', async () => {

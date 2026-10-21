@@ -10,6 +10,9 @@ export type VerificationStatus =
   | 'partially_supported'
   | 'unsupported'
 
+/** The backend does not assess whether natural-language claim wording is true. */
+export type ClaimSupportStatus = 'not_assessed'
+
 /** Backend EvidenceRefKind */
 export type EvidenceRefKind =
   | 'event'
@@ -126,4 +129,48 @@ export interface EvidenceBundle {
   eventIds: string[]
   limitations: string[]
   provenance: DataProvenance
+}
+
+/** One deterministic English or Arabic narrative returned by the backend. */
+export interface LocalizedNarrative {
+  headline: string
+  keyObservations: string[]
+  limitations: string[]
+}
+
+/** Bilingual deterministic narrative payload nested in the composed response. */
+export interface NarratorOutput {
+  matchId: string | null
+  eventId: string | null
+  provenance: DataProvenance | null
+  english: LocalizedNarrative
+  arabic: LocalizedNarrative
+}
+
+/** Reference/calculation validation result; this is not semantic claim verification. */
+export interface NarrativeVerificationResult {
+  claimId: string
+  submittedStatement: string
+  evidenceValidationStatus: VerificationStatus
+  claimSupportStatus: ClaimSupportStatus
+  reason: string
+  evidence: EvidenceReference[]
+  limitations: string[]
+  validationMethod: 'match_event_evidence_catalog_v1'
+  validationScope: 'evidence_reference_membership_and_registered_calculation_consistency'
+}
+
+/**
+ * GET /api/v1/matches/{matchId}/events/{eventId}/decision-analysis/narrative
+ *
+ * Scores and ranking remain in the nested backend analysis; the client does
+ * not calculate or amend them.
+ */
+export interface DecisionNarrativeResponse {
+  matchId: string
+  eventId: string
+  provenance: DataProvenance
+  analysis: DecisionAnalysis
+  verificationResults: NarrativeVerificationResult[]
+  narrative: NarratorOutput
 }

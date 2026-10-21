@@ -6,6 +6,9 @@ export const STRINGS = {
     tagline: "Don't just watch what happened. Understand why.",
     navDashboard: 'Dashboard',
     navMetrics: 'System Metrics',
+    navExplore: 'Explore',
+    demoData: 'Demo data',
+    syntheticDemoNotice: 'Synthetic demo catalogue — not official match data.',
     language: 'Language',
     openMenu: 'Open navigation',
     closeMenu: 'Close navigation',
@@ -61,6 +64,19 @@ export const STRINGS = {
     matchAnalysisDecisionCta: 'Open Decision Explorer',
     matchAnalysisDecisionHint:
       'Compare the observed action with geometric alternatives from the decision engine.',
+    eventFieldType: 'Type',
+    eventFieldMinute: 'Minute',
+    eventFieldOccurredAt: 'Occurred at',
+    eventFieldTeam: 'Team',
+    eventFieldPlayer: 'Player',
+    eventFieldReceiver: 'Receiver',
+    eventFieldPossessionGained: 'Possession gained by',
+    eventFieldOutcome: 'Outcome',
+    eventFieldLocation: 'Location',
+    eventFieldPathStart: 'Path start',
+    eventFieldPathEnd: 'Path end',
+    eventFieldProvenance: 'Provenance',
+    eventFieldFrame: 'Frame',
     matchAnalysisNoFrames:
       'This dataset has no player or ball frames. The pitch shows event locations and paths only when those coordinates exist.',
     matchAnalysisEmptyEventsHint:
@@ -102,6 +118,16 @@ export const STRINGS = {
     decisionCompletenessHeading: 'Data completeness',
     decisionConfidenceHeading: 'Confidence',
     decisionLimitationsHeading: 'Limitations',
+    decisionNarrativeHeading: 'Backend narrative',
+    decisionNarrativeLoading: 'Loading backend narrative…',
+    decisionNarrativeUnavailable:
+      'A backend narrative is unavailable for this event.',
+    decisionNarrativeError: 'Could not load the backend narrative.',
+    decisionNarrativeRetry: 'Retry narrative',
+    decisionNarrativeProvenance: 'Narrative provenance',
+    decisionNarrativeObservations: 'Backend observations',
+    decisionNarrativeVerificationScope:
+      'Evidence-reference and calculation validation does not establish whether natural-language claims are true.',
     decisionUnavailableMetrics:
       'Not computed: xG, xT, pass-completion probability, packing, or full pressure maps.',
     decisionProvenanceSynthetic: 'Synthetic data',
@@ -159,6 +185,9 @@ export const STRINGS = {
     tagline: 'لا تكتفِ بمشاهدة ما حدث. افهم لماذا حدث.',
     navDashboard: 'لوحة التحكم',
     navMetrics: 'مقاييس النظام',
+    navExplore: 'استكشاف',
+    demoData: 'بيانات تجريبية',
+    syntheticDemoNotice: 'كتالوج تجريبي اصطناعي — ليس بيانات مباريات رسمية.',
     language: 'اللغة',
     openMenu: 'فتح القائمة',
     closeMenu: 'إغلاق القائمة',
@@ -214,6 +243,19 @@ export const STRINGS = {
     matchAnalysisDecisionCta: 'فتح مستكشف القرار',
     matchAnalysisDecisionHint:
       'قارن الإجراء المرصود بالبدائل الهندسية من محرك القرار.',
+    eventFieldType: 'النوع',
+    eventFieldMinute: 'الدقيقة',
+    eventFieldOccurredAt: 'وقت الحدوث',
+    eventFieldTeam: 'الفريق',
+    eventFieldPlayer: 'اللاعب',
+    eventFieldReceiver: 'المستلم',
+    eventFieldPossessionGained: 'الفريق المستحوذ',
+    eventFieldOutcome: 'النتيجة',
+    eventFieldLocation: 'الموقع',
+    eventFieldPathStart: 'بداية المسار',
+    eventFieldPathEnd: 'نهاية المسار',
+    eventFieldProvenance: 'المصدر',
+    eventFieldFrame: 'الإطار',
     matchAnalysisNoFrames:
       'لا تتضمن مجموعة البيانات إطارات للاعبين أو الكرة. يعرض الملعب مواقع ومسارات الأحداث فقط عند توفر الإحداثيات.',
     matchAnalysisEmptyEventsHint:
@@ -255,6 +297,16 @@ export const STRINGS = {
     decisionCompletenessHeading: 'اكتمال البيانات',
     decisionConfidenceHeading: 'الثقة',
     decisionLimitationsHeading: 'القيود',
+    decisionNarrativeHeading: 'سرد الخادم',
+    decisionNarrativeLoading: 'جارٍ تحميل سرد الخادم…',
+    decisionNarrativeUnavailable:
+      'لا يتوفر سرد من الخادم لهذا الحدث.',
+    decisionNarrativeError: 'تعذر تحميل سرد الخادم.',
+    decisionNarrativeRetry: 'إعادة محاولة السرد',
+    decisionNarrativeProvenance: 'مصدر السرد',
+    decisionNarrativeObservations: 'ملاحظات الخادم',
+    decisionNarrativeVerificationScope:
+      'التحقق من مراجع الأدلة والحسابات لا يثبت صحة الادعاءات المكتوبة باللغة الطبيعية.',
     decisionUnavailableMetrics:
       'غير محسوبة: xG، xT، احتمال إكمال التمريرة، التعبئة، أو خرائط الضغط الكاملة.',
     decisionProvenanceSynthetic: 'بيانات اصطناعية',

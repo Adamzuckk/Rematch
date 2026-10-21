@@ -50,7 +50,7 @@ export function EventTimeline({
             aria-label={previousLabel}
           >
             <ChevronLeft size={16} aria-hidden="true" />
-            Prev
+            {previousLabel}
           </Button>
           <Button
             variant="secondary"
@@ -58,7 +58,7 @@ export function EventTimeline({
             disabled={!canNext}
             aria-label={nextLabel}
           >
-            Next
+            {nextLabel}
             <ChevronRight size={16} aria-hidden="true" />
           </Button>
         </div>

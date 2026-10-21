@@ -26,6 +26,7 @@ export type {
 export type {
   MetricStatus,
   VerificationStatus,
+  ClaimSupportStatus,
   EvidenceRefKind,
   ConfidenceLevel,
   CompletenessLevel,
@@ -38,4 +39,8 @@ export type {
   DataCompleteness,
   DecisionAnalysis,
   EvidenceBundle,
+  LocalizedNarrative,
+  NarratorOutput,
+  NarrativeVerificationResult,
+  DecisionNarrativeResponse,
 } from './decision'

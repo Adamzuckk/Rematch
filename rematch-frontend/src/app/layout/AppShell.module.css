@@ -1,49 +1,5 @@
-.shell {
-  display: grid;
-  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
-  min-height: 100svh;
-  background:
-    radial-gradient(1200px 600px at 0% 0%, rgba(127, 227, 106, 0.06), transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, rgba(101, 189, 69, 0.04), transparent 50%),
-    var(--color-bg);
-}
-
-.mainColumn {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 100svh;
-}
-
-.content {
-  flex: 1;
-  padding: var(--space-6);
-  width: min(100%, calc(var(--content-max) + var(--space-12)));
-  margin-inline: auto;
-}
-
-.backdrop {
-  display: none;
-}
-
-@media (max-width: 1023px) {
-  .shell {
-    grid-template-columns: 1fr;
-  }
-
-  .content {
-    padding: var(--space-4);
-  }
-
-  .backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 30;
-    border: 0;
-    padding: 0;
-    margin: 0;
-    background: rgba(0, 0, 0, 0.55);
-    cursor: pointer;
-  }
-}
+.shell { display: grid; grid-template-columns: var(--sidebar-width) minmax(0,1fr); min-height: 100svh; background-color: var(--color-bg); background-image: linear-gradient(rgba(241,244,237,.018) 1px, transparent 1px), linear-gradient(90deg,rgba(241,244,237,.018) 1px,transparent 1px); background-size: 32px 32px; }
+.mainColumn { display: flex; flex-direction: column; min-width: 0; min-height: 100svh; }
+.content { flex: 1; width: min(100%, calc(var(--content-max) + var(--space-16))); margin-inline: auto; padding: var(--space-8); animation: rematch-enter var(--duration-slow) var(--ease-out) both; }
+.backdrop { display: none; }
+@media (max-width:1023px) { .shell { grid-template-columns:1fr; } .content { padding: var(--space-5) var(--space-4) var(--space-8); } .backdrop { display:block; position:fixed; inset:0; z-index:30; border:0; padding:0; margin:0; background:rgba(3,5,4,.74); cursor:pointer; } }

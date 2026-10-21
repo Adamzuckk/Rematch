@@ -6,6 +6,7 @@ import {
 } from '../../lib/pitch'
 import { Button } from '../ui/Button'
 import { EVENT_TYPE_LABELS } from './eventLabels'
+import { useLocale } from '../../i18n/locale'
 import styles from './EventInspector.module.css'
 
 export interface EventInspectorProps {
@@ -21,6 +22,21 @@ export interface EventInspectorProps {
     missing?: string
     decisionCta?: string
     decisionHint?: string
+    fields?: {
+      type: string
+      minute: string
+      occurredAt: string
+      team: string
+      player: string
+      receiver: string
+      possessionGained: string
+      outcome: string
+      location: string
+      pathStart: string
+      pathEnd: string
+      provenance: string
+      frame: string
+    }
   }
 }
 
@@ -77,6 +93,7 @@ export function EventInspector({
   frame = null,
   labels = {},
 }: EventInspectorProps) {
+  const { t } = useLocale()
   const heading = labels.heading ?? 'Event details'
   const empty = labels.empty ?? 'Select an event to inspect its details.'
   const missing = labels.missing ?? 'Not available'
@@ -84,6 +101,21 @@ export function EventInspector({
   const decisionHint =
     labels.decisionHint ??
     'Compare the observed action with geometric alternatives from the decision engine.'
+  const fields = labels.fields ?? {
+    type: t('eventFieldType'),
+    minute: t('eventFieldMinute'),
+    occurredAt: t('eventFieldOccurredAt'),
+    team: t('eventFieldTeam'),
+    player: t('eventFieldPlayer'),
+    receiver: t('eventFieldReceiver'),
+    possessionGained: t('eventFieldPossessionGained'),
+    outcome: t('eventFieldOutcome'),
+    location: t('eventFieldLocation'),
+    pathStart: t('eventFieldPathStart'),
+    pathEnd: t('eventFieldPathEnd'),
+    provenance: t('eventFieldProvenance'),
+    frame: t('eventFieldFrame'),
+  }
 
   if (!event) {
     return (
@@ -123,24 +155,24 @@ export function EventInspector({
 
       <dl className={styles.list}>
         <DetailRow
-          label="Type"
+          label={fields.type}
           value={EVENT_TYPE_LABELS[event.type]}
           missingLabel={missing}
         />
         <DetailRow
-          label="Minute"
+          label={fields.minute}
           value={
             event.minute != null ? formatEventMinute(event.minute) : null
           }
           missingLabel={missing}
         />
         <DetailRow
-          label="Occurred at"
+          label={fields.occurredAt}
           value={event.occurredAt ?? null}
           missingLabel={missing}
         />
         <DetailRow
-          label="Team"
+          label={fields.team}
           value={
             teamName ??
             (event.teamId ? `Unresolved (${event.teamId})` : null)
@@ -148,7 +180,7 @@ export function EventInspector({
           missingLabel={missing}
         />
         <DetailRow
-          label="Player"
+          label={fields.player}
           value={
             playerName ??
             (event.playerId ? `Unresolved (${event.playerId})` : null)
@@ -157,7 +189,7 @@ export function EventInspector({
         />
         {event.type === 'pass' ? (
           <DetailRow
-            label="Receiver"
+            label={fields.receiver}
             value={
               receiverName ??
               (event.receiverId ? `Unresolved (${event.receiverId})` : null)
@@ -167,7 +199,7 @@ export function EventInspector({
         ) : null}
         {event.type === 'possession_change' ? (
           <DetailRow
-            label="Possession gained by"
+            label={fields.possessionGained}
             value={
               gainedBy ??
               (event.gainedByTeamId
@@ -178,34 +210,34 @@ export function EventInspector({
           />
         ) : null}
         {outcome != null ? (
-          <DetailRow label="Outcome" value={outcome} missingLabel={missing} />
+          <DetailRow label={fields.outcome} value={outcome} missingLabel={missing} />
         ) : null}
         <DetailRow
-          label="Location"
+          label={fields.location}
           value={formatPoint(geometry.location)}
           missingLabel={missing}
         />
         {geometry.path ? (
           <>
             <DetailRow
-              label="Path start"
+              label={fields.pathStart}
               value={formatPoint(geometry.path.start)}
               missingLabel={missing}
             />
             <DetailRow
-              label="Path end"
+              label={fields.pathEnd}
               value={formatPoint(geometry.path.end)}
               missingLabel={missing}
             />
           </>
         ) : null}
         <DetailRow
-          label="Provenance"
+          label={fields.provenance}
           value={event.provenance}
           missingLabel={missing}
         />
         <DetailRow
-          label="Frame"
+          label={fields.frame}
           value={
             frame
               ? `${frame.id} · ${frame.players.length} player marker(s)${

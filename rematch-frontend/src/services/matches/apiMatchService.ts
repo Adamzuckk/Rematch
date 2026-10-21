@@ -1,6 +1,7 @@
 import type {
   DashboardOverviewStat,
   DecisionAnalysis,
+  DecisionNarrativeResponse,
   MatchDatasetInfo,
   MatchEvent,
   MatchFrame,
@@ -9,6 +10,7 @@ import type {
 } from '../../types'
 import {
   DecisionInsufficientEvidenceError,
+  DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
   MatchApiError,
   MatchNotFoundError,
@@ -222,6 +224,25 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
           (error.code === 'insufficient_evidence' || !error.code)
         ) {
           throw new DecisionInsufficientEvidenceError(
+            error.message,
+            matchId,
+            eventId,
+          )
+        }
+        throw error
+      }
+    },
+
+    async getDecisionNarrative(matchId, eventId) {
+      const path = `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/events/${encodeURIComponent(eventId)}/decision-analysis/narrative`
+      try {
+        return await getJson<DecisionNarrativeResponse>(path)
+      } catch (error) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.status === 422)
+        ) {
+          throw new DecisionNarrativeUnavailableError(
             error.message,
             matchId,
             eventId,

@@ -26,6 +26,10 @@
   opacity: 0.7;
 }
 
+:global([dir='rtl']) .separator {
+  transform: scaleX(-1);
+}
+
 .link {
   color: var(--color-text-secondary);
   font-weight: 600;

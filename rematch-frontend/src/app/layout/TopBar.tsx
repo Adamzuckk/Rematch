@@ -41,7 +41,7 @@ export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
         </span>
       </div>
       <div className={styles.end}>
-        <span className={styles.badge}>Demo data</span>
+        <span className={styles.badge}>{t('demoData')}</span>
       </div>
     </header>
   )

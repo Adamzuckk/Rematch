@@ -1,6 +1,7 @@
 import type {
   DashboardOverviewStat,
   DecisionAnalysis,
+  DecisionNarrativeResponse,
   MatchDatasetInfo,
   MatchEvent,
   MatchFrame,
@@ -55,6 +56,16 @@ export interface MatchService {
     matchId: string,
     eventId: string,
   ): Promise<DecisionAnalysis>
+
+  /**
+   * Composed deterministic bilingual narrative for an existing decision.
+   * This is unavailable in the static mock catalogue because it must never
+   * fabricate narrative content outside the backend response.
+   */
+  getDecisionNarrative(
+    matchId: string,
+    eventId: string,
+  ): Promise<DecisionNarrativeResponse>
 }
 
 export class MatchNotFoundError extends Error {
@@ -117,6 +128,19 @@ export class DecisionInsufficientEvidenceError extends Error {
   constructor(message: string, matchId: string, eventId: string) {
     super(message)
     this.name = 'DecisionInsufficientEvidenceError'
+    this.matchId = matchId
+    this.eventId = eventId
+  }
+}
+
+/** The current data source cannot supply a backend-composed narrative. */
+export class DecisionNarrativeUnavailableError extends Error {
+  readonly matchId: string
+  readonly eventId: string
+
+  constructor(message: string, matchId: string, eventId: string) {
+    super(message)
+    this.name = 'DecisionNarrativeUnavailableError'
     this.matchId = matchId
     this.eventId = eventId
   }
