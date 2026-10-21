@@ -3,6 +3,7 @@ import { AppShell } from './layout/AppShell'
 import { DashboardPage } from '../pages/DashboardPage'
 import { DecisionExplorerPage } from '../pages/DecisionExplorerPage'
 import { InsightsPage } from '../pages/InsightsPage'
+import { JudgeModePage } from '../pages/JudgeModePage'
 import { MatchAnalysisPage } from '../pages/MatchAnalysisPage'
 import { MetricsPage } from '../pages/MetricsPage'
 import { PickYourPassPage } from '../pages/PickYourPassPage'
@@ -13,6 +14,7 @@ export function AppRouter() {
       <Route element={<AppShell />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="judge" element={<JudgeModePage />} />
         <Route path="matches/:matchId" element={<MatchAnalysisPage />} />
         <Route
           path="matches/:matchId/decisions/:eventId"
