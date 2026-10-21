@@ -1,1 +1,5 @@
 .page { display:flex; flex-direction:column; gap:var(--space-6); min-width:0; width:100%; overflow-x:hidden; }.loading { margin:0; padding:var(--space-8) 0; color:var(--color-text-secondary); font-size:.95rem; }.notice { margin:0; padding:var(--space-3) var(--space-4); border-inline-start:3px solid var(--color-demo); border-radius:var(--radius-sm); background:var(--color-demo-bg); color:var(--color-demo); font-size:.83rem; }.layout { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(18rem,.8fr); gap:var(--space-6); align-items:start; min-width:0; }.pitchColumn,.inspectorColumn { min-width:0; } @media(max-width:1023px){.layout{grid-template-columns:1fr;}}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin-bottom:.5rem;font-size:.85rem}
+.toggle{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
+.linkish{background:none;border:none;color:#7dd3fc;cursor:pointer;text-decoration:underline;padding:0;font:inherit}
+.modeTag{opacity:.8;margin-inline-start:auto}
