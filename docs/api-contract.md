@@ -4,7 +4,7 @@ Base URL (local): `http://localhost:8000`
 Versioned prefix: `/api/v1`  
 OpenAPI UI: `/docs` · ReDoc: `/redoc` · Schema: `/openapi.json`
 
-Authentication is **not** implemented.
+By default, local development authentication is disabled. Set `REQUIRE_API_AUTH=true` and configure `API_BEARER_TOKEN` (at least 32 characters) to require `Authorization: Bearer <token>` for every `/api/v1` endpoint. When auth is required, server startup fails if no token is configured. The token is never included in OpenAPI, URLs, or application logs. See [FOUNDRY_CONNECT.md](FOUNDRY_CONNECT.md) before creating a public development tunnel.
 
 ## Error shape
 
@@ -242,15 +242,31 @@ Body:
 }
 ```
 
-Returns the claims with engine-assigned `status` and `reason` after catalog validation. Does not invent supporting evidence.
+Returns the claims with engine-assigned `status` and `reason` after catalog validation, plus explicit validation-scope fields. The request schema is unchanged. The legacy `status` remains unchanged and mirrors `evidenceValidationStatus`; `verified` means only that the references (and supplied registered calculation value) passed validation. `claimSupportStatus` is always `not_assessed`: this endpoint does not evaluate natural-language truth.
+
+Each response item also contains:
+
+| Field | Meaning |
+|-------|---------|
+| `evidenceValidationStatus` | The result of evidence-reference and registered-calculation checks; mirrors legacy `status`. |
+| `claimSupportStatus` | Always `not_assessed`; no semantic truth evaluation is performed. |
+| `validationMethod` | `match_event_evidence_catalog_v1` identifies the evidence catalog used. |
+| `validationScope` | `evidence_reference_membership_and_registered_calculation_consistency` describes the performed checks. |
+| `limitations` | Includes that valid references/calculation IDs do not prove the statement true, and that `geometric_progression_v1` is not xG or a pass-success probability. |
 
 Claim statuses:
 
 | Status | Meaning |
 |--------|---------|
-| `verified` | All refs valid (and calculation values match when provided) |
-| `partially_supported` | Some refs valid / claim cannot be fully established |
-| `unsupported` | No valid justification from available data |
+| `verified` | Legacy evidence-validation status: all refs are valid (and supplied calculation values match). It does not mean the statement is true. |
+| `partially_supported` | Evidence validation found a mix of valid and invalid references, or could not fully validate a supplied calculation. |
+| `unsupported` | No valid references, no evidence, or an inconsistent registered calculation. |
+
+### `GET /api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative`
+
+Runs Match Intelligence once, retains that analysis's in-memory evidence catalog, validates its structured claims, and passes the typed match/event/analysis and adapted verification results to the deterministic Narrator.
+
+The response contains `matchId`, `eventId`, `provenance`, the unchanged `analysis` object, native Agent 3 `verificationResults`, and `narrative` with English and Arabic headline, observations, and limitations. Each verification result keeps `evidenceValidationStatus` separate from `claimSupportStatus`, which is always `not_assessed`. The analysis's legacy claim statuses describe evidence validation; neither they nor valid references prove natural-language truth. The route is read-only and has the same 404 and 422 analysis error behavior.
 
 ---
 

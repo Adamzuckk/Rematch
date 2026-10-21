@@ -164,7 +164,7 @@ pip install -e ".[dev]"
 cp .env.example .env
 alembic upgrade head
 rematch-seed
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 - Health: http://localhost:8000/api/v1/health  

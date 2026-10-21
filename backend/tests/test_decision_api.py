@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
+from app.api.deps import get_settings_dep
+from app.core.config import Settings
+
 NORTHGATE = "m-northgate-riverside-2401"
 OAKWOOD = "m-oakwood-silvermere-2403"
 
@@ -105,11 +108,20 @@ def test_evidence_endpoint(client: TestClient) -> None:
 
 
 def test_verify_endpoint_flags_bad_refs(client: TestClient) -> None:
+    # This test-only credential is isolated from .env and the running API.
+    test_token = "rematch-regression-test-only-bearer-token-2026"
+    client.app.dependency_overrides[get_settings_dep] = lambda: Settings(
+        _env_file=None,
+        require_api_auth=True,
+        api_bearer_token=test_token,
+    )
     payload = {
         "claims": [
             {
                 "id": "user-1",
-                "statement": "Uses a real event",
+                # The intentionally unsupported natural-language assertion makes
+                # explicit that this endpoint validates references, not truth.
+                "statement": "This event proves the player scored a hat-trick",
                 "status": "unsupported",
                 "evidence": [
                     {
@@ -146,18 +158,78 @@ def test_verify_endpoint_flags_bad_refs(client: TestClient) -> None:
                 "limitations": [],
                 "calculation": None,
             },
+            {
+                "id": "user-probability",
+                "statement": "This geometric composite score is the probability of pass success",
+                "status": "unsupported",
+                "evidence": [
+                    {
+                        "kind": "event",
+                        "id": "evt-ng-carry-64",
+                        "matchId": NORTHGATE,
+                    },
+                    {
+                        "kind": "calculation",
+                        "id": "calc:observed:evt-ng-carry-64:composite_score",
+                        "matchId": NORTHGATE,
+                    },
+                ],
+                "reason": "",
+                "limitations": [],
+                "calculation": {
+                    "id": "calc:observed:evt-ng-carry-64:composite_score",
+                    "value": 36.63380605388592,
+                },
+            },
         ]
     }
-    response = client.post(
-        f"/api/v1/matches/{NORTHGATE}/events/evt-ng-carry-64/decision-analysis/verify",
-        json=payload,
-    )
-    assert response.status_code == 200
-    body = response.json()
-    by_id = {c["id"]: c for c in body}
-    assert by_id["user-1"]["status"] == "verified"
-    assert by_id["user-2"]["status"] == "unsupported"
-    assert by_id["user-3"]["status"] == "unsupported"
+    try:
+        response = client.post(
+            f"/api/v1/matches/{NORTHGATE}/events/evt-ng-carry-64/decision-analysis/verify",
+            json=payload,
+            headers={"Authorization": f"Bearer {test_token}"},
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert isinstance(body, list)
+        by_id = {claim["id"]: claim for claim in body}
+
+        assert by_id["user-1"]["status"] == "verified"
+        assert by_id["user-1"]["reason"] == (
+            "event:evt-ng-carry-64 — Event exists on this match"
+        )
+        assert by_id["user-1"]["statement"] == (
+            "This event proves the player scored a hat-trick"
+        )
+        assert by_id["user-2"]["status"] == "unsupported"
+        assert by_id["user-2"]["reason"] == (
+            "frame:frm-fake — Frame 'frm-fake' is not part of this match"
+        )
+        assert by_id["user-3"]["status"] == "unsupported"
+        assert by_id["user-3"]["reason"] == "No evidence references were supplied"
+        probability_claim = by_id["user-probability"]
+        assert probability_claim["status"] == "verified"  # legacy ref-validation meaning
+        assert probability_claim["evidenceValidationStatus"] == "verified"
+        assert probability_claim["claimSupportStatus"] == "not_assessed"
+        assert probability_claim["validationMethod"] == "match_event_evidence_catalog_v1"
+        assert probability_claim["validationScope"] == (
+            "evidence_reference_membership_and_registered_calculation_consistency"
+        )
+        assert any(
+            "do not prove the submitted statement is true" in limitation
+            for limitation in probability_claim["limitations"]
+        )
+        assert any(
+            "not xG or a pass-success probability" in limitation
+            for limitation in probability_claim["limitations"]
+        )
+        assert all(
+            isinstance(claim.get("status"), str)
+            and isinstance(claim.get("reason"), str)
+            for claim in body
+        )
+    finally:
+        client.app.dependency_overrides.pop(get_settings_dep, None)
 
 
 def test_oakwood_analysis_sparse(client: TestClient) -> None:

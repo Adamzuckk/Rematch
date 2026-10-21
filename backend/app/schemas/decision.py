@@ -80,6 +80,34 @@ class ClaimSchema(BaseModel):
     calculation: dict[str, Any] | None = None
 
 
+class ClaimVerificationResponseSchema(ClaimSchema):
+    """Claim response with evidence-validation scope separated from truth support."""
+
+    status: VerificationStatus = Field(
+        description=(
+            "Legacy alias for evidenceValidationStatus. It reflects evidence and "
+            "calculation validation only, not natural-language claim truth."
+        )
+    )
+    evidenceValidationStatus: VerificationStatus = Field(
+        description="Result of validating evidence references and calculation consistency."
+    )
+    claimSupportStatus: Literal["not_assessed"] = Field(
+        description="Natural-language statement truth is not assessed by this endpoint."
+    )
+    validationMethod: Literal["match_event_evidence_catalog_v1"] = Field(
+        description="Identifier of the match/event evidence-catalog validation method."
+    )
+    validationScope: Literal[
+        "evidence_reference_membership_and_registered_calculation_consistency"
+    ] = Field(
+        description=(
+            "Checks reference membership and registered calculation consistency; "
+            "does not assess arbitrary natural-language truth."
+        )
+    )
+
+
 class DataCompletenessSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

@@ -5,7 +5,9 @@ FastAPI match catalogue API with SQLAlchemy models, Alembic migrations, the dete
 **Python:** 3.11–3.14 (developed/tested on 3.12).  
 **Stack:** FastAPI, Pydantic v2, SQLAlchemy 2.x, Alembic, SQLite (local) / PostgreSQL-compatible URL.
 
-The local demo uses synthetic data only. It does **not** include AI explanations, Microsoft Foundry, streaming, or authentication.
+The local demo uses synthetic data only. It does **not** include AI explanations, Microsoft Foundry, or streaming. Optional bearer authentication is available for exposing the API through a development tunnel.
+
+For the reviewed Azure Container Apps container setup, resource/cost prerequisites, and deployment validation steps, see [docs/AZURE_CONTAINER_APPS.md](../docs/AZURE_CONTAINER_APPS.md). The guide does not imply that a cloud deployment or Foundry connection has been performed.
 
 ## Quick start
 
@@ -24,7 +26,7 @@ rematch-seed
 # or: python -m app.services.seed
 
 # Run API
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 - OpenAPI docs: http://localhost:8000/docs  
@@ -37,6 +39,8 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 | `APP_NAME` | `ReMatch API` | OpenAPI title |
 | `APP_ENV` | `development` | Environment label |
 | `DEBUG` | `false` | Reserved; stack traces are never returned to clients |
+| `REQUIRE_API_AUTH` | `false` | Require a bearer token for all `/api/v1` routes |
+| `API_BEARER_TOKEN` | unset | Secret bearer token; required when `REQUIRE_API_AUTH=true`, at least 32 characters |
 | `DATABASE_URL` | `sqlite:///./rematch.db` | SQLAlchemy URL |
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated browser origins. Empty disables CORS |
 | `DEFAULT_PAGE_LIMIT` | `50` | Default list page size |
@@ -98,7 +102,7 @@ pytest
 
 ## CORS
 
-Local Vite origins are listed in `.env.example`. Leaving `CORS_ORIGINS` empty disables CORS middleware. There is **no** wildcard production CORS default.
+Local Vite origins are listed in `.env.example`. Leaving `CORS_ORIGINS` empty disables CORS middleware. There is **no** wildcard production CORS default. CORS is unrelated to API authentication and does not protect a public tunnel.
 
 ## Frontend integration boundary
 
@@ -118,9 +122,35 @@ See [docs/decision-engine.md](../docs/decision-engine.md). Scoring is `geometric
 
 Pick Your Pass uses the alternatives returned by `GET /api/v1/matches/{id}/events/{event_id}/decision-analysis`. Each frame-backed alternative already includes its candidate geometry, backend-computed metrics/composite score and ranking entry. The client selects among those returned records; there is no candidate submission/evaluation endpoint and the client does not calculate scores. Alternatives are sparse-frame hypotheticals and do not predict pass completion.
 
+## Agent 2 — Narrator
+
+The deterministic bilingual Narrator accepts typed Agent 1 match/event/decision records and optional verifier results as a `MatchIntelligenceTruthPack`. It produces English and Arabic headlines, observations, and limitations; it does not fetch data, call a model, or connect external orchestration. The composed read-only route is `GET /api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative`. See [docs/narrator.md](../docs/narrator.md) for its contract.
+
+Run the focused Narrator tests from `backend`:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_narrator.py
+```
+
+## Agent 3 — Verifier
+
+The verifier accepts Agent 1's structured claims and actual evidence catalog on the composed narrative route. It reuses the existing reference and calculation checks and always reports natural-language claim support as `not_assessed`. See [docs/verifier.md](../docs/verifier.md) for the contract and limitations.
+
+Run its focused tests from `backend`:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_verifier.py tests/test_decision_evidence.py
+```
+
+Run the composed endpoint and OpenAPI contract tests from `backend`:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest tests/test_match_intelligence_integration.py tests/test_foundry_openapi_contract.py
+```
+
 ## Known limitations
 
-- No auth / authz
+- No user accounts or per-user authorization. Optional shared bearer-token protection is provided for development tunnels only.
 - No WebSocket event stream
 - No AI / Foundry explanations
 - No xG or probability metrics

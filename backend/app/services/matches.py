@@ -121,6 +121,14 @@ def get_match(db: Session, match_id: str) -> MatchSummarySchema:
     return match_to_summary(match)
 
 
+def get_event(db: Session, match_id: str, event_id: str) -> MatchEventSchema | None:
+    """Return one typed event only when it belongs to the requested match."""
+    event = db.get(MatchEvent, event_id)
+    if event is None or event.match_id != match_id:
+        return None
+    return event_to_schema(event)
+
+
 def list_events(
     db: Session,
     match_id: str,

@@ -68,7 +68,11 @@ def create_app() -> FastAPI:
                     "message": str(detail),
                 }
             }
-        return JSONResponse(status_code=exc.status_code, content=payload)
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=payload,
+            headers=exc.headers,
+        )
 
     @application.exception_handler(RequestValidationError)
     async def validation_exception_handler(

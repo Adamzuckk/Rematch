@@ -1,0 +1,2428 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ReMatch Match Intelligence API",
+    "version": "0.5.0",
+    "description": "Tool contract derived from the ReMatch FastAPI application. It exposes read-only match and decision data plus a non-persisting claim evidence/reference validation operation. Match and event data currently shipped with the API is synthetic."
+  },
+  "servers": [
+    {
+      "url": "https://history-monitor-vice-adopt.trycloudflare.com",
+      "description": "Replace with the current Quick Tunnel HTTPS origin before importing into Foundry."
+    }
+  ],
+  "paths": {
+    "/api/v1/matches": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "operationId": "list_matches",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "live",
+                    "finished",
+                    "upcoming"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by match status",
+              "title": "Status"
+            },
+            "description": "Filter by match status"
+          },
+          {
+            "name": "competition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive exact competition name",
+              "title": "Competition"
+            },
+            "description": "Case-insensitive exact competition name"
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search team names, short names, or competition",
+              "title": "Q"
+            },
+            "description": "Search team names, short names, or competition"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "description": "Discover available matches. Use the returned IDs and provenance as the source of truth; follow pagination when additional matches are relevant."
+      }
+    },
+    "/api/v1/matches/{match_id}": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "operationId": "get_match",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchSummarySchema"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Fetch a known match by ID. Use this to confirm the selected match, its teams, status, synthetic provenance, and scenario before analyzing an event."
+      }
+    },
+    "/api/v1/matches/{match_id}/events": {
+      "get": {
+        "tags": [
+          "matches"
+        ],
+        "operationId": "list_match_events",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchEventListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        },
+        "description": "List events for a known match to discover valid event IDs. Follow the returned pagination fields when there are more events than the page contains. Use event IDs from this response for decision analysis."
+      }
+    },
+    "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis": {
+      "get": {
+        "tags": [
+          "decisions"
+        ],
+        "description": "Get the backend's analysis for an observed match event. Preserve returned scoring method ID and version, scores, ranks, provenance, limitations, and verified claim statuses. Scores are geometric estimates, not probabilities or proof of the best real-world decision.",
+        "operationId": "get_decision_analysis",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DecisionAnalysisSchema"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative": {
+      "get": {
+        "tags": [
+          "decisions"
+        ],
+        "description": "Return one backend decision analysis, its evidence/reference validation results, and the deterministic English and Arabic narrative. evidenceValidationStatus reflects reference/calculation checks only; claimSupportStatus is always not_assessed. This operation does not verify natural-language truth. geometric_progression_v1 is not xG or a pass-success probability.",
+        "operationId": "get_decision_analysis_narrative",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchIntelligenceNarrativeResponseSchema"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/evidence": {
+      "get": {
+        "tags": [
+          "decisions"
+        ],
+        "description": "Fetch the registered evidence bundle for a decision analysis, including claims, evidence references, calculation IDs, frame IDs, event IDs, limitations, and provenance. Report missing evidence explicitly.",
+        "operationId": "get_decision_evidence",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceBundleSchema"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/verify": {
+      "post": {
+        "tags": [
+          "decisions"
+        ],
+        "description": "Validate submitted evidence references and registered calculation values against the selected match/event evidence. The legacy status and evidenceValidationStatus report this validation only; claimSupportStatus is always not_assessed because natural-language truth is not evaluated. Valid references do not prove the statement true. geometric_progression_v1 is not xG or a pass-success probability.",
+        "operationId": "verify_decision_claims",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimVerificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClaimVerificationResponseSchema"
+                  },
+                  "title": "Response Verify Decision Claims Api V1 Matches  Match Id  Events  Event Id  Decision Analysis Verify Post"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionScoreSchema": {
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "title": "Actionid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observed_pass",
+              "observed_carry",
+              "observed_shot",
+              "hypothetical_pass"
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "targetPlayerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetplayerid"
+          },
+          "metrics": {
+            "items": {
+              "$ref": "#/components/schemas/MetricValueSchema"
+            },
+            "type": "array",
+            "title": "Metrics"
+          },
+          "compositeScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compositescore"
+          },
+          "rankable": {
+            "type": "boolean",
+            "title": "Rankable"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "actionId",
+          "kind",
+          "label",
+          "metrics",
+          "rankable"
+        ],
+        "title": "ActionScoreSchema"
+      },
+      "CarryEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "carry",
+            "title": "Type"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "CarryEventSchema"
+      },
+      "ClaimSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "statement": {
+            "type": "string",
+            "title": "Statement"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "partially_supported",
+              "unsupported"
+            ],
+            "title": "Status"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceReferenceSchema"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "calculation": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "statement",
+          "status",
+          "reason"
+        ],
+        "title": "ClaimSchema"
+      },
+      "ClaimVerificationRequest": {
+        "properties": {
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimSchema"
+            },
+            "type": "array",
+            "title": "Claims"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "claims"
+        ],
+        "title": "ClaimVerificationRequest",
+        "description": "Optional body for validating caller-supplied claims against match evidence."
+      },
+      "ClaimVerificationResponseSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "statement": {
+            "type": "string",
+            "title": "Statement"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "partially_supported",
+              "unsupported"
+            ],
+            "title": "Status",
+            "description": "Legacy alias for evidenceValidationStatus. It reflects evidence and calculation validation only, not natural-language claim truth."
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceReferenceSchema"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "calculation": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calculation"
+          },
+          "evidenceValidationStatus": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "partially_supported",
+              "unsupported"
+            ],
+            "title": "Evidencevalidationstatus",
+            "description": "Result of validating evidence references and calculation consistency."
+          },
+          "claimSupportStatus": {
+            "type": "string",
+            "const": "not_assessed",
+            "title": "Claimsupportstatus",
+            "description": "Natural-language statement truth is not assessed by this endpoint."
+          },
+          "validationMethod": {
+            "type": "string",
+            "const": "match_event_evidence_catalog_v1",
+            "title": "Validationmethod",
+            "description": "Identifier of the match/event evidence-catalog validation method."
+          },
+          "validationScope": {
+            "type": "string",
+            "const": "evidence_reference_membership_and_registered_calculation_consistency",
+            "title": "Validationscope",
+            "description": "Checks reference membership and registered calculation consistency; does not assess arbitrary natural-language truth."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "statement",
+          "status",
+          "reason",
+          "evidenceValidationStatus",
+          "claimSupportStatus",
+          "validationMethod",
+          "validationScope"
+        ],
+        "title": "ClaimVerificationResponseSchema",
+        "description": "Claim response with evidence-validation scope separated from truth support."
+      },
+      "DataCompletenessSchema": {
+        "properties": {
+          "level": {
+            "type": "string",
+            "enum": [
+              "complete",
+              "partial",
+              "insufficient"
+            ],
+            "title": "Level"
+          },
+          "hasCoordinates": {
+            "type": "boolean",
+            "title": "Hascoordinates"
+          },
+          "hasAlignedFrame": {
+            "type": "boolean",
+            "title": "Hasalignedframe"
+          },
+          "teammatePositionsInFrame": {
+            "type": "integer",
+            "title": "Teammatepositionsinframe"
+          },
+          "opponentPositionsInFrame": {
+            "type": "integer",
+            "title": "Opponentpositionsinframe"
+          },
+          "alternativeCount": {
+            "type": "integer",
+            "title": "Alternativecount"
+          },
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missing"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Notes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "level",
+          "hasCoordinates",
+          "hasAlignedFrame",
+          "teammatePositionsInFrame",
+          "opponentPositionsInFrame",
+          "alternativeCount"
+        ],
+        "title": "DataCompletenessSchema"
+      },
+      "DecisionAnalysisSchema": {
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "eventId": {
+            "type": "string",
+            "title": "Eventid"
+          },
+          "eventType": {
+            "type": "string",
+            "title": "Eventtype"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "isHomeTeam": {
+            "type": "boolean",
+            "title": "Ishometeam"
+          },
+          "scoringMethodId": {
+            "type": "string",
+            "title": "Scoringmethodid"
+          },
+          "scoringMethodVersion": {
+            "type": "string",
+            "title": "Scoringmethodversion"
+          },
+          "scoringAssumptions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Scoringassumptions"
+          },
+          "observed": {
+            "$ref": "#/components/schemas/ActionScoreSchema"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/ActionScoreSchema"
+            },
+            "type": "array",
+            "title": "Alternatives"
+          },
+          "ranking": {
+            "items": {
+              "$ref": "#/components/schemas/RankingEntrySchema"
+            },
+            "type": "array",
+            "title": "Ranking"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimSchema"
+            },
+            "type": "array",
+            "title": "Claims"
+          },
+          "completeness": {
+            "$ref": "#/components/schemas/DataCompletenessSchema"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low",
+              "none"
+            ],
+            "title": "Confidence"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "context": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Context"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matchId",
+          "eventId",
+          "eventType",
+          "isHomeTeam",
+          "scoringMethodId",
+          "scoringMethodVersion",
+          "scoringAssumptions",
+          "observed",
+          "alternatives",
+          "ranking",
+          "claims",
+          "completeness",
+          "confidence",
+          "limitations",
+          "context",
+          "provenance"
+        ],
+        "title": "DecisionAnalysisSchema"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorDetail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse"
+      },
+      "EvidenceBundleSchema": {
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "eventId": {
+            "type": "string",
+            "title": "Eventid"
+          },
+          "scoringMethodId": {
+            "type": "string",
+            "title": "Scoringmethodid"
+          },
+          "claims": {
+            "items": {
+              "$ref": "#/components/schemas/ClaimSchema"
+            },
+            "type": "array",
+            "title": "Claims"
+          },
+          "calculationIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Calculationids"
+          },
+          "frameIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Frameids"
+          },
+          "eventIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Eventids"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matchId",
+          "eventId",
+          "scoringMethodId",
+          "claims",
+          "calculationIds",
+          "frameIds",
+          "eventIds",
+          "limitations",
+          "provenance"
+        ],
+        "title": "EvidenceBundleSchema"
+      },
+      "EvidenceReferenceSchema": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "event",
+              "frame",
+              "calculation",
+              "player_position"
+            ],
+            "title": "Kind"
+          },
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "id",
+          "matchId"
+        ],
+        "title": "EvidenceReferenceSchema"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LocalizedNarrative": {
+        "properties": {
+          "headline": {
+            "type": "string",
+            "title": "Headline"
+          },
+          "keyObservations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Keyobservations"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "headline",
+          "keyObservations",
+          "limitations"
+        ],
+        "title": "LocalizedNarrative"
+      },
+      "MatchEventListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/PassEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/ShotEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/CarryEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/TackleEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/PressureEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/PossessionChangeEventSchema"
+                }
+              ],
+              "discriminator": {
+                "propertyName": "type",
+                "mapping": {
+                  "carry": "#/components/schemas/CarryEventSchema",
+                  "pass": "#/components/schemas/PassEventSchema",
+                  "possession_change": "#/components/schemas/PossessionChangeEventSchema",
+                  "pressure": "#/components/schemas/PressureEventSchema",
+                  "shot": "#/components/schemas/ShotEventSchema",
+                  "tackle": "#/components/schemas/TackleEventSchema"
+                }
+              }
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "MatchEventListResponse"
+      },
+      "MatchIntelligenceNarrativeResponseSchema": {
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "eventId": {
+            "type": "string",
+            "title": "Eventid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "analysis": {
+            "$ref": "#/components/schemas/DecisionAnalysisSchema"
+          },
+          "verificationResults": {
+            "items": {
+              "$ref": "#/components/schemas/NarrativeClaimVerificationResult"
+            },
+            "type": "array",
+            "title": "Verificationresults"
+          },
+          "narrative": {
+            "$ref": "#/components/schemas/NarratorOutput"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matchId",
+          "eventId",
+          "provenance",
+          "analysis",
+          "verificationResults",
+          "narrative"
+        ],
+        "title": "MatchIntelligenceNarrativeResponseSchema"
+      },
+      "MatchListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchSummarySchema"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "MatchListResponse"
+      },
+      "MatchScoreSchema": {
+        "properties": {
+          "home": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Home"
+          },
+          "away": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Away"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "home",
+          "away"
+        ],
+        "title": "MatchScoreSchema"
+      },
+      "MatchSummarySchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "competition": {
+            "type": "string",
+            "title": "Competition"
+          },
+          "homeTeam": {
+            "$ref": "#/components/schemas/TeamSchema"
+          },
+          "awayTeam": {
+            "$ref": "#/components/schemas/TeamSchema"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "live",
+              "finished",
+              "upcoming"
+            ],
+            "title": "Status"
+          },
+          "kickoffAt": {
+            "type": "string",
+            "title": "Kickoffat"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MatchScoreSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "venue": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Venue"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "scenarioId": {
+            "type": "string",
+            "title": "Scenarioid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "competition",
+          "homeTeam",
+          "awayTeam",
+          "status",
+          "kickoffAt",
+          "provenance",
+          "scenarioId"
+        ],
+        "title": "MatchSummarySchema",
+        "description": "Mirrors rematch-frontend MatchSummary (camelCase)."
+      },
+      "MetricValueSchema": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "available",
+              "unavailable"
+            ],
+            "title": "Status"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "formula": {
+            "type": "string",
+            "title": "Formula"
+          },
+          "inputs": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Inputs"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "unit",
+          "formula"
+        ],
+        "title": "MetricValueSchema"
+      },
+      "NarrativeClaimVerificationResult": {
+        "properties": {
+          "claimId": {
+            "type": "string",
+            "title": "Claimid"
+          },
+          "submittedStatement": {
+            "type": "string",
+            "title": "Submittedstatement"
+          },
+          "evidenceValidationStatus": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "partially_supported",
+              "unsupported"
+            ],
+            "title": "Evidencevalidationstatus"
+          },
+          "claimSupportStatus": {
+            "type": "string",
+            "const": "not_assessed",
+            "title": "Claimsupportstatus",
+            "default": "not_assessed"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceReferenceSchema"
+            },
+            "type": "array",
+            "title": "Evidence"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "validationMethod": {
+            "type": "string",
+            "const": "match_event_evidence_catalog_v1",
+            "title": "Validationmethod",
+            "default": "match_event_evidence_catalog_v1"
+          },
+          "validationScope": {
+            "type": "string",
+            "const": "evidence_reference_membership_and_registered_calculation_consistency",
+            "title": "Validationscope",
+            "default": "evidence_reference_membership_and_registered_calculation_consistency"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "claimId",
+          "submittedStatement",
+          "evidenceValidationStatus",
+          "reason",
+          "evidence",
+          "limitations"
+        ],
+        "title": "NarrativeClaimVerificationResult",
+        "description": "Evidence check result with natural-language support explicitly unassessed."
+      },
+      "NarratorOutput": {
+        "properties": {
+          "matchId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matchid"
+          },
+          "eventId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eventid"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "synthetic",
+                  "api",
+                  "unavailable"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance"
+          },
+          "english": {
+            "$ref": "#/components/schemas/LocalizedNarrative"
+          },
+          "arabic": {
+            "$ref": "#/components/schemas/LocalizedNarrative"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matchId",
+          "eventId",
+          "provenance",
+          "english",
+          "arabic"
+        ],
+        "title": "NarratorOutput"
+      },
+      "PassEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "pass",
+            "title": "Type"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "receiverId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receiverid"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "complete",
+                  "incomplete",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "PassEventSchema"
+      },
+      "PitchPointSchema": {
+        "properties": {
+          "x": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Y"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "PitchPointSchema",
+        "description": "Frontend-compatible PitchPoint (0–100%, origin bottom-left)."
+      },
+      "PossessionChangeEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "possession_change",
+            "title": "Type"
+          },
+          "gainedByTeamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gainedbyteamid"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "PossessionChangeEventSchema"
+      },
+      "PressureEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "pressure",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "PressureEventSchema"
+      },
+      "RankingEntrySchema": {
+        "properties": {
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "actionId": {
+            "type": "string",
+            "title": "Actionid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "observed_pass",
+              "observed_carry",
+              "observed_shot",
+              "hypothetical_pass"
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "compositeScore": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compositescore"
+          },
+          "targetPlayerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targetplayerid"
+          },
+          "rankable": {
+            "type": "boolean",
+            "title": "Rankable"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "actionId",
+          "kind",
+          "label",
+          "rankable"
+        ],
+        "title": "RankingEntrySchema"
+      },
+      "ShotEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "shot",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "goal",
+                  "saved",
+                  "blocked",
+                  "off_target",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "ShotEventSchema"
+      },
+      "TackleEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "tackle",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "won",
+                  "lost",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "TackleEventSchema"
+      },
+      "TeamSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "shortName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortname"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "TeamSchema"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "apiKey",
+        "description": "Bearer token configured on the ReMatch API server.",
+        "in": "header",
+        "name": "Authorization"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}
