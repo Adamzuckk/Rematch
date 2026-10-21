@@ -20,7 +20,7 @@ properties:
           - name: APP_ENV
             value: production
           - name: REQUIRE_API_AUTH
-            value: "true"
+            value: "false"  # demo: judges without bearer token
           - name: API_BEARER_TOKEN
             secretRef: api-bearer-token
           - name: DATABASE_URL
