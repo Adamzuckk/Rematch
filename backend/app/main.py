@@ -38,9 +38,9 @@ def create_app() -> FastAPI:
             "Synthetic demo data only; no LLM or Foundry integration."
         ),
         lifespan=lifespan,
-        docs_url="/docs",
-        redoc_url="/redoc",
-        openapi_url="/openapi.json",
+        docs_url="/docs" if settings.docs_enabled else None,
+        redoc_url="/redoc" if settings.docs_enabled else None,
+        openapi_url="/openapi.json" if settings.docs_enabled else None,
     )
 
     origins = settings.cors_origin_list()

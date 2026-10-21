@@ -69,6 +69,24 @@ def test_external_auth_requires_valid_bearer_and_advertises_security(
     get_settings.cache_clear()
 
 
+def test_production_disables_public_api_documentation(seeded_db, monkeypatch):
+    monkeypatch.setenv("APP_ENV", "production")
+    get_settings.cache_clear()
+
+    app = create_app()
+
+    def override_db():
+        yield seeded_db
+
+    app.dependency_overrides[get_db_dep] = override_db
+    with TestClient(app) as client:
+        for path in ("/docs", "/redoc", "/openapi.json"):
+            assert client.get(path).status_code == 404
+
+    app.dependency_overrides.clear()
+    get_settings.cache_clear()
+
+
 def test_external_auth_rejects_short_token():
     with pytest.raises(ValidationError, match="at least 32 characters"):
         Settings(

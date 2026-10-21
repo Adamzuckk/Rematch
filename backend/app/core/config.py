@@ -50,6 +50,11 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
+    def docs_enabled(self) -> bool:
+        """Keep interactive API documentation local-only by default."""
+        return self.app_env.lower() not in {"production", "prod"}
+
+    @property
     def is_sqlite(self) -> bool:
         return self.database_url.startswith("sqlite")
 

@@ -15,7 +15,7 @@ For the reviewed Azure Container Apps container setup, resource/cost prerequisit
 cd backend
 python3.12 -m venv .venv          # or python3.11+
 source .venv/bin/activate
-pip install -e ".[dev]"
+uv sync --locked --extra dev
 cp .env.example .env
 
 # Create schema
@@ -29,7 +29,7 @@ rematch-seed
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-- OpenAPI docs: http://localhost:8000/docs  
+- OpenAPI docs: http://localhost:8000/docs (development only)  
 - Health: http://localhost:8000/api/v1/health  
 
 ## Environment variables
@@ -45,6 +45,18 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated browser origins. Empty disables CORS |
 | `DEFAULT_PAGE_LIMIT` | `50` | Default list page size |
 | `MAX_PAGE_LIMIT` | `100` | Hard cap for `limit` |
+
+`uv.lock` is the canonical dependency graph. `requirements.txt` is the
+hash-checked, production-only export used by the Docker build. Refresh both
+together after an intentional dependency update:
+
+```bash
+uv lock
+uv export --locked --no-dev --no-emit-project --format requirements-txt --output-file requirements.txt
+```
+
+When `APP_ENV=production` (or `prod`), `/docs`, `/redoc`, and `/openapi.json`
+are disabled. Local development keeps them enabled.
 
 PostgreSQL example:
 
