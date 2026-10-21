@@ -28,6 +28,13 @@ describe('mapPitchPointToSvg', () => {
     })
   })
 
+  it('normalizes finite SVG coordinates so equivalent positions are stable', () => {
+    expect(mapPitchPointToSvg({ x: 80, y: 30 })).toEqual({
+      x: 840,
+      y: 476,
+    })
+  })
+
   it('returns null for out-of-range coordinates', () => {
     expect(mapPitchPointToSvg({ x: -1, y: 50 })).toBeNull()
     expect(mapPitchPointToSvg({ x: 50, y: 101 })).toBeNull()

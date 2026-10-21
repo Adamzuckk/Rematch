@@ -23,7 +23,7 @@ function useCrumbs(): Crumb[] {
       ? formatMatchLabel(matchState.match)
       : params.matchId
         ? `Match ${params.matchId}`
-        : 'Match'
+        : t('breadcrumbMatch')
 
   const path = location.pathname
 
@@ -42,7 +42,7 @@ function useCrumbs(): Crumb[] {
         label: t('breadcrumbDecisionExplorer'),
         to: `/matches/${params.matchId}/decisions/${params.eventId}`,
       },
-      { label: 'Pick Your Pass' },
+      { label: t('breadcrumbPickPass') },
     ]
   }
 
@@ -58,7 +58,7 @@ function useCrumbs(): Crumb[] {
     return [
       { label: t('navDashboard'), to: '/dashboard' },
       { label: matchLabel, to: `/matches/${params.matchId}` },
-      { label: 'Insights' },
+      { label: t('breadcrumbInsights') },
     ]
   }
 

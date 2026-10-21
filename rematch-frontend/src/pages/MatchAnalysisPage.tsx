@@ -117,6 +117,7 @@ export function MatchAnalysisPage() {
             selectedEvent={selectedEvent}
             frame={frame}
             label={t('matchAnalysisPitchLabel')}
+            locale={locale}
           />
         </div>
 
@@ -155,6 +156,7 @@ export function MatchAnalysisPage() {
         }}
         canPrevious={canPrevious}
         canNext={canNext}
+        locale={locale}
         labels={{
           heading: t('matchAnalysisTimeline'),
           empty: t('matchAnalysisTimelineEmpty'),

@@ -1,4 +1,5 @@
 import { Button } from '../components/ui/Button'
+import { useLocale } from '../i18n/locale'
 import styles from './PlaceholderPage.module.css'
 
 interface PlaceholderPageProps {
@@ -14,16 +15,17 @@ export function PlaceholderPage({
   phaseHint,
   details = [],
 }: PlaceholderPageProps) {
+  const { t } = useLocale()
   return (
     <div className={styles.page}>
       <header className={styles.header}>
-        <p className={styles.eyebrow}>Not implemented yet</p>
+        <p className={styles.eyebrow}>{t('comingSoonEyebrow')}</p>
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.lead}>{description}</p>
       </header>
 
-      <section className={styles.panel} aria-label="Implementation status">
-        <h2 className={styles.panelTitle}>Coming in a later phase</h2>
+      <section className={styles.panel} aria-label={t('implementationStatus')}>
+        <h2 className={styles.panelTitle}>{t('comingSoonTitle')}</h2>
         <p className={styles.panelBody}>{phaseHint}</p>
         {details.length > 0 ? (
           <ul className={styles.list}>
@@ -34,7 +36,7 @@ export function PlaceholderPage({
         ) : null}
         <div>
           <Button variant="secondary" to="/dashboard">
-            Back to dashboard
+            {t('backToDashboard')}
           </Button>
         </div>
       </section>

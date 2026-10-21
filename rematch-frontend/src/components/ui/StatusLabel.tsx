@@ -1,14 +1,8 @@
 import type { MatchStatus } from '../../types/match'
+import { useLocale } from '../../i18n/locale'
 import styles from './StatusLabel.module.css'
 
 type StatusKind = MatchStatus | 'demo'
-
-const LABELS: Record<StatusKind, string> = {
-  live: 'Live',
-  finished: 'Finished',
-  upcoming: 'Upcoming',
-  demo: 'Synthetic demo data',
-}
 
 interface StatusLabelProps {
   status: StatusKind
@@ -21,10 +15,19 @@ export function StatusLabel({
   showDot = status === 'live',
   className,
 }: StatusLabelProps) {
+  const { t } = useLocale()
+  const label =
+    status === 'live'
+      ? t('filterLive')
+      : status === 'finished'
+        ? t('filterFinished')
+        : status === 'upcoming'
+          ? t('filterUpcoming')
+          : t('statusSynthetic')
   return (
     <span className={[styles.label, styles[status], className ?? ''].join(' ')}>
       {showDot ? <span className={styles.dot} aria-hidden="true" /> : null}
-      {LABELS[status]}
+      {label}
     </span>
   )
 }

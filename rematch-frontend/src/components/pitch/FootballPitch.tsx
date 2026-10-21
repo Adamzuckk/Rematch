@@ -1,9 +1,8 @@
-import type { KeyboardEvent } from 'react'
+import { useId, type KeyboardEvent } from 'react'
 import type { MatchEvent, MatchFrame, Team } from '../../types'
 import type { PitchPoint } from '../../types/coordinates'
 import {
   getEventGeometry,
-  mapPitchPointToSvg,
   mapPitchPointToSvgClamped,
   PITCH_VIEWBOX,
 } from '../../lib/pitch'
@@ -16,6 +15,7 @@ export interface FootballPitchProps {
   frame?: MatchFrame | null
   /** Accessible name for the pitch diagram */
   label?: string
+  locale?: 'en' | 'ar'
   className?: string
   highlightedPath?: { start: PitchPoint; end: PitchPoint } | null
   selectablePlayerIds?: string[]
@@ -55,6 +55,7 @@ export function FootballPitch({
   selectedEvent = null,
   frame = null,
   label = 'Football pitch',
+  locale = 'en',
   className,
   highlightedPath = null,
   selectablePlayerIds = [],
@@ -62,6 +63,9 @@ export function FootballPitch({
   onSelectPlayer,
   selectPlayerLabel = (playerId) => `Select pass to player ${playerId}`,
 }: FootballPitchProps) {
+  // SVG fragment identifiers are document-global. A component-scoped ID avoids
+  // one pitch borrowing another pitch's stripe pattern when two are mounted.
+  const stripePatternId = `pitch-stripes-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const geometry = selectedEvent ? getEventGeometry(selectedEvent) : {}
   const locationSvg = geometry.location
     ? mapPitchPointToSvgClamped(geometry.location)
@@ -80,8 +84,10 @@ export function FootballPitch({
     : null
 
   const players = frame?.players ?? []
+  // Event, player, and ball data all share one normalized coordinate system.
+  // Clamp finite upstream edge drift consistently; reject non-finite points.
   const ballSvg = frame?.ball
-    ? mapPitchPointToSvg(frame.ball.position)
+    ? mapPitchPointToSvgClamped(frame.ball.position)
     : null
 
   const penaltyY = (H - MARK.penaltyWidth) / 2
@@ -100,7 +106,7 @@ export function FootballPitch({
         <title>{label}</title>
         <defs>
           <pattern
-            id="pitch-stripes"
+            id={stripePatternId}
             width="70"
             height={H}
             patternUnits="userSpaceOnUse"
@@ -110,7 +116,7 @@ export function FootballPitch({
           </pattern>
         </defs>
 
-        <rect width={W} height={H} fill="url(#pitch-stripes)" />
+        <rect width={W} height={H} fill={`url(#${stripePatternId})`} />
 
         {/* Boundary */}
         <rect
@@ -192,14 +198,14 @@ export function FootballPitch({
 
         {/* Goal mouths (visual only) */}
         <rect
-          x={-8}
+          x={2}
           y={goalMouthY}
           width={10}
           height={MARK.goalMouth}
           className={styles.goal}
         />
         <rect
-          x={W - 2}
+          x={W - 12}
           y={goalMouthY}
           width={10}
           height={MARK.goalMouth}
@@ -231,6 +237,7 @@ export function FootballPitch({
         {/* Event path */}
         {pathStart && pathEnd ? (
           <line
+            key={`event-path-${selectedEvent?.id ?? ''}-${pathStart.x}-${pathStart.y}-${pathEnd.x}-${pathEnd.y}`}
             x1={pathStart.x}
             y1={pathStart.y}
             x2={pathEnd.x}
@@ -241,6 +248,7 @@ export function FootballPitch({
         ) : null}
         {selectedStart && selectedEnd ? (
           <line
+            key={`selected-path-${selectedStart.x}-${selectedStart.y}-${selectedEnd.x}-${selectedEnd.y}`}
             x1={selectedStart.x}
             y1={selectedStart.y}
             x2={selectedEnd.x}
@@ -253,6 +261,7 @@ export function FootballPitch({
         {/* Event location */}
         {locationSvg ? (
           <g
+            key={`event-location-${selectedEvent?.id ?? ''}-${locationSvg.x}-${locationSvg.y}`}
             transform={`translate(${locationSvg.x}, ${locationSvg.y})`}
             data-testid="event-location"
           >
@@ -268,7 +277,7 @@ export function FootballPitch({
 
         {/* Player markers from frame only */}
         {players.map((player) => {
-          const svgPoint = mapPitchPointToSvg(player.position)
+          const svgPoint = mapPitchPointToSvgClamped(player.position)
           if (!svgPoint) return null
           const side = teamSide(player.teamId, homeTeam.id, awayTeam.id)
           const teamLabel =
@@ -353,11 +362,13 @@ export function FootballPitch({
         </span>
         <span className={styles.legendItem}>
           <span className={[styles.swatch, styles.swatchEvent].join(' ')} />
-          Event
+          {locale === 'ar' ? 'حدث' : 'Event'}
         </span>
         {frame == null || players.length === 0 ? (
           <span className={styles.legendNote}>
-            No player frame for this moment
+            {locale === 'ar'
+              ? 'لا يوجد إطار للاعبين لهذه اللحظة'
+              : 'No player frame for this moment'}
           </span>
         ) : null}
       </figcaption>

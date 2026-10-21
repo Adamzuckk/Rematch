@@ -4,25 +4,27 @@ import {
   useMatchSummary,
 } from '../hooks/useMatchSummary'
 import { PlaceholderPage } from './PlaceholderPage'
+import { useLocale } from '../i18n/locale'
 
 export function InsightsPage() {
+  const { t } = useLocale()
   const { matchId } = useParams()
   const matchState = useMatchSummary(matchId)
 
   const label =
     matchState.status === 'ready'
       ? formatMatchLabel(matchState.match)
-      : `Match ${matchId ?? ''}`
+      : `${t('breadcrumbMatch')} ${matchId ?? ''}`
 
   return (
     <PlaceholderPage
-      title={`Match insights — ${label}`}
-      description="Grounded summaries, Fan/Analyst modes, and metric charts are not implemented yet."
-      phaseHint="A later phase adds match insights backed by backend calculations and localization."
+      title={`${t('insightsTitle')} — ${label}`}
+      description={t('insightsDescription')}
+      phaseHint={t('insightsPhaseHint')}
       details={[
-        'Key moments linked to supporting events',
-        'Fan Mode and Analyst Mode',
-        'No invented operational metrics',
+        t('insightsDetailMoments'),
+        t('insightsDetailModes'),
+        t('insightsDetailEvidence'),
       ]}
     />
   )

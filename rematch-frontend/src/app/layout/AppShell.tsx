@@ -28,6 +28,8 @@ export function AppShell() {
 
   return (
     <div className={styles.shell}>
+      <div className={styles.pitchPulse} aria-hidden="true" />
+      <div className={styles.touchline} aria-hidden="true" />
       <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
       {navOpen ? (
         <button

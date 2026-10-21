@@ -39,6 +39,13 @@ export function MatchCard({ match }: MatchCardProps) {
       data-status={match.status}
       aria-label={`${homeName} ${t('versus')} ${awayName}, ${statusAnnouncement}`}
     >
+      {match.status === 'live' ? (
+        <span className={styles.liveSignal} aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </span>
+      ) : null}
       <header className={styles.header}>
         <span className={styles.competition}>{match.competition}</span>
         <div className={styles.badges}>
@@ -51,6 +58,7 @@ export function MatchCard({ match }: MatchCardProps) {
 
       <div className={styles.teams}>
         <div className={styles.teamRow}>
+          <span className={styles.teamIndex} aria-hidden="true">01</span>
           <span className={styles.teamName}>
             {homeName}
             {match.homeTeam.shortName ? (
@@ -69,6 +77,7 @@ export function MatchCard({ match }: MatchCardProps) {
           )}
         </div>
         <div className={styles.teamRow}>
+          <span className={styles.teamIndex} aria-hidden="true">02</span>
           <span className={styles.teamName}>
             {awayName}
             {match.awayTeam.shortName ? (
@@ -91,7 +100,7 @@ export function MatchCard({ match }: MatchCardProps) {
       <div className={styles.meta}>
         <span>{formatKickoff(match.kickoffAt, locale)}</span>
         {match.status === 'live' && match.minute != null ? (
-          <span>{match.minute}&prime;</span>
+          <span className={styles.liveMinute}>{match.minute}&prime;</span>
         ) : null}
         {match.venue ? <span>{match.venue}</span> : null}
       </div>

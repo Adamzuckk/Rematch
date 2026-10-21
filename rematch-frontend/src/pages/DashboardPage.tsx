@@ -87,15 +87,35 @@ export function DashboardPage() {
   return (
     <div className={styles.page}>
       <header className={styles.hero}>
-        <p className={styles.eyebrow}>{t('dashboardEyebrow')}</p>
-        <h1 className={styles.title}>{t('dashboardTitle')}</h1>
-        <p className={styles.intro}>{t('dashboardIntro')}</p>
-        {isReady ? (
-          <p className={styles.seed}>
-            {t('dashboardSeed')}: {ready.dataset.scenarioId} ·{' '}
-            {t('dashboardProvenance')}: {ready.dataset.provenance}
-          </p>
-        ) : null}
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}>{t('dashboardEyebrow')}</p>
+          <h1 className={styles.title}>{t('dashboardTitle')}</h1>
+          <p className={styles.intro}>{t('dashboardIntro')}</p>
+          {isReady ? (
+            <p className={styles.seed}>
+              {t('dashboardSeed')}: {ready.dataset.scenarioId} ·{' '}
+              {t('dashboardProvenance')}: {ready.dataset.provenance}
+            </p>
+          ) : null}
+          {isReady ? (
+            <div className={styles.heroReadout} aria-label={t('dashboardCatalogueReadout')}>
+              <span className={styles.readoutValue}>{ready.totalCount}</span>
+              <span className={styles.readoutLabel}>{t('dashboardCatalogueReadout')}</span>
+              <span className={styles.readoutRule} aria-hidden="true" />
+              <span className={styles.readoutLabel}>{t('dashboardEvidenceFirst')}</span>
+            </div>
+          ) : null}
+        </div>
+        <div className={styles.tacticalWindow} aria-hidden="true">
+          <span className={styles.tacticalHalfway} />
+          <span className={styles.tacticalCircle} />
+          <span className={styles.tacticalBoxTop} />
+          <span className={styles.tacticalBoxBottom} />
+          <span className={styles.tacticalBall} />
+          <span className={[styles.runner, styles.runnerOne].join(' ')} />
+          <span className={[styles.runner, styles.runnerTwo].join(' ')} />
+          <span className={[styles.runner, styles.runnerThree].join(' ')} />
+        </div>
       </header>
 
       {isReady ? (
@@ -168,9 +188,10 @@ export function DashboardPage() {
         </div>
 
         {isLoading ? (
-          <p className={styles.loading} role="status" aria-live="polite">
-            {t('loadingMatches')}
-          </p>
+          <div className={styles.loading} role="status" aria-live="polite">
+            <span className={styles.loadingBall} aria-hidden="true" />
+            <span>{t('loadingMatches')}</span>
+          </div>
         ) : null}
 
         {isError ? (

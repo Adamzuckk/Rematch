@@ -5,7 +5,7 @@ import {
   isDecisionCandidate,
 } from '../../lib/pitch'
 import { Button } from '../ui/Button'
-import { EVENT_TYPE_LABELS } from './eventLabels'
+import { eventTypeLabel } from './eventLabels'
 import { useLocale } from '../../i18n/locale'
 import styles from './EventInspector.module.css'
 
@@ -93,7 +93,7 @@ export function EventInspector({
   frame = null,
   labels = {},
 }: EventInspectorProps) {
-  const { t } = useLocale()
+  const { t, locale } = useLocale()
   const heading = labels.heading ?? 'Event details'
   const empty = labels.empty ?? 'Select an event to inspect its details.'
   const missing = labels.missing ?? 'Not available'
@@ -156,7 +156,7 @@ export function EventInspector({
       <dl className={styles.list}>
         <DetailRow
           label={fields.type}
-          value={EVENT_TYPE_LABELS[event.type]}
+          value={eventTypeLabel(event.type, locale)}
           missingLabel={missing}
         />
         <DetailRow

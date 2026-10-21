@@ -27,7 +27,12 @@ export function MatchHeader({
   locale = 'en',
 }: MatchHeaderProps) {
   return (
-    <header className={styles.root}>
+    <header
+      className={[styles.root, match.status === 'live' ? styles.live : '']
+        .filter(Boolean)
+        .join(' ')}
+    >
+      {match.status === 'live' ? <span className={styles.liveScan} aria-hidden="true" /> : null}
       <div className={styles.top}>
         <p className={styles.competition}>{match.competition}</p>
         <div className={styles.badges}>

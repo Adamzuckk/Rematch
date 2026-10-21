@@ -21,6 +21,16 @@ const passEvent: MatchEvent = {
   provenance: 'synthetic',
 }
 
+const shotEvent: MatchEvent = {
+  id: 'evt-shot',
+  matchId: 'm1',
+  type: 'shot',
+  minute: 18,
+  teamId: awayTeam.id,
+  location: { x: 80, y: 30 },
+  provenance: 'synthetic',
+}
+
 const frameWithPlayers: MatchFrame = {
   id: 'frame-1',
   matchId: 'm1',
@@ -156,5 +166,112 @@ describe('FootballPitch', () => {
     expect(
       screen.getByRole('img', { name: /Player ok, Away United/i }),
     ).toBeInTheDocument()
+  })
+
+  it('keeps all finite frame markers inside the shared pitch coordinate system', () => {
+    const edgeFrame: MatchFrame = {
+      id: 'frame-edge',
+      matchId: 'm1',
+      players: [
+        {
+          playerId: 'edge-player',
+          teamId: homeTeam.id,
+          position: { x: -12, y: 120 },
+        },
+      ],
+      ball: { position: { x: 130, y: -5 } },
+      provenance: 'synthetic',
+    }
+
+    render(
+      <FootballPitch
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        frame={edgeFrame}
+      />,
+    )
+
+    expect(screen.getByTestId('player-marker')).toHaveAttribute(
+      'transform',
+      'translate(0, 0)',
+    )
+    expect(screen.getByTestId('ball-marker')).toHaveAttribute(
+      'transform',
+      'translate(1050, 680)',
+    )
+  })
+
+  it('uses a fixed proportional viewBox, so marker coordinates do not depend on rendered width', () => {
+    render(
+      <FootballPitch
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        frame={frameWithPlayers}
+        className="narrow-pitch"
+      />,
+    )
+
+    const pitch = screen.getByRole('img', { name: 'Football pitch' })
+    expect(pitch).toHaveAttribute('viewBox', '0 0 1050 680')
+    expect(pitch).toHaveAttribute('preserveAspectRatio', 'xMidYMid meet')
+    expect(screen.getByTestId('ball-marker')).toHaveAttribute(
+      'transform',
+      'translate(525, 340)',
+    )
+  })
+
+  it('replaces animated overlays when the selected event changes and removes them on cleanup', () => {
+    const { rerender, unmount } = render(
+      <FootballPitch
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        selectedEvent={passEvent}
+      />,
+    )
+
+    const oldPath = screen.getByTestId('event-path')
+    const oldLocation = screen.getByTestId('event-location')
+
+    rerender(
+      <FootballPitch
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        selectedEvent={shotEvent}
+      />,
+    )
+
+    const newLocation = screen.getByTestId('event-location')
+    expect(screen.queryByTestId('event-path')).not.toBeInTheDocument()
+    expect(newLocation).toHaveAttribute('transform', 'translate(840, 476)')
+    expect(newLocation).not.toBe(oldLocation)
+    expect(oldLocation.isConnected).toBe(false)
+    expect(oldPath.isConnected).toBe(false)
+
+    unmount()
+    expect(newLocation.isConnected).toBe(false)
+  })
+
+  it('restarts the selected-path entry motion when its geometry changes', () => {
+    const { rerender } = render(
+      <FootballPitch
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        highlightedPath={{ start: { x: 20, y: 40 }, end: { x: 30, y: 50 } }}
+      />,
+    )
+    const firstPath = screen.getByTestId('selected-pass-path')
+
+    rerender(
+      <FootballPitch
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        highlightedPath={{ start: { x: 20, y: 40 }, end: { x: 70, y: 60 } }}
+      />,
+    )
+
+    const nextPath = screen.getByTestId('selected-pass-path')
+    expect(nextPath).not.toBe(firstPath)
+    expect(firstPath.isConnected).toBe(false)
+    expect(nextPath).toHaveAttribute('x2', '735')
   })
 })

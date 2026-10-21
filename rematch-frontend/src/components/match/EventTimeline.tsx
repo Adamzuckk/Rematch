@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { MatchEvent } from '../../types'
 import { formatEventMinute } from '../../lib/pitch'
 import { Button } from '../ui/Button'
-import { EVENT_TYPE_LABELS } from './eventLabels'
+import { eventTypeLabel } from './eventLabels'
 import styles from './EventTimeline.module.css'
 
 export interface EventTimelineProps {
@@ -13,6 +13,7 @@ export interface EventTimelineProps {
   onNext: () => void
   canPrevious: boolean
   canNext: boolean
+  locale?: 'en' | 'ar'
   labels?: {
     heading?: string
     empty?: string
@@ -30,6 +31,7 @@ export function EventTimeline({
   onNext,
   canPrevious,
   canNext,
+  locale = 'en',
   labels = {},
 }: EventTimelineProps) {
   const heading = labels.heading ?? 'Event timeline'
@@ -85,13 +87,13 @@ export function EventTimeline({
                   onClick={() => onSelect(event.id)}
                   aria-selected={selected}
                   role="option"
-                  aria-label={`${EVENT_TYPE_LABELS[event.type]} at ${formatEventMinute(event.minute)}${selected ? `, ${selectedHint}` : ''}`}
+                  aria-label={`${eventTypeLabel(event.type, locale)} ${locale === 'ar' ? 'في' : 'at'} ${formatEventMinute(event.minute)}${selected ? `, ${selectedHint}` : ''}`}
                 >
                   <span className={styles.minute}>
                     {formatEventMinute(event.minute)}
                   </span>
                   <span className={styles.type}>
-                    {EVENT_TYPE_LABELS[event.type]}
+                    {eventTypeLabel(event.type, locale)}
                   </span>
                   {selected ? (
                     <span className={styles.selectedBadge} aria-hidden="true">

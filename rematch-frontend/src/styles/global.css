@@ -2,7 +2,7 @@
 *, *::before, *::after { box-sizing: border-box; }
 html { color-scheme: dark; }
 html, body, #root { min-height: 100%; }
-body { margin: 0; font-family: var(--font-sans); font-size: 15px; line-height: 1.5; color: var(--color-text); background: var(--color-bg); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { margin: 0; overflow-x:hidden; font-family: var(--font-sans); font-size: 15px; line-height: 1.5; color: var(--color-text); background: radial-gradient(circle at 78% -10%, rgba(78,137,63,.13), transparent 28rem), var(--color-bg); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 #root { min-height: 100svh; }
 h1, h2, h3, h4 { margin: 0; font-family: var(--font-display); font-weight: 650; color: var(--color-text); letter-spacing: -.035em; }
 p { margin: 0; } a { color: inherit; text-decoration: none; } img { display: block; max-width: 100%; }
@@ -10,5 +10,7 @@ button, input, select { color: inherit; font: inherit; } button { -webkit-tap-hi
 :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 3px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 ::selection { background: var(--color-accent); color: var(--color-accent-ink); }
-@keyframes rematch-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes rematch-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes stadium-glow { 50% { opacity: .72; transform: scale(1.035); } }
+@keyframes tactical-drift { to { background-position: 48px 48px, 48px 48px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }

@@ -384,6 +384,7 @@ export function DecisionExplorerPanel({
                     awayTeam={match.awayTeam}
                     frame={frame}
                     label={t('pickPassPitch')}
+                    locale={locale}
                     highlightedPath={selected ? { start: selected.start!, end: selected.end! } : null}
                     selectablePlayerIds={eligibleAlternatives.map((alt) => alt.targetPlayerId).filter((id): id is string => Boolean(id))}
                     selectedPlayerId={selected?.targetPlayerId}
