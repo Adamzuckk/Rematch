@@ -1,380 +1,262 @@
 <div align="center">
+  <img src="rematch-frontend/src/assets/brand/rematch-logo-on-dark.svg" alt="ReMatch" width="132" />
 
-# Rematch
+  # ReMatch
 
-### Don't just watch what happened. Understand why it happened.
+  ### Rewind the moment. See the options. Follow the evidence.
 
-**An explainable football intelligence platform that compares what a player actually did with what they could have done, and shows the evidence.**
+  **An evidence-first football intelligence experience for exploring _why_ a decision mattered.**
 
-![Status](https://img.shields.io/badge/status-in%20development-orange)
-![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20TypeScript-61DAFB)
-![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
-![Data](https://img.shields.io/badge/data-synthetic-blueviolet)
-![Hackathon](https://img.shields.io/badge/Microsoft-Inside%20the%20Game%20Hackathon-0078D4)
+  [![Frontend: React + TypeScript](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB?logo=react&logoColor=white)](rematch-frontend)
+  [![Backend: FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](backend)
+  [![Data: Synthetic](https://img.shields.io/badge/Data-Synthetic-7C3AED)](#the-data-behind-the-demo)
+  [![Status: In development](https://img.shields.io/badge/Status-In%20development-F59E0B)](#roadmap)
 
-[Live Demo](#demo) · [Demo Video](#demo) · [How It Works](#how-it-works) · [Getting Started](#getting-started)
-
-<!-- Add a screenshot or GIF of the Decision Explorer here -->
-<!-- ![Rematch Decision Explorer](docs/images/decision-explorer.png) -->
-
+  [Get started](#run-it-locally) · [Explore the API](#api-at-a-glance) · [Understand the scoring](docs/decision-engine.md) · [Read the docs](#documentation)
 </div>
 
 ---
 
-## Why Rematch?
+## The idea
 
-Match dashboards show **what** happened: passes, shots, possession. They rarely explain **why a decision mattered**. AI-generated commentary can sound convincing while inventing facts.
+Most match products can tell you that a pass was played. ReMatch lets you stop on that moment, see the frame around it, compare the action with the options that were actually present, and trace every computed claim back to evidence.
 
-Rematch is built around one question:
-
-> **"What could have happened if the player had chosen differently?"**
-
-For any key moment (a pass, a shot, or a carry), Rematch compares the action the player took against plausible alternatives, scores each one with a transparent decision-value model, and explains the difference in plain language. Every claim links back to the events and calculations behind it.
-
-> **Code calculates the values. AI explains them.** Rematch never asks a language model to invent match statistics.
-
----
-
-## Features
-
-> Features below are **planned**. A feature is marked done only after it is implemented and tested in this repository (see [Current Status](#current-status)).
-
-- **Decision Explorer:** compare an actual action with plausible alternatives.
-- **Interactive Match View:** 2D pitch, score, event timeline, and key moments.
-- **Evidence Drawer:** inspect the exact events and calculations behind any claim.
-- **Match Insights:** summaries, player metrics, and match-momentum charts.
-- **Fan & Analyst Modes:** accessible explanations or detailed analysis.
-- **English & Arabic UI:** interface and explanations in both languages.
-- **Verified Explanations:** unsupported claims are rejected, corrected, or replaced with a safe fallback.
-- **System Metrics:** evidence support, verifier outcomes, and explanation latency.
-- **Synthetic Match Simulator:** fictional match events for repeatable demos and tests.
-
----
-
-## How It Works
+It is deliberately opinionated about what it will _not_ pretend to know. ReMatch is a deterministic geometry-based explainer—not xG, a pass-completion model, betting advice, or proof that a footballer made the objectively “right” choice.
 
 ```mermaid
 flowchart LR
-    A[Ingest<br/>synthetic events] --> B[Interpret<br/>match state + stats]
-    B --> C[Evaluate<br/>decision values]
-    C --> D[Explain<br/>AI-written summary]
-    D --> E[Verify<br/>claims vs evidence]
-    E --> F[Render<br/>frontend + evidence]
+  A["01 · Pick a moment"] --> B["02 · Inspect the frame"]
+  B --> C["03 · Compare available actions"]
+  C --> D["04 · Verify the evidence"]
 ```
 
-| Step | What happens |
-|------|--------------|
-| **1. Ingest** | Receive synthetic events: passes, shots, tackles, pressure, possession changes. |
-| **2. Interpret** | Update match state and compute statistics with deterministic code. |
-| **3. Evaluate** | Score the actual action and plausible alternatives with the decision-value model. |
-| **4. Explain** | Generate a readable explanation from the calculated results only. |
-| **5. Verify** | Check every claim against available event IDs and calculations. |
-| **6. Render** | Show the analysis, evidence, and events in the UI. |
+## What you can explore
 
-> **Note:** Decision values are **model estimates**, not objective probabilities or guaranteed predictions of real-world outcomes.
+| Experience | What it gives you |
+|---|---|
+| **Match catalogue** | Searchable synthetic fixtures, filterable by status, with an at-a-glance dataset overview. |
+| **Match analysis** | A pitch view, event timeline, event inspector, score context, players, and aligned frames. |
+| **Decision Explorer** | Backend-scored observed actions and frame-backed alternatives, ranked with transparent calculations. |
+| **Pick Your Pass** | An interactive way to inspect alternatives already returned by the engine—without recalculating or inventing scores in the browser. |
+| **Evidence & narration** | Claim references, calculation checks, and deterministic English/Arabic narrative output that states limitations clearly. |
 
----
+### Built to show its working
 
-## Pages
+Every decision analysis is grounded in one observable frame of synthetic match data:
 
-| Page | Purpose |
-|------|---------|
-| **Dashboard** | Browse matches and open an analysis. |
-| **Match Analysis** | Explore the pitch, score, timeline, and key moments. |
-| **Decision Explorer** | Compare a player's decision with alternatives. |
-| **Match Insights** | Review summaries and performance insights. |
-| **System Metrics** | Inspect reliability and performance measurements. |
-| **Settings** *(optional)* | Choose language and analysis mode. |
+- The backend, not an AI model or the UI, calculates scores and ranks.
+- Alternatives are created only for teammates positioned in the event’s aligned frame.
+- Claims include references to source events, frames, positions, and registered calculations.
+- The verifier validates evidence/reference membership and calculation consistency; it does not certify a free-form statement as football truth.
+- The client keeps mock and API modes separate. An API failure is shown to the user—it never silently swaps in mock data.
 
----
+## How scoring works
 
-## Sitemap
-
-> Planned navigation and routes. Paths and endpoints may change during development.
-
-```mermaid
-flowchart TD
-    D["Dashboard<br/>/"]
-    M["Match Analysis<br/>/matches/:matchId"]
-    X["Decision Explorer<br/>/matches/:matchId/decisions/:eventId"]
-    I["Match Insights<br/>/matches/:matchId/insights"]
-    S["System Metrics<br/>/metrics"]
-
-    D -->|open a match| M
-    M -->|select pass / shot / carry| X
-    M --> I
-    X -->|back to match| M
-    D --> S
-```
-
-### Routes
-
-| Route | Page | Purpose | Planned API |
-|-------|------|---------|-------------|
-| `/dashboard` (and `/` → redirect) | Dashboard | Browse sample matches and open an analysis | `GET /api/v1/matches` |
-| `/matches/:matchId` | Match Analysis | 2D pitch, score, event timeline, inspector | `GET /api/v1/matches/{id}`, `…/events`, `…/frames`, `…/players` |
-| `/matches/:matchId/decisions/:eventId` | Decision Explorer | Compare observed action with geometric alternatives + evidence claims | `GET /api/v1/matches/{id}/events/{eventId}/decision-analysis` |
-| `/matches/:matchId/insights` | Match Insights | Summaries, player metrics *(placeholder)* | — |
-| `/metrics` | System Metrics | Reliability measurements *(placeholder)* | — |
-| Language toggle | Sidebar EN/AR | Interface locale + RTL | client-side |
-
-### Navigation Tree
+The current method, `geometric_progression_v1`, asks a narrow and explainable question: **how far does an action progress toward the opponent’s goal in this coordinate system?**
 
 ```text
-Rematch
-├── Dashboard                      /dashboard
-│   └── Match Analysis             /matches/:matchId
-│       ├── Decision Explorer      /matches/:matchId/decisions/:eventId
-│       └── Match Insights         /matches/:matchId/insights (placeholder)
-└── System Metrics                 /metrics (placeholder)
+composite score = progressive distance + goal-proximity gain
 ```
 
----
+`progressive distance` measures movement in the team’s attacking direction. `goal-proximity gain` measures the reduction in Euclidean distance to the centre of the opponent’s goal. Higher values mean more geometric progression—nothing more.
 
-## Tech Stack
+Recorded outcomes, xG, pressure estimates, passing-lane clearance, and completion probability are not mixed into this score. See the full [decision-engine notes](docs/decision-engine.md) for formulas, examples, evidence rules, and known limits.
 
-> This is the **intended** architecture. It will be updated to match what is actually used.
+## Architecture
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React, TypeScript, SVG pitch visualizations |
-| Backend API | Python, FastAPI |
-| Live updates | WebSockets (if needed for the event stream) |
-| Storage | SQLite (PostgreSQL only if required) |
-| Analytics & simulation | Python, NumPy, Pandas |
-| AI orchestration | Microsoft Foundry and Microsoft Agent Framework *(subject to availability)* |
-| Testing | Vitest + React Testing Library (frontend); pytest + HTTPX (backend) |
-| Automation | Git, GitHub, GitHub Actions |
+```mermaid
+flowchart LR
+  S["Deterministic synthetic generator"] --> A["FastAPI catalogue"]
+  A --> D["Decision engine"]
+  D --> V["Evidence catalogue & verifier"]
+  D --> N["Deterministic EN / AR narrator"]
+  A --> R["React + TypeScript experience"]
+  D --> R
+  V --> R
+  N --> R
+```
 
----
+| Layer | Stack | Responsibility |
+|---|---|---|
+| Frontend | React 19, TypeScript, Vite | Dark-mode football analysis experience, accessible states, English/Arabic RTL support, mock/API switching. |
+| API | FastAPI, Pydantic, SQLAlchemy | Versioned catalogue, decision analysis, narratives, evidence, and validation endpoints. |
+| Data | Alembic, SQLite locally | Idempotent synthetic seeds, fictional teams, typed events, and aligned player frames. |
+| Delivery | Docker, `uv`, Azure Container Apps template | Reproducible backend image and a reviewable deployment starting point. |
 
-## Getting Started
+## Run it locally
 
-**Prerequisites:** Node.js 20+, npm 10+, Git, Python 3.11+ (3.12 recommended for the backend).
+**Prerequisites:** Node.js 22.23.1+, Python 3.11–3.14, and [uv](https://docs.astral.sh/uv/). The production image uses Python 3.12.
 
-### End-to-end (Decision Explorer with live engine)
-
-**1. Backend**
+### Start the API
 
 ```bash
 cd backend
-python3.12 -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -e ".[dev]"
+uv sync --locked --all-extras
 cp .env.example .env
-alembic upgrade head
-rematch-seed
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+uv run alembic upgrade head
+uv run rematch-seed
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-- Health: http://localhost:8000/api/v1/health  
-- OpenAPI: http://localhost:8000/docs  
-- CORS defaults allow the local Vite origins on ports `5173` and `5174` (`CORS_ORIGINS` in `backend/.env`)
+The API health check is available at `http://127.0.0.1:8000/api/v1/health`. In development, interactive API documentation is available at `/docs`.
 
-**2. Frontend (API mode)**
+### Start the frontend in API mode
+
+In a second terminal:
 
 ```bash
 cd rematch-frontend
-npm install
+npm ci
 npm run dev:api -- --host 127.0.0.1 --port 5173
 ```
 
-The `dev:api` script loads the checked-in `.env.api` (`VITE_MATCH_DATA_SOURCE=api`, API at `http://127.0.0.1:8000`). Vite uses `5173` when free and may fall back to `5174` if another process already owns it. Both local ports are allowed by the backend CORS defaults. Open the URL Vite prints, then choose a Phase 8 match and an event with an aligned frame to inspect the available alternatives.
+`dev:api` uses the checked-in `.env.api` configuration and connects to the local API. The backend’s development CORS defaults allow local Vite hosts on ports 5173 and 5174.
 
-**3. Frontend (mock mode — default, offline)**
+For a full frame-backed decision journey, open:
+
+```text
+/matches/m-p8-harbor-eastbridge-002/decisions/m-p8-harbor-eastbridge-002-evt-001-pass
+```
+
+### Or work entirely offline
 
 ```bash
-VITE_MATCH_DATA_SOURCE=mock
-# VITE_API_BASE_URL can stay empty
+cd rematch-frontend
+npm ci
 npm run dev
 ```
 
-Mock Decision Explorer fixtures are static and labelled synthetic. Alternatives are empty (no frames in `rematch-phase2-v1`). There is **no** silent fallback from API failures to mock data.
+Mock mode is the default. It uses the `rematch-phase2-v1` synthetic fixture set. Those fixtures intentionally have no aligned frames, so the Decision Explorer correctly has no alternatives to compare.
 
-### Verify
+## Configuration
+
+### Backend
+
+Copy `backend/.env.example` to `backend/.env` for local overrides. Never commit this file or any secret.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `APP_NAME` | `ReMatch API` | API title. |
+| `APP_ENV` | `development` | `production` / `prod` disables interactive API documentation. |
+| `REQUIRE_API_AUTH` | `false` | Require a bearer token for every `/api/v1` endpoint. |
+| `API_BEARER_TOKEN` | unset | Required with authentication; must be at least 32 characters. |
+| `DATABASE_URL` | `sqlite:///./rematch.db` | SQLAlchemy database URL. |
+| `CORS_ORIGINS` | local Vite hosts | Comma-separated browser origins; empty disables CORS middleware. |
+| `DEFAULT_PAGE_LIMIT` / `MAX_PAGE_LIMIT` | `50` / `100` | Pagination defaults and ceiling. |
+
+### Frontend
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `VITE_MATCH_DATA_SOURCE` | `mock` | `mock` for bundled fixtures or `api` for FastAPI. |
+| `VITE_API_BASE_URL` | empty | Required in API mode, for example `http://127.0.0.1:8000`. |
+
+## API at a glance
+
+All application endpoints are JSON under `/api/v1`; list endpoints use `{ items, total, limit, offset }`.
+
+| Method | Endpoint | Use it for |
+|---|---|---|
+| `GET` | `/health` | A liveness check. |
+| `GET` | `/matches` | Paginated, searchable fixture catalogue. |
+| `GET` | `/matches/dataset` | Metadata for the preferred seeded scenario. |
+| `GET` | `/matches/overview` | Dashboard statistics. |
+| `GET` | `/matches/{match_id}` | A match summary. |
+| `GET` | `/matches/{match_id}/events` | The event timeline. |
+| `GET` | `/matches/{match_id}/frames` | Aligned player frames. |
+| `GET` | `/matches/{match_id}/players` | Players referenced by that match. |
+| `GET` | `/matches/{match_id}/events/{event_id}/decision-analysis` | Observed action, alternatives, scores, rankings, and claims. |
+| `GET` | `…/decision-analysis/narrative` | Deterministic bilingual explanation. |
+| `GET` | `…/decision-analysis/evidence` | Evidence bundle and validation context. |
+| `POST` | `…/decision-analysis/verify` | Validate supplied evidence references and registered calculations. |
+
+The exact request and response shapes are in the [API contract](docs/api-contract.md).
+
+## The data behind the demo
+
+Everything bundled with ReMatch is fictional and labelled as synthetic.
+
+- **`rematch-phase4-v1`** is retained as a sparse compatibility dataset.
+- **`rematch-phase8-v1`** is the preferred dataset: three generated full matches, 22-player frames, deterministic IDs, and eligible decision moments.
+- Alternatives exist only where an event has an aligned frame with eligible teammate positions. Missing options are never inferred.
+- The generator is deterministic: the same seed and parameters produce the same logical dataset.
+
+Read the [data model](docs/data-model.md) and [generator guide](docs/data-generator.md) for the schema, constraints, and reproducibility details.
+
+## Security, deployment, and boundaries
+
+ReMatch is a read-only demo architecture, not a production match platform. Its current safeguards include:
+
+- Pinned direct dependencies, committed lockfiles, and scheduled dependency-audit workflows.
+- A non-root Docker image and reproducible production dependency installation.
+- Documentation endpoints disabled in production mode.
+- Optional fail-closed bearer authentication for a development tunnel or protected demo.
+- No user accounts, write APIs, WebSockets, live data feeds, external AI/Foundry calls, or public deployment included in this repository.
+
+SQLite storage at `/tmp/rematch/rematch.db` inside the container is ephemeral. The supplied [Azure Container Apps template](backend/containerapp.yaml) is a reviewable starting point only; read the [deployment guide](docs/AZURE_CONTAINER_APPS.md) before creating cloud resources.
+
+## Quality checks
 
 ```bash
 # Frontend
 cd rematch-frontend
-npm run test
+npm ci
+npm audit --audit-level=high
 npm run lint
 npm run typecheck
+npm run test
 npm run build
 
-# Optional live-backend smoke (backend must be running + seeded)
-npm run smoke:decision
-
 # Backend
-cd ../backend && source .venv/bin/activate && pytest
+cd ../backend
+uv lock --check
+uv run --locked pytest
+
+# Optional: with the seeded API running
+cd ../rematch-frontend
+npm run smoke:decision
 ```
 
-Details: [backend/README.md](backend/README.md) · [rematch-frontend/README.md](rematch-frontend/README.md) · [docs/api-contract.md](docs/api-contract.md) · [docs/decision-engine.md](docs/decision-engine.md)
+Tests cover UI behavior, the API contract, synthetic generation and seeding, geometry scoring, evidence verification, deterministic narration, authentication behavior, and production-documentation protection.
 
-**Never commit secrets, API keys, credentials, or `.env` files.**
-
----
-
-## Project Structure
+## Project map
 
 ```text
 Rematch/
-├── rematch-frontend/   # React + TypeScript + Vite UI (Phase 1–3, 6)
-├── backend/            # FastAPI + SQLAlchemy + Alembic (Phase 4–5)
-├── docs/               # Data model, API contract, decision engine
-│   ├── data-model.md
-│   ├── api-contract.md
-│   └── decision-engine.md
-└── README.md
+├── rematch-frontend/       # React + TypeScript product experience
+├── backend/                # FastAPI service, migrations, decision engine, seed generator
+├── docs/                   # API, data, decision, verifier, narrator, deployment guides
+├── .github/workflows/      # Dependency and security automation
+├── PHASE8_REPORT.md        # Synthetic-data generation report
+└── PHASE9_REPORT.md        # Local API-journey validation report
 ```
 
----
+## Roadmap
 
-## Evaluation & Testing
+- [x] Typed football analysis UI, synthetic catalogue, pitch and timeline.
+- [x] Deterministic decision engine with evidence and claim-reference verification.
+- [x] Frame-backed alternatives, bilingual deterministic narration, and API-backed journeys.
+- [x] Locked dependencies, audit automation, production docs protection, and containerized API setup.
+- [ ] Complete the Insights and System Metrics views.
+- [ ] Add durable storage and a real data-ingestion pipeline.
+- [ ] Design identity, authorization, and production operations for a real deployment.
+- [ ] Evaluate any optional external AI/Foundry integration under a separate security, data-rights, and product review.
 
-Rematch is measured, not just described. Planned metrics:
+## Documentation
 
-| Metric | Question it answers |
-|--------|---------------------|
-| **Evidence support rate** | How many explanation claims are backed by referenced events and calculations? |
-| **Verifier rejection rate** | How often are unsupported claims caught? |
-| **Correction success rate** | How often does a corrected explanation pass verification? |
-| **Explanation latency** | How long from an event arriving to an explanation on screen? |
-| **Key-moment coverage** | How many important moments receive analysis? |
-
-Metrics come from recorded test runs and are reported honestly. **No placeholder numbers are published as measured results.**
-
-```bash
-# Frontend tests
-cd rematch-frontend && npm run test
-
-# Backend tests
-cd backend && source .venv/bin/activate && pytest
-```
-
----
-
-## Responsible Use
-
-- The demo uses **synthetic football data** with fictional teams and players, unless data rights and hackathon rules permit otherwise.
-- Decision values are estimates, never certainties.
-- Every explanation links back to supporting events and calculations.
-- Unsupported claims are rejected, corrected, or replaced with a safe fallback.
-- Rematch is an analytics and explanation prototype, **not** a betting or gambling product.
+- [Frontend guide](rematch-frontend/README.md)
+- [Backend guide](backend/README.md)
+- [API contract](docs/api-contract.md)
+- [Decision engine](docs/decision-engine.md)
+- [Verifier contract](docs/verifier.md)
+- [Narrator contract](docs/narrator.md)
+- [Data model](docs/data-model.md)
+- [Synthetic-data generator](docs/data-generator.md)
+- [Phase 8 report](PHASE8_REPORT.md)
+- [Phase 9 report](PHASE9_REPORT.md)
 
 ---
-
-## Current Status
-
-**Status: In development — Phase 9 local production-readiness validation complete**
-
-- [x] Frontend foundation: Dark Pro shell, routing, dashboard with synthetic demo matches
-- [x] Typed service boundaries and richer mock/event data (Phase 2)
-- [x] Interactive match pitch and timeline (Phase 3)
-- [x] Backend / API foundation (Phase 4)
-- [x] Decision-value calculations, alternative comparison, and evidence verification (Phase 5)
-- [x] Decision Explorer UI + typed `/api/v1` client integration (Phase 6)
-- [x] Pick Your Pass selection of backend-scored frame alternatives (Phase 7)
-- [x] Deterministic synthetic match generator + full-XI decision frames (Phase 8)
-- [x] Phase 8 data integrated in API catalogue and validated through match → event/frame → decision analysis (Phase 9)
-- [x] Coordinate-backed dashboard moment count; repeatable API journey smoke and Arabic/English UI coverage
-- [ ] AI / Foundry explanations
-- [ ] Demo deployment and production operations review
-
-### Decision metrics (`geometric_progression_v1`)
-
-| Metric | Meaning |
-|--------|---------|
-| `progressive_distance` | Attack-direction Δx in pitch-percent units |
-| `goal_proximity_gain` | Reduction in Euclidean distance to opponent goal centre |
-| `path_length` | Euclidean start→end length |
-| `start_distance_to_goal` / `end_distance_to_goal` | Distances to goal centre |
-| `composite_score` | `progressive_distance + goal_proximity_gain` |
-
-A **higher geometric composite score does not establish a better real-world football decision**. It only ranks actions under this transparent geometry method. It is not xG, probability, or proof of correctness. Outcomes (`complete`, `goal`, …) are context only and are not mixed into the score.
-
-### Synthetic-data limitations
-
-- Frontend mock (`rematch-phase2-v1`): no frames → Decision Explorer fixtures have empty alternatives and show a mock banner.
-- Backend seeds (`rematch-phase4-v1` + `rematch-phase8-v1`): Phase 4 remains for compatibility; Phase 8 adds three generated matches and 43 aligned full-XI frames.
-- Alternatives exist only for teammates present in an aligned frame — absent options are not evaluated.
-
-**Phase 6 notes**
-
-- Route: `/matches/:matchId/decisions/:eventId` via Match Analysis CTA on pass/shot/carry.
-- Service: `getDecisionAnalysis` on mock + API (`GET …/decision-analysis`). Claims/statuses come from that response; UI does not call `…/evidence` or `…/verify` yet.
-- States: loading, ready, 404, 422 insufficient evidence, network error + retry, empty alternatives, missing frames. Stale-response guard + success cache in `useDecisionAnalysis`.
-- EN/AR + RTL. See [docs/decision-engine.md](docs/decision-engine.md).
-
-**Phase 8 notes**
-
-- Deterministic generator (`rematch-phase8-generator` v1.0.0) under `backend/app/simulation/generator/`.
-- Scenario `rematch-phase8-v1`: three full matches, each with ≥10 eligible decision moments and 22-player frames.
-- Optional event metric columns: `distance_m`, `duration_s`, `ball_speed_mps`, `shot_speed_mps` (`path_metrics_v1`).
-- See [docs/data-generator.md](docs/data-generator.md). Canonical club name: **Riverside United**.
-
-**Phase 9 notes**
-
-- `rematch-seed` applies both the Phase 4 compatibility fixtures and Phase 8 generated dataset. The dataset endpoint prefers Phase 8 when available; the match list includes both.
-- Dashboard decision-moment count is derived from seeded pass/carry/shot events with the required coordinates. It is not an outcome or match-importance metric.
-- Backend integration tests and the live API journey smoke cover dataset → match → events/frames/players → decision analysis, plus missing and insufficient-evidence cases.
-- The default frontend remains explicit mock mode. Use `VITE_MATCH_DATA_SOURCE=api` to browse Phase 8; API failures never silently fall back to static mock data.
-- Local validation does not constitute a deployment, security, load, or real-world match-data review. See [PHASE9_REPORT.md](PHASE9_REPORT.md) for exact commands and results.
-
-**Phase 7 notes**
-
-- Pick Your Pass is available inside Decision Explorer (also from the existing `/pick-your-pass` route).
-- It selects only alternatives returned by `GET .../decision-analysis`, displays the backend score, rank and matching evidence claim, and highlights the returned path on the existing SVG pitch when coordinates and an aligned frame are available.
-- There is no selection submission endpoint: the backend already computes and returns scores/ranks for all frame-backed alternatives. The UI does not rescore or post hypothetical geometry.
-- No API contract change was needed. With no alternatives or usable coordinates, the UI reports the unavailable state. Mock selections are explicitly labelled synthetic.
-
-**Phase 5 notes**
-
-- Deterministic engine under `backend/app/services/decision/`.
-- Endpoints: `…/decision-analysis`, `…/evidence`, `…/verify`.
-
-**Phase 4 notes**
-
-- FastAPI + SQLAlchemy + Alembic + seed `rematch-phase4-v1` (includes sample frames).
-- Versioned REST under `/api/v1` with paginated list envelopes.
-
----
-
-## Demo
-
-- **Live demo:** _coming soon_
-- **Demo video:** _coming soon_
-- **Screenshots:** _to be added from the working application_
-
----
-
-## Contributing
-
-Contributions and feedback are welcome. Open an issue to discuss your idea before sending a pull request, and keep changes focused and tested.
-
----
-
-## Team
-
-| Name | Role | GitHub |
-|------|------|--------|
-| Omar Alnajjar | Backend engineer | [@omar-hady](https://github.com/omar-hady) |
-| Adam Ahmed | Software engineer| [@Adamzuckk](https://github.com/Adamzuckk) |
-| Youssef Mohammed | Pentester | [@Captain10Joe](https://github.com/Captain10Joe) |
-| Yousef Abass | AI engineer | [@Youssef-3bas](https://github.com/Youssef-3bas) |
----
-
-## License
-
-_Add a license (e.g. MIT) and a `LICENSE` file before the final submission._
-
----
-
-## Acknowledgements
-
-Developed for the **Microsoft Inside the Game Hackathon**. Microsoft, the Premier League, and their respective marks belong to their owners. Rematch is an independent hackathon submission and does not imply official endorsement.
 
 <div align="center">
-
-**Rematch: every explanation should have evidence.**
-
+  Built for better questions about the game—not overconfident answers.
 </div>
