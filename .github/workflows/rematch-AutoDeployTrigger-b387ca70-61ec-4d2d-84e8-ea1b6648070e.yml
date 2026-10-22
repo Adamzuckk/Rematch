@@ -102,8 +102,8 @@ jobs:
           }
 
           acr_mode=$(az acr show --name "$ACR_NAME" --query roleAssignmentMode --output tsv)
-          [[ "$acr_mode" == 'rbac' ]] || {
-            echo 'AcrPull and AcrPush require this registry to use RBAC Registry Permissions (roleAssignmentMode=rbac); stopping without Azure changes.' >&2
+          [[ "$acr_mode" == 'rbac' || "$acr_mode" == 'LegacyRegistryPermissions' ]] || {
+            echo "AcrPull and AcrPush require this registry to use RBAC Registry Permissions (got roleAssignmentMode='$acr_mode'); stopping without Azure changes." >&2
             exit 1
           }
 
