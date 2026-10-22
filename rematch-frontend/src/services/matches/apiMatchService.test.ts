@@ -78,7 +78,7 @@ describe('createApiMatchService decision analysis', () => {
     expect(result.eventId).toBe('evt-1')
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8000/api/v1/matches/m-1/events/evt-1/decision-analysis',
-      undefined,
+      expect.objectContaining({ headers: expect.any(Object) }),
     )
   })
 
@@ -171,7 +171,7 @@ describe('createApiMatchService decision analysis', () => {
     expect(result).toEqual(narrative)
     expect(fetchMock).toHaveBeenCalledWith(
       'http://localhost:8000/api/v1/matches/m-1/events/evt-1/decision-analysis/narrative',
-      undefined,
+      expect.objectContaining({ headers: expect.any(Object) }),
     )
   })
 
