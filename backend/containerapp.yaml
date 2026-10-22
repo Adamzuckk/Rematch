@@ -1,5 +1,10 @@
+identity:
+  type: SystemAssigned
 properties:
   configuration:
+    registries:
+      - server: rematchbackend.azurecr.io
+        identity: system
     activeRevisionsMode: Single
     ingress:
       external: true
@@ -11,16 +16,16 @@ properties:
           weight: 100
   template:
     scale:
-      minReplicas: 1
+      minReplicas: 0
       maxReplicas: 1
     containers:
-      - name: rematch-api
-        image: REPLACE_WITH_REGISTRY/rematch-backend:REPLACE_WITH_TAG
+      - name: bootstrap-container-pre-deployment
+        image: rematchbackend.azurecr.io/rematch-api:REPLACE_WITH_GIT_SHA
         env:
           - name: APP_ENV
             value: production
           - name: REQUIRE_API_AUTH
-            value: "false"  # demo: judges without bearer token
+            value: "true"
           - name: API_BEARER_TOKEN
             secretRef: api-bearer-token
           - name: DATABASE_URL
@@ -36,13 +41,14 @@ properties:
           - type: Startup
             tcpSocket:
               port: 8000
-            initialDelaySeconds: 2
-            periodSeconds: 5
+            initialDelaySeconds: 5
+            periodSeconds: 10
             timeoutSeconds: 2
-            failureThreshold: 60
+            failureThreshold: 10
           - type: Liveness
             tcpSocket:
               port: 8000
+            initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 2
             failureThreshold: 3

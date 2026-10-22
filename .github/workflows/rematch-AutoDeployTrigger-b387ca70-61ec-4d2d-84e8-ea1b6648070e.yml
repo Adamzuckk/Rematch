@@ -1,49 +1,280 @@
-name: Trigger auto deployment for rematch
+name: Deploy Rematch backend
 
-# When this action will be executed
 on:
-  # Automatically trigger it when detected changes in repo
   push:
-    branches: 
-      [ main ]
+    branches: [main]
     paths:
-    - '**'
-    - '.github/workflows/rematch-AutoDeployTrigger-b387ca70-61ec-4d2d-84e8-ea1b6648070e.yml'
+      - "backend/**"
+      - ".github/workflows/rematch-AutoDeployTrigger-b387ca70-61ec-4d2d-84e8-ea1b6648070e.yml"
+  workflow_dispatch:
 
-  # Allow manual trigger 
-  workflow_dispatch:      
+permissions:
+  contents: read
+
+concurrency:
+  group: rematch-production-deploy
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  backend-tests:
+    name: Backend tests
     runs-on: ubuntu-latest
-    permissions: 
-      id-token: write #This is required for requesting the OIDC JWT Token
-      contents: read #Required when GH token is used to authenticate with private repo
-
+    defaults:
+      run:
+        working-directory: backend
     steps:
-      - name: Checkout to the branch
-        uses: actions/checkout@v2
-
-      - name: Azure Login
-        uses: azure/login@v2
+      - name: Check out source
+        uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v6
         with:
-          client-id: ${{ secrets.REMATCH_AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.REMATCH_AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.REMATCH_AZURE_SUBSCRIPTION_ID }}
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - name: Install backend with test dependencies
+        run: python -m pip install -e ".[dev]" --disable-pip-version-check
+      - name: Run backend tests
+        run: python -m pytest -q
+        env:
+          DATABASE_URL: sqlite:///./ci-rematch.db
 
-      - name: Build and push container image to registry
-        uses: azure/container-apps-deploy-action@v2
+  deploy:
+    name: Build and deploy backend
+    needs: backend-tests
+    if: github.repository == 'Adamzuckk/Rematch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_RESOURCE_GROUP: Rematch-RG
+      AZURE_CONTAINER_APP: rematch
+      ACR_NAME: rematchbackend
+      ACR_SERVER: rematchbackend.azurecr.io
+      CONTAINER_NAME: bootstrap-container-pre-deployment
+      IMAGE: rematchbackend.azurecr.io/rematch-api:${{ github.sha }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+
+      - name: Sign in to Azure using GitHub OIDC
+        uses: azure/login@v3
         with:
-          appSourcePath: ${{ github.workspace }}
-          _dockerfilePathKey_: _dockerfilePath_
-          _targetLabelKey_: _targetLabel_
-          registryUrl: 
-          registryUsername: ${{ secrets.REMATCH_REGISTRY_USERNAME }}
-          registryPassword: ${{ secrets.REMATCH_REGISTRY_PASSWORD }}
-          containerAppName: rematch
-          resourceGroup: Rematch-RG
-          imageToBuild: default/[parameters('containerAppName')]:${{ github.sha }}
-          _buildArgumentsKey_: |
-            _buildArgumentsValues_
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Verify existing app configuration before making changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_json=$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --output json)
 
+          jq -e --arg container "$CONTAINER_NAME" '
+            .name == "rematch"
+            and (.properties.managedEnvironmentId | type == "string" and length > 0)
+            and (.properties.configuration.ingress.targetPort == 8000)
+            and (.properties.configuration.ingress.external == true)
+            and (.properties.configuration.ingress.allowInsecure == false)
+            and ([.properties.template.containers[] | select(.name == $container)] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .env[]? | select(.name == "REQUIRE_API_AUTH" and .value == "true")] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .env[]? | select(.name == "API_BEARER_TOKEN" and .secretRef == "api-bearer-token")] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .env[]? | select(.name == "PORT" and .value == "8000")] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Startup" and .tcpSocket.port == 8000)] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Liveness" and .tcpSocket.port == 8000)] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Readiness" and .tcpSocket.port == 8000)] | length == 1)
+          ' <<< "$app_json" >/dev/null || {
+            echo 'Existing Container App does not match the expected app, environment presence, container, auth secret reference, ingress, port, or TCP probes. Stopping before changing Azure.' >&2
+            exit 1
+          }
+
+          secret_name=$(az containerapp secret list \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query "[?name=='api-bearer-token'].name | [0]" \
+            --output tsv)
+          [[ "$secret_name" == 'api-bearer-token' ]] || {
+            echo 'Required Container Apps secret api-bearer-token is missing; stopping without changing secrets.' >&2
+            exit 1
+          }
+
+          acr_mode=$(az acr show --name "$ACR_NAME" --query roleAssignmentMode --output tsv)
+          [[ "$acr_mode" == 'rbac' ]] || {
+            echo 'AcrPull and AcrPush require this registry to use RBAC Registry Permissions (roleAssignmentMode=rbac); stopping without Azure changes.' >&2
+            exit 1
+          }
+
+          echo 'Existing app, auth reference, ingress, port, and TCP probe configuration verified.'
+
+      - name: Build and smoke-test the image
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --file backend/Dockerfile --tag "$IMAGE" backend
+
+          smoke_token=$(openssl rand -hex 32)
+          cleanup() {
+            docker stop rematch-backend-smoke >/dev/null 2>&1 || true
+            unset smoke_token
+          }
+          docker run --detach --rm --name rematch-backend-smoke \
+            --publish 8000:8000 \
+            --env APP_ENV=production \
+            --env REQUIRE_API_AUTH=true \
+            --env "API_BEARER_TOKEN=$smoke_token" \
+            --env PORT=8000 \
+            "$IMAGE"
+          trap cleanup EXIT
+
+          healthy=false
+          for attempt in $(seq 1 24); do
+            unauth_status=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 3 http://127.0.0.1:8000/api/v1/health || true)
+            if [[ "$unauth_status" == 401 ]]; then healthy=true; break; fi
+            sleep 5
+          done
+          [[ "$healthy" == true ]] || {
+            docker logs rematch-backend-smoke
+            echo 'Backend did not start with API authentication enabled.' >&2
+            exit 1
+          }
+
+          auth_status=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 10 \
+            --header "Authorization: Bearer $smoke_token" http://127.0.0.1:8000/api/v1/health)
+          [[ "$auth_status" == 200 ]] || {
+            echo "Authenticated local health check returned HTTP $auth_status; expected 200." >&2
+            exit 1
+          }
+          docker stop rematch-backend-smoke >/dev/null
+          trap - EXIT
+          unset smoke_token
+
+      - name: Log in to ACR and push the commit-tagged image
+        shell: bash
+        run: |
+          set -euo pipefail
+          az acr login --name "$ACR_NAME"
+          docker push "$IMAGE"
+
+      - name: Configure system-assigned identity and ACR pull access
+        shell: bash
+        run: |
+          set -euo pipefail
+          az containerapp identity assign \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --system-assigned \
+            --output none
+
+          app_principal_id=$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query identity.principalId \
+            --output tsv)
+          acr_id=$(az acr show --name "$ACR_NAME" --query id --output tsv)
+          [[ -n "$app_principal_id" && -n "$acr_id" ]] || {
+            echo 'Could not resolve the app system identity or existing ACR resource ID.' >&2
+            exit 1
+          }
+
+          pull_assignment=$(az role assignment list \
+            --include-inherited \
+            --assignee "$app_principal_id" \
+            --scope "$acr_id" \
+            --role AcrPull \
+            --query '[0].id' \
+            --output tsv)
+          if [[ -z "$pull_assignment" ]]; then
+            az role assignment create \
+              --assignee-object-id "$app_principal_id" \
+              --assignee-principal-type ServicePrincipal \
+              --role AcrPull \
+              --scope "$acr_id" \
+              --output none
+          fi
+
+          az containerapp registry set \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --server "$ACR_SERVER" \
+            --identity system \
+            --output none
+
+      - name: Update only the existing container image and replica bounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          az containerapp update \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --container-name "$CONTAINER_NAME" \
+            --image "$IMAGE" \
+            --min-replicas 0 \
+            --max-replicas 1 \
+            --output none
+
+      - name: Verify deployed image, ready revision, and protected API
+        shell: bash
+        run: |
+          set -euo pipefail
+          app_json=$(az containerapp show \
+            --name "$AZURE_CONTAINER_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --output json)
+          actual_images=$(jq -cer --arg container "$CONTAINER_NAME" \
+            '[.properties.template.containers[] | select(.name == $container) | .image]' <<< "$app_json")
+          [[ "$actual_images" == "[\"$IMAGE\"]" ]] || {
+            echo 'Expected exactly one intended container with the commit-tagged image.' >&2
+            exit 1
+          }
+          jq -e --arg container "$CONTAINER_NAME" '
+            (.properties.configuration.ingress.targetPort == 8000)
+            and (.properties.configuration.ingress.external == true)
+            and (.properties.configuration.ingress.allowInsecure == false)
+            and (.properties.template.scale.minReplicas == 0)
+            and (.properties.template.scale.maxReplicas == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Startup" and .tcpSocket.port == 8000)] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Liveness" and .tcpSocket.port == 8000)] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Readiness" and .tcpSocket.port == 8000)] | length == 1)
+          ' <<< "$app_json" >/dev/null || {
+            echo 'Post-deployment ingress, scale, or TCP probe configuration differs from the expected values.' >&2
+            exit 1
+          }
+
+          fqdn=$(jq -r '.properties.configuration.ingress.fqdn // empty' <<< "$app_json")
+          [[ -n "$fqdn" ]] || { echo 'Container App ingress has no FQDN.' >&2; exit 1; }
+          api_status=''
+          for attempt in $(seq 1 12); do
+            api_status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+              --max-time 10 "https://$fqdn/api/v1/health" || true)
+            [[ "$api_status" == 401 ]] && break
+            echo "Waiting for the scale-to-zero app to answer the protected API check (attempt $attempt/12)."
+            sleep 5
+          done
+          [[ "$api_status" == 401 ]] || {
+            echo "Unauthenticated API health returned HTTP ${api_status:-no-response}; expected 401." >&2
+            exit 1
+          }
+
+          ready=false
+          for attempt in $(seq 1 30); do
+            app_json=$(az containerapp show \
+              --name "$AZURE_CONTAINER_APP" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --output json)
+            latest=$(jq -r '.properties.latestRevisionName // empty' <<< "$app_json")
+            ready_revision=$(jq -r '.properties.latestReadyRevisionName // empty' <<< "$app_json")
+            if [[ -n "$latest" && "$latest" == "$ready_revision" ]]; then
+              ready=true
+              break
+            fi
+            echo "Waiting for the latest revision to become ready (attempt $attempt/30)."
+            sleep 10
+          done
+          [[ "$ready" == true ]] || {
+            echo 'Latest Container App revision did not become ready within 5 minutes.' >&2
+            exit 1
+          }
+          echo "Verified $IMAGE on ready revision $latest; unauthenticated API health remains protected (401)."
