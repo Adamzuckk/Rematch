@@ -38,6 +38,12 @@ flowchart LR
 | **Match analysis** | A pitch view, event timeline, event inspector, score context, players, and aligned frames. |
 | **Decision Explorer** | Backend-scored observed actions and frame-backed alternatives, ranked with transparent calculations. |
 | **Pick Your Pass** | An interactive way to inspect alternatives already returned by the engine—without recalculating or inventing scores in the browser. |
+
+| **Judge Mode** | Guided path for reviewers: open a seeded match, replay events, inspect decisions. |
+| **Fan / Analyst views** | Presentation mode toggle (local preference) for simpler vs denser wording. |
+| **Broadcast-style overlay** | Optional timed strip + downloadable overlay JSON for a moment (synthetic). |
+| **Foundry-ready API tools** | OpenAPI export and agent instructions under `docs/` for Microsoft Foundry; the app does not call Foundry from the browser by default. |
+
 | **Evidence & narration** | Claim references, calculation checks, and deterministic English/Arabic narrative output that states limitations clearly. |
 
 ### Built to show its working
@@ -191,7 +197,7 @@ ReMatch is a read-only demo architecture, not a production match platform. Its c
 - A non-root Docker image and reproducible production dependency installation.
 - Documentation endpoints disabled in production mode.
 - Optional fail-closed bearer authentication for a development tunnel or protected demo.
-- No user accounts, write APIs, WebSockets, live data feeds, external AI/Foundry calls, or public deployment included in this repository.
+- No user accounts, write APIs, WebSockets, or live data feeds in this repository. Microsoft Foundry is supported via documented OpenAPI tools and agent instructions (`docs/FOUNDRY_*`); the web app does not embed Foundry credentials or call cloud agents by default. Public deployment is optional—see `docs/AZURE_CONTAINER_APPS.md`, `rematch-frontend/Dockerfile`, and `docs/judge/`.
 
 SQLite storage at `/tmp/rematch/rematch.db` inside the container is ephemeral. The supplied [Azure Container Apps template](backend/containerapp.yaml) is a reviewable starting point only; read the [deployment guide](docs/AZURE_CONTAINER_APPS.md) before creating cloud resources.
 
