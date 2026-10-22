@@ -17,11 +17,10 @@ export function JudgeModePage() {
     let cancelled = false
     try {
       matchService
-        .listMatches({})
-        .then((res) => {
+        .getMatches({})
+        .then((list) => {
           if (cancelled) return
-          const list = Array.isArray(res.items) ? res.items : []
-          setMatches(list)
+          setMatches(Array.isArray(list) ? list : [])
         })
         .catch((err: unknown) => {
           if (!cancelled) {

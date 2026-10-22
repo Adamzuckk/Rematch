@@ -63,27 +63,33 @@ export function InsightsPage() {
   useEffect(() => {
     if (!matchId) return
     let cancelled = false
-    setLoading(true)
-    setError(null)
     const base = import.meta.env.VITE_API_BASE_URL as string | undefined
+    const token = import.meta.env.VITE_API_BEARER_TOKEN as string | undefined
     const url = `${(base ?? '').replace(/\/+$/, '')}/api/v1/matches/${matchId}/intelligence`
-    fetch(url)
-      .then(async (res) => {
+    const headers: HeadersInit = {}
+    if (token?.trim()) {
+      headers.Authorization = `Bearer ${token.trim()}`
+    }
+
+    void (async () => {
+      try {
+        const res = await fetch(url, { headers })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json() as Promise<Intelligence>
-      })
-      .then((data) => {
-        if (!cancelled) setIntel(data)
-      })
-      .catch((err: unknown) => {
+        const data = (await res.json()) as Intelligence
+        if (!cancelled) {
+          setIntel(data)
+          setError(null)
+          setLoading(false)
+        }
+      } catch (err: unknown) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to load intelligence')
           setIntel(null)
+          setLoading(false)
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+      }
+    })()
+
     return () => {
       cancelled = true
     }

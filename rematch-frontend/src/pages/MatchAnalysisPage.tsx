@@ -4,11 +4,11 @@ import { EventInspector } from '../components/match/EventInspector'
 import { EventTimeline } from '../components/match/EventTimeline'
 import { MatchHeader } from '../components/match/MatchHeader'
 import { FootballPitch } from '../components/pitch/FootballPitch'
+import { BroadcastOverlay } from '../components/overlay/BroadcastOverlay'
 import {
-  BroadcastOverlay,
   buildTimedOverlayJson,
   type OverlayPayload,
-} from '../components/overlay/BroadcastOverlay'
+} from '../components/overlay/overlayTypes'
 import {
   ReplayControls,
   type ReplaySpeed,
