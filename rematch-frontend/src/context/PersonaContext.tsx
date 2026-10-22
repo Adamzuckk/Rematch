@@ -6,14 +6,9 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import type { PersonaPrefs, ViewMode } from './personaTypes'
 
-export type ViewMode = 'fan' | 'analyst'
-export type PersonaPrefs = {
-  mode: ViewMode
-  favoriteTeamId: string | null
-  favoritePlayerId: string | null
-  playerFocusId: string | null
-}
+export type { PersonaPrefs, ViewMode } from './personaTypes'
 
 type PersonaContextValue = PersonaPrefs & {
   setMode: (mode: ViewMode) => void
