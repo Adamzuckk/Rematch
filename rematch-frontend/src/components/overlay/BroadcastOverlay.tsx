@@ -1,14 +1,5 @@
 import styles from './BroadcastOverlay.module.css'
-
-export interface OverlayPayload {
-  matchLabel: string
-  minuteLabel: string
-  eventType: string
-  headline: string
-  detail: string
-  provenance: string
-  tMs: number
-}
+import type { OverlayPayload } from './overlayTypes'
 
 interface BroadcastOverlayProps {
   payload: OverlayPayload | null
@@ -30,13 +21,4 @@ export function BroadcastOverlay({ payload, visible }: BroadcastOverlayProps) {
       <p className={styles.detail}>{payload.detail}</p>
     </div>
   )
-}
-
-export function buildTimedOverlayJson(
-  items: OverlayPayload[],
-): { version: string; items: OverlayPayload[] } {
-  return {
-    version: 'rematch-overlay-v1',
-    items: items.map((item) => ({ ...item })),
-  }
 }
