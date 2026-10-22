@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "https://history-monitor-vice-adopt.trycloudflare.com",
-      "description": "Replace with the current Quick Tunnel HTTPS origin before importing into Foundry."
+      "url": "https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io",
+      "description": "Live Azure Container Apps backend (East US). Requires Authorization: Bearer <API_BEARER_TOKEN>."
     }
   ],
   "paths": {
