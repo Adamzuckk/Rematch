@@ -33,6 +33,15 @@ function trimBaseUrl(baseUrl: string): string {
   return baseUrl.replace(/\/+$/, '')
 }
 
+/** Optional bearer token for protected demos (VITE_API_BEARER_TOKEN). */
+function authHeaders(): HeadersInit {
+  const token = import.meta.env.VITE_API_BEARER_TOKEN
+  if (token && String(token).trim()) {
+    return { Authorization: `Bearer ${String(token).trim()}` }
+  }
+  return {}
+}
+
 function buildQuery(filters: MatchListFilters = {}): string {
   const params = new URLSearchParams()
   if (filters.query?.trim()) {
@@ -84,7 +93,11 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
   ): Promise<{ response: Response; body: T }> {
     let response: Response
     try {
-      response = await fetch(`${root}${path}`, init)
+      const headers = {
+        ...authHeaders(),
+        ...(init?.headers ?? {}),
+      }
+      response = await fetch(`${root}${path}`, { ...init, headers })
     } catch (cause) {
       const detail =
         cause instanceof Error ? cause.message : 'network request failed'
