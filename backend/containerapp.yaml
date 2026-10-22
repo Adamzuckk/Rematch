@@ -11,7 +11,7 @@ properties:
           weight: 100
   template:
     scale:
-      minReplicas: 0
+      minReplicas: 1
       maxReplicas: 1
     containers:
       - name: rematch-api
@@ -28,7 +28,7 @@ properties:
           - name: PORT
             value: "8000"
           - name: CORS_ORIGINS
-            value: ""
+            value: "REPLACE_WITH_FRONTEND_ORIGIN"
         resources:
           cpu: 0.5
           memory: 1Gi
