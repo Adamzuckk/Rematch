@@ -70,14 +70,26 @@ def list_matches(
     if competition:
         filters.append(func.lower(Match.competition) == competition.strip().lower())
     if q and q.strip():
-        pattern = f"%{q.strip().lower()}%"
+        # Escape LIKE metacharacters so user input cannot broaden the match set.
+        escaped = (
+            q.strip()
+            .lower()
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_")
+        )
+        pattern = f"%{escaped}%"
         filters.append(
             or_(
-                func.lower(Match.competition).like(pattern),
-                func.lower(home.name).like(pattern),
-                func.lower(away.name).like(pattern),
-                func.lower(func.coalesce(home.short_name, "")).like(pattern),
-                func.lower(func.coalesce(away.short_name, "")).like(pattern),
+                func.lower(Match.competition).like(pattern, escape="\\"),
+                func.lower(home.name).like(pattern, escape="\\"),
+                func.lower(away.name).like(pattern, escape="\\"),
+                func.lower(func.coalesce(home.short_name, "")).like(
+                    pattern, escape="\\"
+                ),
+                func.lower(func.coalesce(away.short_name, "")).like(
+                    pattern, escape="\\"
+                ),
             )
         )
 
