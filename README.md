@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="rematch-frontend/src/assets/brand/rematch-logo-on-dark.svg" alt="ReMatch" width="132" />
+  <img src="Rematch/logo/1x/Artboard 1.png" alt="ReMatch" width="132" />
 
   # ReMatch
 
