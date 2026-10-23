@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db_dep
@@ -27,6 +27,9 @@ from app.services.decision.evidence import Claim, EvidenceReference, verify_clai
 from app.services.match_intelligence import build_match_intelligence_narrative
 
 router = APIRouter(prefix="/matches", tags=["decisions"])
+
+MatchIdPath = Annotated[str, Path(min_length=1, max_length=128)]
+EventIdPath = Annotated[str, Path(min_length=1, max_length=128)]
 
 CLAIM_VERIFICATION_LIMITATIONS = (
     "Validated evidence references and registered calculation values do not prove the submitted statement is true.",
@@ -71,8 +74,8 @@ def _http_for_engine(exc: Exception) -> HTTPException:
     },
 )
 def get_decision_analysis(
-    match_id: str,
-    event_id: str,
+    match_id: MatchIdPath,
+    event_id: EventIdPath,
     db: Annotated[Session, Depends(get_db_dep)],
 ) -> DecisionAnalysisSchema:
     """Score the observed action and any frame-backed alternatives."""
@@ -92,8 +95,8 @@ def get_decision_analysis(
     },
 )
 def get_decision_narrative(
-    match_id: str,
-    event_id: str,
+    match_id: MatchIdPath,
+    event_id: EventIdPath,
     db: Annotated[Session, Depends(get_db_dep)],
 ) -> MatchIntelligenceNarrativeResponseSchema:
     """Return one Agent 1 analysis with evidence validation and bilingual narration."""
@@ -112,8 +115,8 @@ def get_decision_narrative(
     },
 )
 def get_decision_evidence(
-    match_id: str,
-    event_id: str,
+    match_id: MatchIdPath,
+    event_id: EventIdPath,
     db: Annotated[Session, Depends(get_db_dep)],
 ) -> EvidenceBundleSchema:
     """Return verified claims and registered evidence for an analysis."""
@@ -133,8 +136,8 @@ def get_decision_evidence(
     },
 )
 def verify_decision_claims(
-    match_id: str,
-    event_id: str,
+    match_id: MatchIdPath,
+    event_id: EventIdPath,
     body: ClaimVerificationRequest,
     db: Annotated[Session, Depends(get_db_dep)],
 ) -> list[ClaimVerificationResponseSchema]:

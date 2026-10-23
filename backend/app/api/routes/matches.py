@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db_dep, get_settings_dep
@@ -21,6 +21,9 @@ from app.schemas.intelligence import MatchIntelligenceSchema
 router = APIRouter(prefix="/matches", tags=["matches"])
 
 MatchStatusQuery = Literal["live", "finished", "upcoming"]
+MatchIdPath = Annotated[str, Path(min_length=1, max_length=128)]
+_MAX_SEARCH_LEN = 100
+_MAX_COMPETITION_LEN = 120
 
 
 def _pagination(
@@ -65,11 +68,17 @@ def list_matches(
     ] = None,
     competition: Annotated[
         str | None,
-        Query(description="Case-insensitive exact competition name"),
+        Query(
+            description="Case-insensitive exact competition name",
+            max_length=_MAX_COMPETITION_LEN,
+        ),
     ] = None,
     q: Annotated[
         str | None,
-        Query(description="Search team names, short names, or competition"),
+        Query(
+            description="Search team names, short names, or competition",
+            max_length=_MAX_SEARCH_LEN,
+        ),
     ] = None,
     limit: Annotated[int | None, Query(ge=1)] = None,
     offset: Annotated[int, Query(ge=0)] = 0,
@@ -118,7 +127,7 @@ def get_overview(
     responses={404: {"model": ErrorResponse}},
 )
 def get_match(
-    match_id: str,
+    match_id: MatchIdPath,
     db: Annotated[Session, Depends(get_db_dep)],
 ) -> MatchSummarySchema:
     try:
@@ -139,7 +148,7 @@ def get_match(
     responses={404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}},
 )
 def get_match_events(
-    match_id: str,
+    match_id: MatchIdPath,
     db: Annotated[Session, Depends(get_db_dep)],
     settings: Annotated[Settings, Depends(get_settings_dep)],
     limit: Annotated[int | None, Query(ge=1)] = None,
@@ -166,7 +175,7 @@ def get_match_events(
     responses={404: {"model": ErrorResponse}, 422: {"model": ErrorResponse}},
 )
 def get_match_frames(
-    match_id: str,
+    match_id: MatchIdPath,
     db: Annotated[Session, Depends(get_db_dep)],
     settings: Annotated[Settings, Depends(get_settings_dep)],
     limit: Annotated[int | None, Query(ge=1)] = None,
@@ -193,7 +202,7 @@ def get_match_frames(
     responses={404: {"model": ErrorResponse}},
 )
 def get_match_players(
-    match_id: str,
+    match_id: MatchIdPath,
     db: Annotated[Session, Depends(get_db_dep)],
 ) -> list[PlayerSchema]:
     try:
@@ -213,7 +222,7 @@ def get_match_players(
     responses={404: {"model": ErrorResponse}},
 )
 def get_match_intelligence(
-    match_id: str,
+    match_id: MatchIdPath,
     db: Annotated[Session, Depends(get_db_dep)],
 ) -> MatchIntelligenceSchema:
     """Aggregates derived only from seeded synthetic events/frames for this match."""
