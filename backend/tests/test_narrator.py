@@ -143,10 +143,11 @@ def test_narrator_generates_english_from_supplied_analysis() -> None:
     output = narrate_truth_pack(_truth_pack())
 
     assert "Northgate vs Riverside" in output.english.headline
-    assert any("event-demo-1" in row for row in output.english.keyObservations)
+    assert len(output.english.keyObservations) <= 3
     assert any("36.63380605388592" in row for row in output.english.keyObservations)
-    assert any("backend-reported rank 1" in row for row in output.english.keyObservations)
-    assert any("not xG or a pass-success probability" in row for row in output.english.limitations)
+    assert any("Best ranked alternative" in row and "68.62" in row for row in output.english.keyObservations)
+    assert len(output.english.limitations) == 1
+    assert "not a probability" in output.english.limitations[0]
     assert not any("player-9" in row for row in output.english.keyObservations)
 
 
@@ -155,8 +156,11 @@ def test_narrator_generates_arabic_and_keeps_proper_names() -> None:
 
     assert "Northgate × Riverside" in output.arabic.headline
     assert "تحليل قرار حمل الكرة" in output.arabic.headline
-    assert any("درجة تقدّم هندسي مركبة" in row for row in output.arabic.keyObservations)
-    assert any("احتمال نجاح التمريرة" in row for row in output.arabic.limitations)
+    assert len(output.arabic.keyObservations) <= 3
+    assert any("درجة" in row and "36.63380605388592" in row for row in output.arabic.keyObservations)
+    assert any("أفضل بديل" in row and "68.62" in row for row in output.arabic.keyObservations)
+    assert len(output.arabic.limitations) == 1
+    assert "احتمالاً" in output.arabic.limitations[0]
     assert output.provenance == "synthetic"
 
 
@@ -166,11 +170,11 @@ def test_legacy_verified_status_is_not_narrated_as_claim_truth() -> None:
 
     assert all(false_statement not in row for row in output.english.keyObservations)
     assert any(
-        "evidence/reference validation is verified; claim truth remains not assessed"
+        "claim truth remains not assessed"
         in row
         for row in output.english.keyObservations
     )
-    assert any("لم يُقيّم صدق الادعاء لغوياً" in row for row in output.arabic.keyObservations)
+    assert any("لم يُقيّم صدق الادعاء" in row for row in output.arabic.keyObservations)
 
 
 def test_missing_analysis_and_unresolved_detail_are_stated_without_invention() -> None:
@@ -178,8 +182,10 @@ def test_missing_analysis_and_unresolved_detail_are_stated_without_invention() -
     output = narrate_truth_pack(pack)
 
     assert output.english.keyObservations == []
-    assert any("does not establish the requested" in row for row in output.english.limitations)
-    assert any("لا تثبت التفاصيل المطلوبة" in row for row in output.arabic.limitations)
+    assert len(output.english.limitations) == 1
+    assert "No decision analysis was supplied" in output.english.limitations[0]
+    assert len(output.arabic.limitations) == 1
+    assert "لا تتضمن حزمة الحقيقة تحليلاً" in output.arabic.limitations[0]
     assert all(
         "probability" not in row.lower()
         for row in [output.english.headline, *output.english.keyObservations]

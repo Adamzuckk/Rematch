@@ -46,43 +46,8 @@ _OUTCOME_LABELS = {
     },
 }
 
-_STANDARD_LIMITATION_TRANSLATIONS = {
-    "Synthetic demo data — not official match statistics.": (
-        "Synthetic demo data — not official match statistics.",
-        "البيانات اصطناعية لأغراض العرض وليست إحصاءات رسمية للمباراة.",
-    ),
-    "Alternatives exist only for teammates present in an aligned frame.": (
-        "Alternatives exist only for teammates present in an aligned frame.",
-        "تتوفر البدائل فقط لزملاء الفريق الظاهرين في إطار متزامن.",
-    ),
-    "The aligned frame is sparse; teammates without a recorded position are not evaluated.": (
-        "The aligned frame is sparse; teammates without a recorded position are not evaluated.",
-        "الإطار المتزامن محدود؛ ولا يُقيَّم زملاء الفريق الذين لا تتوفر لهم مواقع مسجلة.",
-    ),
-    "No aligned frame is available for alternative destinations.": (
-        "No aligned frame is available for alternative destinations.",
-        "لا يتوفر إطار متزامن لتحديد وجهات بديلة.",
-    ),
-}
-
-
 def _unique(values: Iterable[str]) -> list[str]:
     return list(dict.fromkeys(value for value in values if value))
-
-
-def _source_limitations(pack: MatchIntelligenceTruthPack) -> list[str]:
-    analysis = pack.decisionAnalysis
-    if analysis is None:
-        return []
-    values = list(analysis.limitations)
-    values.extend(analysis.observed.limitations)
-    for alternative in analysis.alternatives:
-        values.extend(alternative.limitations)
-    # The stable localized warning below is clearer and more precise than
-    # copying the backend's overlapping scoring disclaimer verbatim.
-    if analysis.scoringMethodId == SCORING_METHOD:
-        values = [value for value in values if "not xG" not in value]
-    return _unique(values)
 
 
 def _headline(pack: MatchIntelligenceTruthPack, *, arabic: bool) -> str:
@@ -124,22 +89,6 @@ def _observations(pack: MatchIntelligenceTruthPack, *, arabic: bool) -> list[str
     rows: list[str] = []
     event = pack.event
     analysis = pack.decisionAnalysis
-
-    if event is not None:
-        label = _EVENT_LABELS[event.type][1 if arabic else 0]
-        if arabic:
-            rows.append(f"يتضمن سجل المباراة حدث {label} بالمعرّف {event.id}.")
-        else:
-            rows.append(f"The supplied match record contains a {label} event (ID {event.id}).")
-        if event.minute is not None:
-            rows.append(
-                f"دقيقة الحدث المسجلة: {event.minute}." if arabic
-                else f"Recorded event minute: {event.minute}."
-            )
-        outcome = _outcome_observation(pack, arabic=arabic)
-        if outcome:
-            rows.append(outcome)
-
     if analysis is not None:
         observed = analysis.observed
         if observed.compositeScore is not None:
@@ -147,129 +96,83 @@ def _observations(pack: MatchIntelligenceTruthPack, *, arabic: bool) -> list[str
             score = str(observed.compositeScore)
             if analysis.scoringMethodId == SCORING_METHOD:
                 rows.append(
-                    f"سجلت {action} درجة تقدّم هندسي مركبة مقدارها {score} وفق {SCORING_METHOD}."
+                    f"درجة {action}: {score} ({SCORING_METHOD})."
                     if arabic
-                    else f"The {action} has a backend-returned geometric progression composite score of {score} under {SCORING_METHOD}."
+                    else f"{action.title()} score: {score} ({SCORING_METHOD})."
                 )
             else:
                 rows.append(
-                    f"سجلت {action} الدرجة المركبة {score} وفق طريقة {analysis.scoringMethodId}."
+                    f"درجة {action}: {score} ({analysis.scoringMethodId})."
                     if arabic
-                    else f"The {action} has a backend-returned composite score of {score} under {analysis.scoringMethodId}."
+                    else f"{action.title()} score: {score} ({analysis.scoringMethodId})."
                 )
 
-        ranks = {item.actionId: item.rank for item in analysis.ranking}
-        for alternative in analysis.alternatives:
+        top_rank = next((item for item in analysis.ranking if item.rank == 1), None)
+        alternative = next(
+            (item for item in analysis.alternatives if top_rank and item.actionId == top_rank.actionId),
+            None,
+        )
+        if alternative is not None and alternative.compositeScore is not None:
             action = _ACTION_LABELS[alternative.kind][1 if arabic else 0]
-            rank = ranks.get(alternative.actionId)
-            rank_text = (
-                f" بترتيب مُعاد من الخادم {rank}" if arabic and rank is not None
-                else f" with backend-reported rank {rank}" if rank is not None
-                else ""
-            )
-            if alternative.compositeScore is None:
-                rows.append(
-                    f"تتضمن الحزمة {action} لكن لا تتوفر لها درجة مركبة."
-                    if arabic
-                    else f"The supplied analysis includes a {action} alternative, but its composite score is unavailable."
-                )
-                continue
             score = str(alternative.compositeScore)
-            if analysis.scoringMethodId == SCORING_METHOD:
-                rows.append(
-                    f"تتضمن الحزمة {action}{rank_text} بدرجة تقدّم هندسي مركبة مقدارها {score}."
-                    if arabic
-                    else f"The supplied analysis lists a {action} alternative{rank_text}, with a geometric progression composite score of {score}."
-                )
-            else:
-                rows.append(
-                    f"تتضمن الحزمة {action}{rank_text} بدرجة مركبة مقدارها {score} وفق {analysis.scoringMethodId}."
-                    if arabic
-                    else f"The supplied analysis lists a {action} alternative{rank_text}, with a composite score of {score} under {analysis.scoringMethodId}."
-                )
-
-    for result in pack.verificationResults:
-        rows.append(
-            f"تحقق الخادم من مراجع الأدلة بالحالة {result.evidenceValidationStatus}؛ ولم يُقيّم صدق الادعاء لغوياً."
-            if arabic
-            else f"Verifier evidence/reference validation is {result.evidenceValidationStatus}; claim truth remains not assessed."
-        )
-
-    return _unique(rows)
-
-
-def _limitations(pack: MatchIntelligenceTruthPack, *, arabic: bool) -> list[str]:
-    rows: list[str] = []
-    analysis = pack.decisionAnalysis
-
-    if pack.match is not None and pack.match.provenance == "synthetic":
-        rows.append(
-            "البيانات اصطناعية ولا تمثل سجلاً رسمياً لمباراة حقيقية."
-            if arabic
-            else "The supplied match data is synthetic, not an official real-match record."
-        )
-    elif pack.event is not None and pack.event.provenance == "synthetic":
-        rows.append(
-            "بيانات الحدث اصطناعية."
-            if arabic
-            else "The supplied event data is synthetic."
-        )
-
-    if analysis is not None:
-        if analysis.scoringMethodId == SCORING_METHOD:
             rows.append(
-                "درجة geometric_progression_v1 هندسية؛ وليست xG أو احتمال نجاح التمريرة، ولا تثبت جودة القرار في الواقع."
+                f"أفضل بديل مسجل: {action}، بدرجة {score}."
                 if arabic
-                else "geometric_progression_v1 is a geometric score, not xG or a pass-success probability, and it does not prove real-world decision quality."
+                else f"Best ranked alternative: {action}, score {score}."
             )
-        if not analysis.completeness.hasAlignedFrame:
-            rows.append(
-                "لا يتوفر إطار متزامن في التحليل المقدم."
-                if arabic
-                else "The supplied analysis has no aligned frame."
-            )
-        if not analysis.alternatives:
-            rows.append(
-                "لا تتضمن الحزمة بدائل قابلة للمقارنة."
-                if arabic
-                else "No alternatives are included in the supplied analysis."
-            )
-        for source_limit in _source_limitations(pack):
-            if arabic:
-                localized = _STANDARD_LIMITATION_TRANSLATIONS.get(source_limit)
-                rows.append(
-                    localized[1]
-                    if localized
-                    else f"قيد وارد في حزمة الحقيقة (بالنص الأصلي): «{source_limit}»"
-                )
-            else:
-                rows.append(source_limit)
-    else:
-        rows.append(
-            "لا تتضمن حزمة الحقيقة تحليلاً للقرار، لذلك لا يُذكر تقييم أو بديل."
-            if arabic
-            else "The supplied truth pack contains no decision analysis, so no score or alternative is stated."
-        )
 
     if pack.verificationResults:
         rows.append(
-            "التحقق المتاح يراجع المراجع والحسابات فقط، ولا يقيّم صدق الصياغة الطبيعية."
+            "تم التحقق من مراجع الأدلة؛ ولم يُقيّم صدق الادعاء."
             if arabic
-            else "The available verifier checks references and calculations only; it does not assess natural-language truth."
+            else "Evidence references were checked; claim truth remains not assessed."
         )
-    if pack.unresolvedDetails:
-        rows.append(
-            "البيانات المقدمة لا تثبت التفاصيل المطلوبة غير المدعومة."
+    elif event is not None:
+        outcome = _outcome_observation(pack, arabic=arabic)
+        if outcome:
+            rows.append(outcome)
+
+    return _unique(rows)[:3]
+
+
+def _limitations(pack: MatchIntelligenceTruthPack, *, arabic: bool) -> list[str]:
+    analysis = pack.decisionAnalysis
+    synthetic = (
+        pack.match is not None and pack.match.provenance == "synthetic"
+    ) or (pack.event is not None and pack.event.provenance == "synthetic")
+    if analysis is None:
+        return [
+            "لا تتضمن حزمة الحقيقة تحليلاً للقرار، لذلك لا يُذكر تقييم أو بديل."
             if arabic
-            else "The supplied data does not establish the requested unsupported detail."
-        )
-    if pack.event is None and analysis is None:
-        rows.append(
-            "لا يتضمن المصدر حدثاً أو تحليلاً يثبت تفاصيل خاصة بالحدث."
+            else "No decision analysis was supplied, so no score or alternative is stated."
+        ]
+    if analysis.scoringMethodId == SCORING_METHOD:
+        method_limit = (
+            "الدرجة هندسية وليست احتمالاً، ومراجع الأدلة لا تثبت صدق الادعاء."
+            if arabic and pack.verificationResults
+            else "الدرجة الهندسية ليست احتمالاً ولا تثبت جودة القرار واقعياً."
             if arabic
-            else "The supplied truth pack contains no event or analysis to establish event-specific details."
+            else "The geometric score is not a probability or proof of real-world decision quality."
         )
-    return _unique(rows)
+    else:
+        method_limit = (
+            "مراجع الأدلة لا تثبت صدق الادعاء."
+            if arabic and pack.verificationResults
+            else "التحليل يعكس البيانات المقدمة فقط."
+            if arabic
+            else "The analysis reflects only the supplied data."
+        )
+    if synthetic:
+        method_limit = (
+            "الدرجة هندسية وليست احتمالاً، والبيانات اصطناعية وليست إحصاءات رسمية."
+            if arabic and analysis.scoringMethodId == SCORING_METHOD
+            else "التحليل يعتمد بيانات اصطناعية وليست إحصاءات رسمية."
+            if arabic
+            else "The geometric score is not a probability; the data is synthetic, not official match statistics."
+            if analysis.scoringMethodId == SCORING_METHOD
+            else "The analysis uses synthetic data, not official match statistics."
+        )
+    return [method_limit]
 
 
 def narrate_truth_pack(pack: MatchIntelligenceTruthPack) -> NarratorOutput:

@@ -52,7 +52,7 @@ def test_composed_endpoint_returns_analysis_verification_and_bilingual_narrative
         for row in body["narrative"]["english"]["keyObservations"]
     )
     assert any(
-        "لم يُقيّم صدق الادعاء لغوياً" in row
+        "لم يُقيّم صدق الادعاء" in row
         for row in body["narrative"]["arabic"]["keyObservations"]
     )
 
