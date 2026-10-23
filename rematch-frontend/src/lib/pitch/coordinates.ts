@@ -32,3 +32,18 @@ export function mapPitchPointToSvg(point: PitchPoint): SvgPoint | null {
   }
 }
 
+/** Clamps finite pitch coordinates into the normalized 0–100 range. */
+export function clampPitchPoint(point: PitchPoint): PitchPoint | null {
+  if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return null
+  return {
+    x: Math.min(100, Math.max(0, point.x)),
+    y: Math.min(100, Math.max(0, point.y)),
+  }
+}
+
+/** Clamps a pitch point before mapping it into SVG space. */
+export function mapPitchPointToSvgClamped(point: PitchPoint): SvgPoint | null {
+  const clampedPoint = clampPitchPoint(point)
+  return clampedPoint === null ? null : mapPitchPointToSvg(clampedPoint)
+}
+

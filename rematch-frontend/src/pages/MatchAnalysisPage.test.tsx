@@ -169,7 +169,7 @@ describe('MatchAnalysisPage', () => {
     await waitForAnalysisReady(/Oakwood Wanderers/i)
 
     expect(screen.getByText(STRINGS.en.matchAnalysisNoFrames)).toBeInTheDocument()
-    expect(screen.getByText(/No player frame for this moment/i)).toBeInTheDocument()
+    expect(screen.getByText(/No valid frame coordinates for this moment/i)).toBeInTheDocument()
     expect(screen.queryByTestId('player-marker')).not.toBeInTheDocument()
 
     const inspector = screen.getByLabelText(STRINGS.en.matchAnalysisInspector)

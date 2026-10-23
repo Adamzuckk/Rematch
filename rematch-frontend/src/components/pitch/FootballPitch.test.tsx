@@ -69,7 +69,7 @@ describe('FootballPitch', () => {
     expect(screen.getByRole('img', { name: 'Test pitch' })).toBeInTheDocument()
     expect(screen.getByText('HOM')).toBeInTheDocument()
     expect(screen.getByText('AWY')).toBeInTheDocument()
-    expect(screen.getByText(/No player frame/i)).toBeInTheDocument()
+    expect(screen.getByText(/No valid frame coordinates for this moment/i)).toBeInTheDocument()
   })
 
   it('renders event path and location when coordinates exist', () => {
