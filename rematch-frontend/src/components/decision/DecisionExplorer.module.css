@@ -140,23 +140,84 @@
 }
 .pipelineGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
+}
+.pipelineGridItem {
+  position: relative;
+  display: flex;
+  min-width: 0;
+}
+.pipelineGridItem:not(:last-child)::after {
+  position: absolute;
+  z-index: 1;
+  top: 0.82rem;
+  inset-inline-end: calc(var(--space-3) * -0.72);
+  color: var(--color-accent);
+  content: '→';
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+:global([dir='rtl']) .pipelineGridItem:not(:last-child)::after {
+  content: '←';
 }
 .pipelineCard {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-2);
-  height: 100%;
+  flex: 1;
+  min-height: 100%;
   min-width: 0;
   padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface-raised);
+}
+.pipelineHandoff {
+  width: 100%;
+  margin: auto 0 0;
+  padding-top: var(--space-2);
+  color: var(--color-text-secondary);
+  border-top: 1px dashed var(--color-border);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+.pipelineStatus {
+  margin: 0;
+  padding: var(--space-2);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  background: rgba(182, 244, 71, 0.06);
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+.pipelineFooter {
+  margin: 0;
+  padding-top: var(--space-3);
+  color: var(--color-accent);
+  border-top: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  font-weight: 650;
+  line-height: 1.55;
+  text-align: center;
+}
+.pipelineLanguageBlock {
+  width: 100%;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+.pipelineLanguageLabel {
+  margin: 0 0 var(--space-2);
+  color: var(--color-accent);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 .pipelineStep {
   display: inline-grid;
@@ -397,6 +458,14 @@
   }
   .rankScore {
     grid-column: 2;
+  }
+}
+@media (max-width: 1100px) {
+  .pipelineGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pipelineGridItem::after {
+    display: none;
   }
 }
 @media (max-width: 760px) {

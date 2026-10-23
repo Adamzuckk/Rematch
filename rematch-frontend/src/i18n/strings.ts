@@ -159,14 +159,28 @@ export const STRINGS = {
       'Evidence-reference and calculation validation does not establish whether natural-language claims are true.',
     decisionPipelineHeading: 'Multi-Agent Pipeline',
     decisionPipelineDescription:
-      'Three backend stages compose geometric analysis, evidence-reference checks, and a grounded narrative.',
-    decisionPipelineSteps: 'Multi-Agent Pipeline stages',
+      'Four coordinated stages pass one shared evidence pack from the request through grounded bilingual delivery.',
+    decisionPipelineSteps: 'Four-stage agent orchestration pipeline',
+    decisionPipelineOrchestratorRole: 'Coordination',
+    decisionPipelineOrchestratorAgent: 'Orchestrator Agent',
+    decisionPipelineOrchestratorSummary:
+      'Receives the request, coordinates specialists, manages the shared evidence pack, and assembles the final result.',
+    decisionPipelineOrchestratorStatus:
+      'Coordinated 3 specialized agents via shared evidence pack.',
+    decisionPipelineOrchestratorLoading:
+      'Routing the request and collecting specialist results.',
+    decisionPipelineOrchestratorWaiting:
+      'Waiting for the shared evidence pack and composed result.',
+    decisionPipelineOrchestratorHandoff:
+      'Dispatched the analysis request and collected agent results.',
     decisionPipelineMatchRole: 'Match Intelligence',
     decisionPipelineMatchAgent: 'Match Intelligence Agent',
     decisionPipelineTopRank: 'Top rank entry',
     decisionPipelineScoringMethod: 'Scoring method',
     decisionPipelineMatchNote:
       'Deterministic geometric scores from backend. No invented numbers.',
+    decisionPipelineMatchHandoff:
+      'Produced the Truth Pack and geometric scores → passed them to Verifier.',
     decisionPipelineVerifierRole: 'Verifier',
     decisionPipelineVerifierAgent: 'Verifier Agent',
     decisionPipelineEvidenceSummary: 'Evidence-reference validation results',
@@ -176,10 +190,22 @@ export const STRINGS = {
     decisionPipelineClaimSupportStatus: 'Claim support status',
     decisionPipelineVerifierNote:
       'These counts describe evidence-reference validation only. “Verified” does not prove the natural-language statement is true; claimSupportStatus is not_assessed.',
+    decisionPipelineVerifierHandoff:
+      'Validated evidence references → passed checked claims to Narrator.',
+    decisionPipelineVerifierWaiting:
+      'Verifier handoff appears when backend verification results are ready.',
     decisionPipelineNarratorRole: 'Narrator',
     decisionPipelineNarratorAgent: 'Narrator Agent',
     decisionPipelineNarratorNote:
       'Deterministic bilingual narrative from Truth Pack only.',
+    decisionPipelineEnglish: 'English',
+    decisionPipelineArabic: 'Arabic',
+    decisionPipelineNarratorHandoff:
+      'Generated a grounded bilingual narrative from checked data only.',
+    decisionPipelineNarratorWaiting:
+      'Narrator handoff appears when the bilingual response is ready.',
+    decisionPipelineFooter:
+      'Four specialized agents coordinated through a shared evidence pack. Code calculated every number. AI only explained. No statistics were invented.',
     decisionUnavailableMetrics:
       'Not computed: xG, xT, pass-completion probability, packing, or full pressure maps.',
     decisionProvenanceSynthetic: 'Synthetic data',
@@ -434,14 +460,28 @@ export const STRINGS = {
       'التحقق من مراجع الأدلة والحسابات لا يثبت صحة الادعاءات المكتوبة باللغة الطبيعية.',
     decisionPipelineHeading: 'مسار الوكلاء المتعددين',
     decisionPipelineDescription:
-      'ثلاث مراحل من الخلفية تجمع التحليل الهندسي وفحص مراجع الأدلة وسردًا مستندًا إلى البيانات.',
-    decisionPipelineSteps: 'مراحل مسار الوكلاء المتعددين',
+      'أربع مراحل منسقة تمرر حزمة أدلة مشتركة من الطلب حتى تقديم سرد ثنائي اللغة مستند إلى البيانات.',
+    decisionPipelineSteps: 'مسار تنسيق من أربع مراحل للوكلاء',
+    decisionPipelineOrchestratorRole: 'التنسيق',
+    decisionPipelineOrchestratorAgent: 'وكيل التنسيق',
+    decisionPipelineOrchestratorSummary:
+      'يستقبل الطلب، وينسق الوكلاء المتخصصين، ويدير حزمة الأدلة المشتركة، ويجمع النتيجة النهائية.',
+    decisionPipelineOrchestratorStatus:
+      'نسّق 3 وكلاء متخصصين عبر حزمة الأدلة المشتركة.',
+    decisionPipelineOrchestratorLoading:
+      'يوجه الطلب ويجمع نتائج الوكلاء المتخصصين.',
+    decisionPipelineOrchestratorWaiting:
+      'بانتظار حزمة الأدلة المشتركة والنتيجة المركبة.',
+    decisionPipelineOrchestratorHandoff:
+      'أرسل طلب التحليل وجمع نتائج الوكلاء.',
     decisionPipelineMatchRole: 'ذكاء المباراة',
     decisionPipelineMatchAgent: 'وكيل ذكاء المباراة',
     decisionPipelineTopRank: 'أعلى عنصر ترتيبًا',
     decisionPipelineScoringMethod: 'طريقة التسجيل',
     decisionPipelineMatchNote:
       'درجات هندسية حتمية من الخلفية. لا توجد أرقام مختلقة.',
+    decisionPipelineMatchHandoff:
+      'أنشأ حزمة الحقيقة والدرجات الهندسية ← مررها إلى المدقّق.',
     decisionPipelineVerifierRole: 'المدقّق',
     decisionPipelineVerifierAgent: 'وكيل التدقيق',
     decisionPipelineEvidenceSummary: 'نتائج التحقق من مراجع الأدلة',
@@ -451,10 +491,22 @@ export const STRINGS = {
     decisionPipelineClaimSupportStatus: 'حالة دعم الادعاء',
     decisionPipelineVerifierNote:
       'تصف هذه الأعداد التحقق من مراجع الأدلة فقط. «تم التحقق» لا يثبت صحة العبارة المكتوبة باللغة الطبيعية؛ claimSupportStatus هو not_assessed.',
+    decisionPipelineVerifierHandoff:
+      'تحقق من مراجع الأدلة ← مرر الادعاءات المدققة إلى الراوي.',
+    decisionPipelineVerifierWaiting:
+      'يظهر تسليم المدقّق عند جاهزية نتائج التحقق من الخلفية.',
     decisionPipelineNarratorRole: 'الراوي',
     decisionPipelineNarratorAgent: 'وكيل السرد',
     decisionPipelineNarratorNote:
       'سرد ثنائي اللغة حتمي مستند إلى حزمة الحقيقة فقط.',
+    decisionPipelineEnglish: 'الإنجليزية',
+    decisionPipelineArabic: 'العربية',
+    decisionPipelineNarratorHandoff:
+      'أنشأ سردًا ثنائي اللغة مستندًا إلى البيانات المدققة فقط.',
+    decisionPipelineNarratorWaiting:
+      'يظهر تسليم الراوي عند جاهزية الاستجابة ثنائية اللغة.',
+    decisionPipelineFooter:
+      'نسّق أربعة وكلاء متخصصين عبر حزمة أدلة مشتركة. حسبت الشيفرة كل رقم. اقتصر دور الذكاء الاصطناعي على الشرح. لم تُختلق أي إحصاءات.',
     decisionUnavailableMetrics:
       'غير محسوبة: xG، xT، احتمال إكمال التمريرة، التعبئة، أو خرائط الضغط الكاملة.',
     decisionProvenanceSynthetic: 'بيانات اصطناعية',

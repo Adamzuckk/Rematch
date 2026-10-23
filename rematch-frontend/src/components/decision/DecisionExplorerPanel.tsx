@@ -237,6 +237,10 @@ export function DecisionExplorerPanel({
         ? narrativeState.response.narrative.arabic
         : narrativeState.response.narrative.english
       : null
+  const bilingualNarrative =
+    narrativeState?.status === 'ready'
+      ? narrativeState.response.narrative
+      : null
   const narrativeProvenance =
     narrativeState?.status === 'ready'
       ? narrativeState.response.provenance
@@ -259,6 +263,12 @@ export function DecisionExplorerPanel({
       }
     : null
   const topRank = ranking[0] ?? null
+  const orchestratorStatusKey: MessageKey =
+    narrativeState?.status === 'ready'
+      ? 'decisionPipelineOrchestratorStatus'
+      : narrativeState?.status === 'loading'
+        ? 'decisionPipelineOrchestratorLoading'
+        : 'decisionPipelineOrchestratorWaiting'
 
   return (
     <article className={styles.root} aria-labelledby="decision-explorer-title">
@@ -339,12 +349,35 @@ export function DecisionExplorerPanel({
           </p>
         </div>
         <ol className={styles.pipelineGrid} aria-label={t('decisionPipelineSteps')}>
-          <li>
+          <li className={styles.pipelineGridItem}>
+            <section
+              className={styles.pipelineCard}
+              aria-labelledby="decision-agent-orchestrator"
+            >
+              <span className={styles.pipelineStep} aria-hidden="true">1</span>
+              <p className={styles.pipelineRole}>
+                {t('decisionPipelineOrchestratorRole')}
+              </p>
+              <h3 id="decision-agent-orchestrator" className={styles.panelTitle}>
+                {t('decisionPipelineOrchestratorAgent')}
+              </h3>
+              <p className={styles.panelNote}>
+                {t('decisionPipelineOrchestratorSummary')}
+              </p>
+              <p className={styles.pipelineStatus} role="status">
+                {t(orchestratorStatusKey)}
+              </p>
+              <p className={styles.pipelineHandoff}>
+                {t('decisionPipelineOrchestratorHandoff')}
+              </p>
+            </section>
+          </li>
+          <li className={styles.pipelineGridItem}>
             <section
               className={styles.pipelineCard}
               aria-labelledby="decision-agent-match-intelligence"
             >
-              <span className={styles.pipelineStep} aria-hidden="true">1</span>
+              <span className={styles.pipelineStep} aria-hidden="true">2</span>
               <p className={styles.pipelineRole}>
                 {t('decisionPipelineMatchRole')}
               </p>
@@ -385,14 +418,17 @@ export function DecisionExplorerPanel({
               <p className={styles.panelNote}>
                 {t('decisionPipelineMatchNote')}
               </p>
+              <p className={styles.pipelineHandoff}>
+                {t('decisionPipelineMatchHandoff')}
+              </p>
             </section>
           </li>
-          <li>
+          <li className={styles.pipelineGridItem}>
             <section
               className={styles.pipelineCard}
               aria-labelledby="decision-agent-verifier"
             >
-              <span className={styles.pipelineStep} aria-hidden="true">2</span>
+              <span className={styles.pipelineStep} aria-hidden="true">3</span>
               <p className={styles.pipelineRole}>
                 {t('decisionPipelineVerifierRole')}
               </p>
@@ -434,41 +470,63 @@ export function DecisionExplorerPanel({
                   onRetry={onNarrativeRetry}
                 />
               )}
+              <p className={styles.pipelineHandoff}>
+                {t(
+                  verificationSummary
+                    ? 'decisionPipelineVerifierHandoff'
+                    : 'decisionPipelineVerifierWaiting',
+                )}
+              </p>
             </section>
           </li>
-          <li>
+          <li className={styles.pipelineGridItem}>
             <section
               className={styles.pipelineCard}
               aria-labelledby="decision-agent-narrator"
             >
-              <span className={styles.pipelineStep} aria-hidden="true">3</span>
+              <span className={styles.pipelineStep} aria-hidden="true">4</span>
               <p className={styles.pipelineRole}>
                 {t('decisionPipelineNarratorRole')}
               </p>
               <h3 id="decision-agent-narrator" className={styles.panelTitle}>
                 {t('decisionPipelineNarratorAgent')}
               </h3>
-              {localizedNarrative ? (
+              {bilingualNarrative ? (
                 <>
-                  <h4 className={styles.pipelineHeadline}>
-                    {localizedNarrative.headline}
-                  </h4>
-                  <h5 className={styles.pipelineSubheading}>
-                    {t('decisionNarrativeObservations')}
-                  </h5>
-                  <ul className={styles.limitList}>
-                    {localizedNarrative.keyObservations.map((observation) => (
-                      <li key={observation}>{observation}</li>
-                    ))}
-                  </ul>
-                  <h5 className={styles.pipelineSubheading}>
-                    {t('decisionLimitationsHeading')}
-                  </h5>
-                  <ul className={styles.limitList}>
-                    {localizedNarrative.limitations.map((limitation) => (
-                      <li key={limitation}>{limitation}</li>
-                    ))}
-                  </ul>
+                  {([
+                    ['en', t('decisionPipelineEnglish'), bilingualNarrative.english],
+                    ['ar', t('decisionPipelineArabic'), bilingualNarrative.arabic],
+                  ] as const).map(([language, languageLabel, narrative]) => (
+                    <div
+                      className={styles.pipelineLanguageBlock}
+                      key={language}
+                      lang={language}
+                      dir={language === 'ar' ? 'rtl' : 'ltr'}
+                    >
+                      <h4 className={styles.pipelineLanguageLabel}>
+                        {languageLabel}
+                      </h4>
+                      <h5 className={styles.pipelineHeadline}>
+                        {narrative.headline}
+                      </h5>
+                      <h6 className={styles.pipelineSubheading}>
+                        {t('decisionNarrativeObservations')}
+                      </h6>
+                      <ul className={styles.limitList}>
+                        {narrative.keyObservations.map((observation) => (
+                          <li key={observation}>{observation}</li>
+                        ))}
+                      </ul>
+                      <h6 className={styles.pipelineSubheading}>
+                        {t('decisionLimitationsHeading')}
+                      </h6>
+                      <ul className={styles.limitList}>
+                        {narrative.limitations.map((limitation) => (
+                          <li key={limitation}>{limitation}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </>
               ) : (
                 <NarrativeAgentFallback
@@ -479,9 +537,19 @@ export function DecisionExplorerPanel({
               <p className={styles.panelNote}>
                 {t('decisionPipelineNarratorNote')}
               </p>
+              <p className={styles.pipelineHandoff}>
+                {t(
+                  localizedNarrative
+                    ? 'decisionPipelineNarratorHandoff'
+                    : 'decisionPipelineNarratorWaiting',
+                )}
+              </p>
             </section>
           </li>
         </ol>
+        <p className={styles.pipelineFooter}>
+          {t('decisionPipelineFooter')}
+        </p>
       </section>
 
       <div className={styles.grid}>
