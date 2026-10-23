@@ -14,6 +14,7 @@ interface TopBarProps {
 export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
   const { t } = useLocale()
   const { mode, setMode } = usePersona()
+  const apiMode = import.meta.env.VITE_MATCH_DATA_SOURCE === 'api'
 
   return (
     <header className={styles.topbar}>
@@ -59,7 +60,9 @@ export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
             {t('modeAnalyst')}
           </button>
         </div>
-        <span className={styles.badge}>{t('demoData')}</span>
+        <span className={styles.badge}>
+          {apiMode ? t('apiMode') : t('demoData')}
+        </span>
       </div>
     </header>
   )
