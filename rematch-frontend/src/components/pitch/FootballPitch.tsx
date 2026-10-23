@@ -1,11 +1,12 @@
 import { useId, type KeyboardEvent } from 'react'
-import type { MatchEvent, MatchFrame, Team } from '../../types'
+import type { MatchEvent, MatchFrame, Player, Team } from '../../types'
 import type { PitchPoint } from '../../types/coordinates'
 import {
   getEventGeometry,
-  mapPitchPointToSvgClamped,
+  mapPitchPointToSvg,
   PITCH_VIEWBOX,
 } from '../../lib/pitch'
+import { isValidPitchPoint } from '../../types/coordinates'
 import styles from './FootballPitch.module.css'
 
 export interface FootballPitchProps {
@@ -13,6 +14,8 @@ export interface FootballPitchProps {
   awayTeam: Team
   selectedEvent?: MatchEvent | null
   frame?: MatchFrame | null
+  /** Roster metadata lets frame markers show the actual shirt number. */
+  players?: readonly Player[]
   /** Accessible name for the pitch diagram */
   label?: string
   locale?: 'en' | 'ar'
@@ -54,6 +57,7 @@ export function FootballPitch({
   awayTeam,
   selectedEvent = null,
   frame = null,
+  players: roster = [],
   label = 'Football pitch',
   locale = 'en',
   className,
@@ -65,30 +69,34 @@ export function FootballPitch({
 }: FootballPitchProps) {
   // SVG fragment identifiers are document-global. A component-scoped ID avoids
   // one pitch borrowing another pitch's stripe pattern when two are mounted.
-  const stripePatternId = `pitch-stripes-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, '')
+  const stripePatternId = `pitch-stripes-${instanceId}`
+  const turfShadeId = `pitch-shade-${instanceId}`
+  const eventArrowId = `event-arrow-${instanceId}`
   const geometry = selectedEvent ? getEventGeometry(selectedEvent) : {}
-  const locationSvg = geometry.location
-    ? mapPitchPointToSvgClamped(geometry.location)
-    : null
+  const locationSvg = geometry.location ? mapPitchPointToSvg(geometry.location) : null
   const pathStart = geometry.path
-    ? mapPitchPointToSvgClamped(geometry.path.start)
+    ? mapPitchPointToSvg(geometry.path.start)
     : null
   const pathEnd = geometry.path
-    ? mapPitchPointToSvgClamped(geometry.path.end)
+    ? mapPitchPointToSvg(geometry.path.end)
     : null
   const selectedStart = highlightedPath
-    ? mapPitchPointToSvgClamped(highlightedPath.start)
+    ? mapPitchPointToSvg(highlightedPath.start)
     : null
   const selectedEnd = highlightedPath
-    ? mapPitchPointToSvgClamped(highlightedPath.end)
+    ? mapPitchPointToSvg(highlightedPath.end)
     : null
 
-  const players = frame?.players ?? []
+  const framePlayers = frame?.players ?? []
   // Event, player, and ball data all share one normalized coordinate system.
-  // Clamp finite upstream edge drift consistently; reject non-finite points.
+  // Invalid points are omitted; clamping would fabricate a pitch location.
+  const players = framePlayers.filter((player) => isValidPitchPoint(player.position))
   const ballSvg = frame?.ball
-    ? mapPitchPointToSvgClamped(frame.ball.position)
+    ? mapPitchPointToSvg(frame.ball.position)
     : null
+  const omittedFrameMarkers =
+    framePlayers.length - players.length + (frame?.ball && !ballSvg ? 1 : 0)
 
   const penaltyY = (H - MARK.penaltyWidth) / 2
   const goalY = (H - MARK.goalWidth) / 2
@@ -114,9 +122,25 @@ export function FootballPitch({
             <rect width="35" height={H} className={styles.stripeA} />
             <rect x="35" width="35" height={H} className={styles.stripeB} />
           </pattern>
+          <radialGradient id={turfShadeId} cx="50%" cy="48%" r="70%">
+            <stop offset="55%" stopColor="#0b2012" stopOpacity="0" />
+            <stop offset="100%" stopColor="#061109" stopOpacity=".48" />
+          </radialGradient>
+          <marker
+            id={eventArrowId}
+            viewBox="0 0 10 10"
+            refX="8"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto-start-reverse"
+          >
+            <path d="M 1 1 L 9 5 L 1 9 z" className={styles.eventArrow} />
+          </marker>
         </defs>
 
         <rect width={W} height={H} fill={`url(#${stripePatternId})`} />
+        <rect width={W} height={H} fill={`url(#${turfShadeId})`} />
 
         {/* Boundary */}
         <rect
@@ -203,6 +227,9 @@ export function FootballPitch({
           width={10}
           height={MARK.goalMouth}
           className={styles.goal}
+          data-testid="away-goal"
+          data-goal-side="left"
+          data-team="away"
         />
         <rect
           x={W - 12}
@@ -210,6 +237,9 @@ export function FootballPitch({
           width={10}
           height={MARK.goalMouth}
           className={styles.goal}
+          data-testid="home-goal"
+          data-goal-side="right"
+          data-team="home"
         />
 
         {/* Corner arcs */}
@@ -236,15 +266,26 @@ export function FootballPitch({
 
         {/* Event path */}
         {pathStart && pathEnd ? (
-          <line
+          <g
             key={`event-path-${selectedEvent?.id ?? ''}-${pathStart.x}-${pathStart.y}-${pathEnd.x}-${pathEnd.y}`}
-            x1={pathStart.x}
-            y1={pathStart.y}
-            x2={pathEnd.x}
-            y2={pathEnd.y}
-            className={styles.eventPath}
             data-testid="event-path"
-          />
+          >
+            <line
+              x1={pathStart.x}
+              y1={pathStart.y}
+              x2={pathEnd.x}
+              y2={pathEnd.y}
+              className={styles.eventPathUnderlay}
+            />
+            <line
+              x1={pathStart.x}
+              y1={pathStart.y}
+              x2={pathEnd.x}
+              y2={pathEnd.y}
+              className={styles.eventPath}
+              markerEnd={`url(#${eventArrowId})`}
+            />
+          </g>
         ) : null}
         {selectedStart && selectedEnd ? (
           <line
@@ -265,8 +306,14 @@ export function FootballPitch({
             transform={`translate(${locationSvg.x}, ${locationSvg.y})`}
             data-testid="event-location"
           >
-            <circle r={14} className={styles.eventHalo} />
-            <circle r={7} className={styles.eventMarker} />
+            <circle r={19} className={styles.eventHalo} />
+            <g className={styles.eventToken} aria-hidden="true">
+              <circle r={11} className={styles.eventMarker} />
+              <path
+                d="M 0 -6 L 5 -2 L 3 4 L -3 4 L -5 -2 Z M -5 -2 L -9 -5 M 5 -2 L 9 -5 M 3 4 L 6 8 M -3 4 L -6 8"
+                className={styles.eventBallSeam}
+              />
+            </g>
             <title>
               {selectedEvent
                 ? `Selected ${selectedEvent.type} location`
@@ -277,7 +324,7 @@ export function FootballPitch({
 
         {/* Player markers from frame only */}
         {players.map((player) => {
-          const svgPoint = mapPitchPointToSvgClamped(player.position)
+          const svgPoint = mapPitchPointToSvg(player.position)
           if (!svgPoint) return null
           const side = teamSide(player.teamId, homeTeam.id, awayTeam.id)
           const teamLabel =
@@ -287,6 +334,8 @@ export function FootballPitch({
                 ? awayTeam.name
                 : 'Unknown team'
           const selectable = selectablePlayerIds.includes(player.playerId)
+          const rosterPlayer = roster.find((item) => item.id === player.playerId)
+          const shirtNumber = rosterPlayer?.shirtNumber
           const markerProps = selectable
             ? {
                 role: 'button' as const,
@@ -306,13 +355,18 @@ export function FootballPitch({
             <g
               key={`${player.playerId}-${player.teamId}`}
               transform={`translate(${svgPoint.x}, ${svgPoint.y})`}
+              className={styles.playerMotion}
               data-testid="player-marker"
               data-team={side}
               data-selectable={selectable || undefined}
               {...markerProps}
             >
-              <circle
-                r={11}
+              <ellipse cx="0" cy="12" rx="10" ry="3.2" className={styles.playerShadow} />
+              {selectedPlayerId === player.playerId ? (
+                <circle r={17} className={styles.playerSelected} aria-hidden="true" />
+              ) : null}
+              <path
+                d="M -6 -10 L -12 -6 L -9 2 L -5 0 L -5 10 L 5 10 L 5 0 L 9 2 L 12 -6 L 6 -10 Z"
                 className={[
                   side === 'home'
                     ? styles.playerHome
@@ -320,7 +374,6 @@ export function FootballPitch({
                       ? styles.playerAway
                       : styles.playerUnknown,
                   selectable ? styles.playerSelectable : '',
-                  selectedPlayerId === player.playerId ? styles.playerSelected : '',
                 ]
                   .filter(Boolean)
                   .join(' ')}
@@ -328,7 +381,12 @@ export function FootballPitch({
                 aria-label={`Player ${player.playerId}, ${teamLabel}`}
               >
                 <title>{`Player ${player.playerId} (${teamLabel})`}</title>
-              </circle>
+              </path>
+              {shirtNumber != null ? (
+                <text x="0" y="4" className={styles.shirtNumber} aria-hidden="true">
+                  {shirtNumber}
+                </text>
+              ) : null}
             </g>
           )
         })}
@@ -339,14 +397,15 @@ export function FootballPitch({
             transform={`translate(${ballSvg.x}, ${ballSvg.y})`}
             data-testid="ball-marker"
           >
-            <circle
-              r={8}
-              className={styles.ball}
-              role="img"
-              aria-label="Ball"
-            >
+            <ellipse cx="1.5" cy="8" rx="8" ry="2.6" className={styles.ballShadow} />
+            <g className={styles.ball} role="img" aria-label="Ball">
               <title>Ball</title>
-            </circle>
+              <circle r={8} className={styles.ballShell} />
+              <path
+                d="M 0 -4 L 3 -1 L 2 3 L -2 3 L -3 -1 Z M -3 -1 L -7 -3 M 3 -1 L 7 -3 M 2 3 L 5 6 M -2 3 L -5 6"
+                className={styles.ballSeam}
+              />
+            </g>
           </g>
         ) : null}
       </svg>
@@ -364,11 +423,18 @@ export function FootballPitch({
           <span className={[styles.swatch, styles.swatchEvent].join(' ')} />
           {locale === 'ar' ? 'حدث' : 'Event'}
         </span>
-        {frame == null || players.length === 0 ? (
+        {frame == null || (players.length === 0 && !ballSvg) ? (
           <span className={styles.legendNote}>
             {locale === 'ar'
-              ? 'لا يوجد إطار للاعبين لهذه اللحظة'
-              : 'No player frame for this moment'}
+              ? 'لا توجد إحداثيات إطار صالحة لهذه اللحظة'
+              : 'No valid frame coordinates for this moment'}
+          </span>
+        ) : null}
+        {omittedFrameMarkers > 0 ? (
+          <span className={styles.legendNote} role="note">
+            {locale === 'ar'
+              ? `تم إخفاء ${omittedFrameMarkers} إحداثيات إطار غير صالحة`
+              : `${omittedFrameMarkers} invalid frame coordinate${omittedFrameMarkers === 1 ? '' : 's'} hidden`}
           </span>
         ) : null}
       </figcaption>

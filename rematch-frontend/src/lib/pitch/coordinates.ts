@@ -32,20 +32,3 @@ export function mapPitchPointToSvg(point: PitchPoint): SvgPoint | null {
   }
 }
 
-/**
- * Clamps a raw point into the valid pitch range when finite.
- * Returns null for non-finite values (never invents positions).
- */
-export function clampPitchPoint(point: PitchPoint): PitchPoint | null {
-  if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return null
-  return {
-    x: Math.min(100, Math.max(0, point.x)),
-    y: Math.min(100, Math.max(0, point.y)),
-  }
-}
-
-export function mapPitchPointToSvgClamped(point: PitchPoint): SvgPoint | null {
-  const clamped = clampPitchPoint(point)
-  if (!clamped) return null
-  return mapPitchPointToSvg(clamped)
-}

@@ -1,6 +1,6 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { MatchEvent, MatchFrame, Team } from '../../types'
+import type { MatchEvent, MatchFrame, Player, Team } from '../../types'
 import { FootballPitch } from './FootballPitch'
 
 afterEach(() => {
@@ -50,6 +50,11 @@ const frameWithPlayers: MatchFrame = {
   ball: { position: { x: 50, y: 50 } },
   provenance: 'synthetic',
 }
+
+const roster: Player[] = [
+  { id: 'player-home-1', name: 'Home Eight', teamId: homeTeam.id, shirtNumber: 8 },
+  { id: 'player-away-1', name: 'Away Ten', teamId: awayTeam.id, shirtNumber: 10 },
+]
 
 describe('FootballPitch', () => {
   it('renders pitch markings and team legend', () => {
@@ -117,6 +122,7 @@ describe('FootballPitch', () => {
         awayTeam={awayTeam}
         selectedEvent={passEvent}
         frame={frameWithPlayers}
+        players={roster}
       />,
     )
 
@@ -133,6 +139,8 @@ describe('FootballPitch', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Ball' })).toBeInTheDocument()
+    expect(screen.getByText('8')).toBeInTheDocument()
+    expect(screen.getByText('10')).toBeInTheDocument()
   })
 
   it('skips invalid player coordinates instead of inventing positions', () => {

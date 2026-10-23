@@ -218,6 +218,7 @@ export function MatchAnalysisPage() {
             awayTeam={match.awayTeam}
             selectedEvent={selectedEvent}
             frame={frame}
+            players={players}
             label={t('matchAnalysisPitchLabel')}
             locale={locale}
           />
