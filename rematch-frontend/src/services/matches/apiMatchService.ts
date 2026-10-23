@@ -14,7 +14,6 @@ import {
   DecisionNotFoundError,
   MatchApiError,
   MatchNotFoundError,
-  MatchServiceConfigError,
   type ApiErrorBody,
   type MatchListFilters,
   type MatchService,
@@ -31,15 +30,6 @@ interface Paginated<T> {
 
 function trimBaseUrl(baseUrl: string): string {
   return baseUrl.replace(/\/+$/, '')
-}
-
-/** Optional bearer token for protected demos (VITE_API_BEARER_TOKEN). */
-function authHeaders(): HeadersInit {
-  const token = import.meta.env.VITE_API_BEARER_TOKEN
-  if (token && String(token).trim()) {
-    return { Authorization: `Bearer ${String(token).trim()}` }
-  }
-  return {}
 }
 
 function buildQuery(filters: MatchListFilters = {}): string {
@@ -74,18 +64,12 @@ async function readErrorBody(response: Response): Promise<ApiErrorBody | null> {
 }
 
 /**
- * HTTP match service. Requires VITE_API_BASE_URL.
+ * HTTP match service. An empty base URL uses the same-origin SWA API proxy.
  * Errors are explicit — this never falls back to mock data.
  * Paths use the Phase 4/5 `/api/v1` contract and unwrap paginated `items`.
  */
 export function createApiMatchService(baseUrl: string | undefined): MatchService {
-  if (!baseUrl?.trim()) {
-    throw new MatchServiceConfigError(
-      'VITE_MATCH_DATA_SOURCE=api requires VITE_API_BASE_URL to be set.',
-    )
-  }
-
-  const root = trimBaseUrl(baseUrl.trim())
+  const root = baseUrl?.trim() ? trimBaseUrl(baseUrl.trim()) : ''
 
   async function request<T>(
     path: string,
@@ -93,10 +77,7 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
   ): Promise<{ response: Response; body: T }> {
     let response: Response
     try {
-      const headers = {
-        ...authHeaders(),
-        ...(init?.headers ?? {}),
-      }
+      const headers = { ...(init?.headers ?? {}) }
       response = await fetch(`${root}${path}`, { ...init, headers })
     } catch (cause) {
       const detail =

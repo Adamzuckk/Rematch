@@ -63,17 +63,11 @@ export function InsightsPage() {
   useEffect(() => {
     if (!matchId) return
     let cancelled = false
-    const base = import.meta.env.VITE_API_BASE_URL as string | undefined
-    const token = import.meta.env.VITE_API_BEARER_TOKEN as string | undefined
-    const url = `${(base ?? '').replace(/\/+$/, '')}/api/v1/matches/${matchId}/intelligence`
-    const headers: HeadersInit = {}
-    if (token?.trim()) {
-      headers.Authorization = `Bearer ${token.trim()}`
-    }
+    const url = `/api/v1/matches/${encodeURIComponent(matchId)}/intelligence`
 
     void (async () => {
       try {
-        const res = await fetch(url, { headers })
+        const res = await fetch(url)
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = (await res.json()) as Intelligence
         if (!cancelled) {

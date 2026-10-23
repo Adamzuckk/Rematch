@@ -17,7 +17,7 @@ EXPECTED_PATHS = {
 }
 VERIFY_PATH = "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/verify"
 NARRATIVE_PATH = "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative"
-EXPECTED_SERVER_URL = "https://history-monitor-vice-adopt.trycloudflare.com"
+EXPECTED_SERVER_URL = "https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io"
 
 
 def _refs(value):

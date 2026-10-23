@@ -32,8 +32,8 @@ function readDataSource(): MatchDataSource {
 
 /**
  * Creates the active match service.
- * Default: mock (synthetic). Set VITE_MATCH_DATA_SOURCE=api and
- * VITE_API_BASE_URL to use the HTTP implementation — no silent mock fallback.
+ * Default: mock (synthetic). Set VITE_MATCH_DATA_SOURCE=api to use the HTTP
+ * implementation through the same-origin SWA proxy — no silent mock fallback.
  */
 export function createMatchService(
   source: MatchDataSource = readDataSource(),

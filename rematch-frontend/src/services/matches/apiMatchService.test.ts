@@ -5,7 +5,6 @@ import {
   DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
   MatchApiError,
-  MatchServiceConfigError,
 } from './types'
 
 afterEach(() => {
@@ -21,10 +20,13 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 describe('createApiMatchService decision analysis', () => {
-  it('requires VITE_API_BASE_URL', () => {
-    expect(() => createApiMatchService(undefined)).toThrow(
-      MatchServiceConfigError,
-    )
+  it('uses same-origin API paths when no base URL is configured', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ items: [] }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await createApiMatchService(undefined).getMatches()
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/v1/matches', { headers: {} })
   })
 
   it('GETs /api/v1/.../decision-analysis and returns the body', async () => {

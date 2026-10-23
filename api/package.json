@@ -1,0 +1,12 @@
+{
+  "name": "rematch-swa-api",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/functions/*.js",
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {
+    "@azure/functions": "4.7.2"
+  }
+}

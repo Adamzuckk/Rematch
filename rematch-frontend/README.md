@@ -24,7 +24,9 @@ Copy `.env.example` to `.env` if you need non-default data wiring:
 | Variable | Default | Notes |
 |----------|---------|-------|
 | `VITE_MATCH_DATA_SOURCE` | `mock` | `mock` (offline synthetic catalogue) or `api` |
-| `VITE_API_BASE_URL` | empty | Required for `api`; no trailing slash (e.g. `http://localhost:8000`) |
+| `VITE_API_BASE_URL` | empty | Optional API base URL. Empty sends requests to the same-origin `/api/v1` proxy; set a local backend URL for local development. |
+
+The browser never receives the backend bearer token. The deployed Static Web App API proxy reads `BACKEND_BASE_URL` and `API_BEARER_TOKEN` from server-side application settings and adds backend authorization on the server.
 
 Default development uses the synthetic mock service. The API client **never** silently falls back to mocks on failure — errors are shown with a retry action.
 
