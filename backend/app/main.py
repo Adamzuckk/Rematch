@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -14,6 +16,16 @@ from app import __version__
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.db.session import configure_engine, get_engine
+
+
+def _safe_validation_details(exc: RequestValidationError) -> list[Any]:
+    """Return JSON-safe validation errors without echoing raw request input."""
+    details: list[Any] = json.loads(json.dumps(exc.errors(), default=str))
+    for item in details:
+        if isinstance(item, dict):
+            item.pop("input", None)
+            item.pop("ctx", None)
+    return details
 
 
 @asynccontextmanager
@@ -53,6 +65,20 @@ def create_app() -> FastAPI:
             allow_headers=["Accept", "Content-Type", "Authorization"],
         )
 
+    @application.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=()",
+        )
+        if request.url.path.startswith("/api/"):
+            response.headers.setdefault("Cache-Control", "no-store")
+        return response
+
     @application.exception_handler(StarletteHTTPException)
     async def http_exception_handler(
         _request: Request,
@@ -79,13 +105,14 @@ def create_app() -> FastAPI:
         _request: Request,
         exc: RequestValidationError,
     ) -> JSONResponse:
+        # Keep details JSON-serializable and avoid echoing attacker-controlled input.
         return JSONResponse(
             status_code=422,
             content={
                 "error": {
                     "code": "validation_error",
                     "message": "Request validation failed",
-                    "details": exc.errors(),
+                    "details": _safe_validation_details(exc),
                 }
             },
         )
