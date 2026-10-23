@@ -73,7 +73,8 @@ jobs:
             --resource-group "$AZURE_RESOURCE_GROUP" \
             --output json)
 
-          jq -e --arg container "$CONTAINER_NAME" '
+          jq -e --arg container "$CONTAINER_NAME" \
+            --arg frontend_origin "https://victorious-cliff-080f51e0f.4.azurestaticapps.net" '
             .name == "rematch"
             and (.properties.managedEnvironmentId | type == "string" and length > 0)
             and (.properties.configuration.ingress.targetPort == 8000)
@@ -83,11 +84,12 @@ jobs:
             and ([.properties.template.containers[] | select(.name == $container) | .env[]? | select(.name == "REQUIRE_API_AUTH" and .value == "true")] | length == 1)
             and ([.properties.template.containers[] | select(.name == $container) | .env[]? | select(.name == "API_BEARER_TOKEN" and .secretRef == "api-bearer-token")] | length == 1)
             and ([.properties.template.containers[] | select(.name == $container) | .env[]? | select(.name == "PORT" and .value == "8000")] | length == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .env[]? | select(.name == "CORS_ORIGINS") | (.value // "") | split(",") | index($frontend_origin)] | length == 1)
             and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Startup" and .tcpSocket.port == 8000)] | length == 1)
             and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Liveness" and .tcpSocket.port == 8000)] | length == 1)
             and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Readiness" and .tcpSocket.port == 8000)] | length == 1)
           ' <<< "$app_json" >/dev/null || {
-            echo 'Existing Container App does not match the expected app, environment presence, container, auth secret reference, ingress, port, or TCP probes. Stopping before changing Azure.' >&2
+            echo 'Existing Container App does not match the expected app, environment presence, container, auth secret reference, frontend CORS origin, ingress, port, or TCP probes. Stopping before changing Azure.' >&2
             exit 1
           }
 
@@ -229,17 +231,19 @@ jobs:
             echo 'Expected exactly one intended container with the commit-tagged image.' >&2
             exit 1
           }
-          jq -e --arg container "$CONTAINER_NAME" '
+          jq -e --arg container "$CONTAINER_NAME" \
+            --arg frontend_origin "https://victorious-cliff-080f51e0f.4.azurestaticapps.net" '
             (.properties.configuration.ingress.targetPort == 8000)
             and (.properties.configuration.ingress.external == true)
             and (.properties.configuration.ingress.allowInsecure == false)
             and (.properties.template.scale.minReplicas == 0)
             and (.properties.template.scale.maxReplicas == 1)
+            and ([.properties.template.containers[] | select(.name == $container) | .env[]? | select(.name == "CORS_ORIGINS") | (.value // "") | split(",") | index($frontend_origin)] | length == 1)
             and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Startup" and .tcpSocket.port == 8000)] | length == 1)
             and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Liveness" and .tcpSocket.port == 8000)] | length == 1)
             and ([.properties.template.containers[] | select(.name == $container) | .probes[]? | select(.type == "Readiness" and .tcpSocket.port == 8000)] | length == 1)
           ' <<< "$app_json" >/dev/null || {
-            echo 'Post-deployment ingress, scale, or TCP probe configuration differs from the expected values.' >&2
+            echo 'Post-deployment frontend CORS origin, ingress, scale, or TCP probe configuration differs from the expected values.' >&2
             exit 1
           }
 
