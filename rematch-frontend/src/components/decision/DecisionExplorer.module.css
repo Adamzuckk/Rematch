@@ -135,6 +135,59 @@
   background: linear-gradient(145deg, var(--color-surface-raised), var(--color-surface));
   box-shadow: var(--shadow-sm);
 }
+.pipelinePanel {
+  gap: var(--space-4);
+}
+.pipelineGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pipelineCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  height: 100%;
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-raised);
+}
+.pipelineStep {
+  display: inline-grid;
+  width: 1.65rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--color-accent-border);
+  border-radius: 50%;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.pipelineRole {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.pipelineHeadline {
+  margin: 0;
+  font-size: 0.94rem;
+  line-height: 1.45;
+}
+.pipelineSubheading {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.76rem;
+}
 .panelTitle {
   font-size: 0.98rem;
 }
@@ -344,6 +397,11 @@
   }
   .rankScore {
     grid-column: 2;
+  }
+}
+@media (max-width: 760px) {
+  .pipelineGrid {
+    grid-template-columns: 1fr;
   }
 }
 @media (max-width: 560px) {

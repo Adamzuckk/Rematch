@@ -241,9 +241,25 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
       />,
     )
 
-    expect(screen.getByText(narrativeResponse.narrative.english.headline)).toBeInTheDocument()
-    expect(screen.getByText('The backend returned a geometric score.')).toBeInTheDocument()
-    expect(screen.getByText('Synthetic match data only.')).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: STRINGS.en.decisionPipelineHeading }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: STRINGS.en.decisionPipelineMatchAgent }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: STRINGS.en.decisionPipelineVerifierAgent }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: STRINGS.en.decisionPipelineNarratorAgent }),
+    ).toBeInTheDocument()
+    expect(screen.getByText('not_assessed')).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionPipelineVerifierNote)).toBeInTheDocument()
+
+    const englishNarrative = within(screen.getByTestId('decision-narrative-content'))
+    expect(englishNarrative.getByText(narrativeResponse.narrative.english.headline)).toBeInTheDocument()
+    expect(englishNarrative.getByText('The backend returned a geometric score.')).toBeInTheDocument()
+    expect(englishNarrative.getByText('Synthetic match data only.')).toBeInTheDocument()
     expect(screen.getByText(STRINGS.en.decisionNarrativeVerificationScope)).toBeInTheDocument()
     expect(screen.getByText(/Narrative provenance: Synthetic data/)).toBeInTheDocument()
 
@@ -261,7 +277,11 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
       />,
     )
     await waitFor(() => {
-      expect(screen.getByText(narrativeResponse.narrative.arabic.headline)).toBeInTheDocument()
+      expect(
+        within(screen.getByTestId('decision-narrative-content')).getByText(
+          narrativeResponse.narrative.arabic.headline,
+        ),
+      ).toBeInTheDocument()
       expect(screen.getByText(STRINGS.ar.decisionNarrativeVerificationScope)).toBeInTheDocument()
     })
   })
@@ -279,8 +299,8 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
         }}
       />,
     )
-    expect(screen.getByText(/backend narrative is unavailable/i)).toHaveAttribute('role', 'status')
-    expect(screen.getByText(/Mock mode has no backend narrative/)).toBeInTheDocument()
+    expect(screen.getAllByText(/backend narrative is unavailable/i).length).toBeGreaterThan(1)
+    expect(screen.getAllByText(/Mock mode has no backend narrative/).length).toBeGreaterThan(1)
 
     rerender(
       <DecisionExplorerPanel
@@ -294,9 +314,13 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
         onNarrativeRetry={retry}
       />,
     )
-    expect(screen.getByRole('alert')).toHaveTextContent('Network request failed.')
+    expect(
+      screen
+        .getAllByRole('alert')
+        .some((alert) => alert.textContent?.includes('Network request failed.')),
+    ).toBe(true)
     await userEvent.setup().click(
-      screen.getByRole('button', { name: STRINGS.en.decisionNarrativeRetry }),
+      screen.getAllByRole('button', { name: STRINGS.en.decisionNarrativeRetry })[0]!,
     )
     expect(retry).toHaveBeenCalledOnce()
   })

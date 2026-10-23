@@ -143,6 +143,44 @@ function ClaimCard({ claim }: { claim: DecisionClaim }) {
   )
 }
 
+function NarrativeAgentFallback({
+  state,
+  onRetry,
+}: {
+  state?: DecisionNarrativeState
+  onRetry?: () => void
+}) {
+  const { t } = useLocale()
+
+  if (state?.status === 'loading') {
+    return (
+      <p className={styles.panelNote} role="status">
+        {t('decisionNarrativeLoading')}
+      </p>
+    )
+  }
+  if (state?.status === 'error') {
+    return (
+      <div>
+        <p className={styles.panelNote} role="alert">
+          {t('decisionNarrativeError')} {state.message}
+        </p>
+        {onRetry ? (
+          <Button variant="secondary" onClick={onRetry}>
+            {t('decisionNarrativeRetry')}
+          </Button>
+        ) : null}
+      </div>
+    )
+  }
+  return (
+    <p className={styles.panelNote} role="status">
+      {t('decisionNarrativeUnavailable')}{' '}
+      {state?.status === 'unavailable' ? state.message : ''}
+    </p>
+  )
+}
+
 export interface DecisionExplorerPanelProps {
   analysis: DecisionAnalysis
   matchLabel?: string
@@ -203,6 +241,24 @@ export function DecisionExplorerPanel({
     narrativeState?.status === 'ready'
       ? narrativeState.response.provenance
       : null
+  const verificationResults =
+    narrativeState?.status === 'ready'
+      ? narrativeState.response.verificationResults
+      : null
+  const verificationSummary = verificationResults
+    ? {
+        verified: verificationResults.filter(
+          (result) => result.evidenceValidationStatus === 'verified',
+        ).length,
+        partiallySupported: verificationResults.filter(
+          (result) => result.evidenceValidationStatus === 'partially_supported',
+        ).length,
+        unsupported: verificationResults.filter(
+          (result) => result.evidenceValidationStatus === 'unsupported',
+        ).length,
+      }
+    : null
+  const topRank = ranking[0] ?? null
 
   return (
     <article className={styles.root} aria-labelledby="decision-explorer-title">
@@ -266,6 +322,167 @@ export function DecisionExplorerPanel({
           {t('decisionConceptOutcome')}
         </li>
       </ul>
+
+      <section
+        className={`${styles.panel} ${styles.pipelinePanel}`}
+        aria-labelledby="decision-multi-agent-pipeline"
+      >
+        <div>
+          <h2
+            id="decision-multi-agent-pipeline"
+            className={styles.panelTitle}
+          >
+            {t('decisionPipelineHeading')}
+          </h2>
+          <p className={styles.panelNote}>
+            {t('decisionPipelineDescription')}
+          </p>
+        </div>
+        <ol className={styles.pipelineGrid} aria-label={t('decisionPipelineSteps')}>
+          <li>
+            <section
+              className={styles.pipelineCard}
+              aria-labelledby="decision-agent-match-intelligence"
+            >
+              <span className={styles.pipelineStep} aria-hidden="true">1</span>
+              <p className={styles.pipelineRole}>
+                {t('decisionPipelineMatchRole')}
+              </p>
+              <h3
+                id="decision-agent-match-intelligence"
+                className={styles.panelTitle}
+              >
+                {t('decisionPipelineMatchAgent')}
+              </h3>
+              <dl className={styles.dl}>
+                <div className={styles.row}>
+                  <dt>{t('decisionCompositeLabel')}</dt>
+                  <dd className={styles.mono}>
+                    {observedScore == null
+                      ? t('decisionMetricUnavailable')
+                      : `${observedScore} ${t('decisionUnitPitchPercent')}`}
+                  </dd>
+                </div>
+                <div className={styles.row}>
+                  <dt>{t('decisionAltCount')}</dt>
+                  <dd className={styles.mono}>{analysis.alternatives.length}</dd>
+                </div>
+                <div className={styles.row}>
+                  <dt>{t('decisionPipelineTopRank')}</dt>
+                  <dd>
+                    {topRank
+                      ? `${topRank.label} · ${formatScore(topRank.compositeScore) ?? t('decisionMetricUnavailable')}`
+                      : t('decisionMetricUnavailable')}
+                  </dd>
+                </div>
+                <div className={styles.row}>
+                  <dt>{t('decisionPipelineScoringMethod')}</dt>
+                  <dd className={styles.mono}>
+                    {analysis.scoringMethodId}@{analysis.scoringMethodVersion}
+                  </dd>
+                </div>
+              </dl>
+              <p className={styles.panelNote}>
+                {t('decisionPipelineMatchNote')}
+              </p>
+            </section>
+          </li>
+          <li>
+            <section
+              className={styles.pipelineCard}
+              aria-labelledby="decision-agent-verifier"
+            >
+              <span className={styles.pipelineStep} aria-hidden="true">2</span>
+              <p className={styles.pipelineRole}>
+                {t('decisionPipelineVerifierRole')}
+              </p>
+              <h3 id="decision-agent-verifier" className={styles.panelTitle}>
+                {t('decisionPipelineVerifierAgent')}
+              </h3>
+              {verificationSummary ? (
+                <>
+                  <p className={styles.panelNote}>
+                    {t('decisionPipelineEvidenceSummary')}
+                  </p>
+                  <dl className={styles.dl}>
+                    <div className={styles.row}>
+                      <dt>{t('decisionPipelineVerified')}</dt>
+                      <dd className={styles.mono}>{verificationSummary.verified}</dd>
+                    </div>
+                    <div className={styles.row}>
+                      <dt>{t('decisionPipelinePartiallySupported')}</dt>
+                      <dd className={styles.mono}>
+                        {verificationSummary.partiallySupported}
+                      </dd>
+                    </div>
+                    <div className={styles.row}>
+                      <dt>{t('decisionPipelineUnsupported')}</dt>
+                      <dd className={styles.mono}>{verificationSummary.unsupported}</dd>
+                    </div>
+                    <div className={styles.row}>
+                      <dt>{t('decisionPipelineClaimSupportStatus')}</dt>
+                      <dd className={styles.mono}>not_assessed</dd>
+                    </div>
+                  </dl>
+                  <p className={styles.panelNote}>
+                    {t('decisionPipelineVerifierNote')}
+                  </p>
+                </>
+              ) : (
+                <NarrativeAgentFallback
+                  state={narrativeState}
+                  onRetry={onNarrativeRetry}
+                />
+              )}
+            </section>
+          </li>
+          <li>
+            <section
+              className={styles.pipelineCard}
+              aria-labelledby="decision-agent-narrator"
+            >
+              <span className={styles.pipelineStep} aria-hidden="true">3</span>
+              <p className={styles.pipelineRole}>
+                {t('decisionPipelineNarratorRole')}
+              </p>
+              <h3 id="decision-agent-narrator" className={styles.panelTitle}>
+                {t('decisionPipelineNarratorAgent')}
+              </h3>
+              {localizedNarrative ? (
+                <>
+                  <h4 className={styles.pipelineHeadline}>
+                    {localizedNarrative.headline}
+                  </h4>
+                  <h5 className={styles.pipelineSubheading}>
+                    {t('decisionNarrativeObservations')}
+                  </h5>
+                  <ul className={styles.limitList}>
+                    {localizedNarrative.keyObservations.map((observation) => (
+                      <li key={observation}>{observation}</li>
+                    ))}
+                  </ul>
+                  <h5 className={styles.pipelineSubheading}>
+                    {t('decisionLimitationsHeading')}
+                  </h5>
+                  <ul className={styles.limitList}>
+                    {localizedNarrative.limitations.map((limitation) => (
+                      <li key={limitation}>{limitation}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <NarrativeAgentFallback
+                  state={narrativeState}
+                  onRetry={onNarrativeRetry}
+                />
+              )}
+              <p className={styles.panelNote}>
+                {t('decisionPipelineNarratorNote')}
+              </p>
+            </section>
+          </li>
+        </ol>
+      </section>
 
       <div className={styles.grid}>
         <div className={styles.stack}>

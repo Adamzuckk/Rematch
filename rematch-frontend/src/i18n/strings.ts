@@ -156,6 +156,29 @@ export const STRINGS = {
     decisionNarrativeObservations: 'Backend observations',
     decisionNarrativeVerificationScope:
       'Evidence-reference and calculation validation does not establish whether natural-language claims are true.',
+    decisionPipelineHeading: 'Multi-Agent Pipeline',
+    decisionPipelineDescription:
+      'Three backend stages compose geometric analysis, evidence-reference checks, and a grounded narrative.',
+    decisionPipelineSteps: 'Multi-Agent Pipeline stages',
+    decisionPipelineMatchRole: 'Match Intelligence',
+    decisionPipelineMatchAgent: 'Match Intelligence Agent',
+    decisionPipelineTopRank: 'Top rank entry',
+    decisionPipelineScoringMethod: 'Scoring method',
+    decisionPipelineMatchNote:
+      'Deterministic geometric scores from backend. No invented numbers.',
+    decisionPipelineVerifierRole: 'Verifier',
+    decisionPipelineVerifierAgent: 'Verifier Agent',
+    decisionPipelineEvidenceSummary: 'Evidence-reference validation results',
+    decisionPipelineVerified: 'References verified',
+    decisionPipelinePartiallySupported: 'Partially supported references',
+    decisionPipelineUnsupported: 'Unsupported references',
+    decisionPipelineClaimSupportStatus: 'Claim support status',
+    decisionPipelineVerifierNote:
+      'These counts describe evidence-reference validation only. “Verified” does not prove the natural-language statement is true; claimSupportStatus is not_assessed.',
+    decisionPipelineNarratorRole: 'Narrator',
+    decisionPipelineNarratorAgent: 'Narrator Agent',
+    decisionPipelineNarratorNote:
+      'Deterministic bilingual narrative from Truth Pack only.',
     decisionUnavailableMetrics:
       'Not computed: xG, xT, pass-completion probability, packing, or full pressure maps.',
     decisionProvenanceSynthetic: 'Synthetic data',
@@ -407,6 +430,29 @@ export const STRINGS = {
     decisionNarrativeObservations: 'ملاحظات الخادم',
     decisionNarrativeVerificationScope:
       'التحقق من مراجع الأدلة والحسابات لا يثبت صحة الادعاءات المكتوبة باللغة الطبيعية.',
+    decisionPipelineHeading: 'مسار الوكلاء المتعددين',
+    decisionPipelineDescription:
+      'ثلاث مراحل من الخلفية تجمع التحليل الهندسي وفحص مراجع الأدلة وسردًا مستندًا إلى البيانات.',
+    decisionPipelineSteps: 'مراحل مسار الوكلاء المتعددين',
+    decisionPipelineMatchRole: 'ذكاء المباراة',
+    decisionPipelineMatchAgent: 'وكيل ذكاء المباراة',
+    decisionPipelineTopRank: 'أعلى عنصر ترتيبًا',
+    decisionPipelineScoringMethod: 'طريقة التسجيل',
+    decisionPipelineMatchNote:
+      'درجات هندسية حتمية من الخلفية. لا توجد أرقام مختلقة.',
+    decisionPipelineVerifierRole: 'المدقّق',
+    decisionPipelineVerifierAgent: 'وكيل التدقيق',
+    decisionPipelineEvidenceSummary: 'نتائج التحقق من مراجع الأدلة',
+    decisionPipelineVerified: 'مراجع تم التحقق منها',
+    decisionPipelinePartiallySupported: 'مراجع مدعومة جزئيًا',
+    decisionPipelineUnsupported: 'مراجع غير مدعومة',
+    decisionPipelineClaimSupportStatus: 'حالة دعم الادعاء',
+    decisionPipelineVerifierNote:
+      'تصف هذه الأعداد التحقق من مراجع الأدلة فقط. «تم التحقق» لا يثبت صحة العبارة المكتوبة باللغة الطبيعية؛ claimSupportStatus هو not_assessed.',
+    decisionPipelineNarratorRole: 'الراوي',
+    decisionPipelineNarratorAgent: 'وكيل السرد',
+    decisionPipelineNarratorNote:
+      'سرد ثنائي اللغة حتمي مستند إلى حزمة الحقيقة فقط.',
     decisionUnavailableMetrics:
       'غير محسوبة: xG، xT، احتمال إكمال التمريرة، التعبئة، أو خرائط الضغط الكاملة.',
     decisionProvenanceSynthetic: 'بيانات اصطناعية',
