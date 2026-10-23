@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.schemas.common import DataProvenance, PitchPointSchema
 
@@ -19,6 +20,17 @@ ActionKind = Literal[
     "observed_shot",
     "hypothetical_pass",
 ]
+
+# Bounds for caller-supplied verification payloads (also safe for engine output).
+_MAX_ID_LEN = 128
+_MAX_STATEMENT_LEN = 2_000
+_MAX_REASON_LEN = 2_000
+_MAX_DETAIL_LEN = 1_000
+_MAX_LIMITATION_LEN = 500
+_MAX_EVIDENCE_REFS = 32
+_MAX_LIMITATIONS = 32
+_MAX_VERIFY_CLAIMS = 32
+_MAX_CALCULATION_JSON_BYTES = 8_192
 
 
 class MetricValueSchema(BaseModel):
@@ -63,21 +75,48 @@ class EvidenceReferenceSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     kind: EvidenceRefKind
-    id: str
-    matchId: str
-    detail: str | None = None
+    id: str = Field(max_length=_MAX_ID_LEN)
+    matchId: str = Field(max_length=_MAX_ID_LEN)
+    detail: str | None = Field(default=None, max_length=_MAX_DETAIL_LEN)
 
 
 class ClaimSchema(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    id: str
-    statement: str
+    id: str = Field(max_length=_MAX_ID_LEN)
+    statement: str = Field(max_length=_MAX_STATEMENT_LEN)
     status: VerificationStatus
-    evidence: list[EvidenceReferenceSchema] = Field(default_factory=list)
-    reason: str
-    limitations: list[str] = Field(default_factory=list)
+    evidence: list[EvidenceReferenceSchema] = Field(
+        default_factory=list,
+        max_length=_MAX_EVIDENCE_REFS,
+    )
+    reason: str = Field(max_length=_MAX_REASON_LEN)
+    limitations: list[str] = Field(default_factory=list, max_length=_MAX_LIMITATIONS)
     calculation: dict[str, Any] | None = None
+
+    @field_validator("limitations")
+    @classmethod
+    def _limit_limitation_strings(cls, value: list[str]) -> list[str]:
+        for item in value:
+            if len(item) > _MAX_LIMITATION_LEN:
+                raise ValueError(
+                    f"each limitation must be at most {_MAX_LIMITATION_LEN} characters"
+                )
+        return value
+
+    @field_validator("calculation")
+    @classmethod
+    def _limit_calculation_payload(
+        cls, value: dict[str, Any] | None
+    ) -> dict[str, Any] | None:
+        if value is None:
+            return value
+        encoded = json.dumps(value, default=str, separators=(",", ":"))
+        if len(encoded.encode("utf-8")) > _MAX_CALCULATION_JSON_BYTES:
+            raise ValueError(
+                f"calculation payload must be at most {_MAX_CALCULATION_JSON_BYTES} bytes"
+            )
+        return value
 
 
 class ClaimVerificationResponseSchema(ClaimSchema):
@@ -163,4 +202,4 @@ class ClaimVerificationRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    claims: list[ClaimSchema]
+    claims: list[ClaimSchema] = Field(max_length=_MAX_VERIFY_CLAIMS)
