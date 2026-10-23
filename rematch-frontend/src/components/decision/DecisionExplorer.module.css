@@ -485,3 +485,79 @@
     gap: var(--space-2);
   }
 }
+
+
+/* Decision What-If duel */
+.whatIfPanel {
+  border-color: rgba(182, 244, 71, 0.28);
+  background: linear-gradient(165deg, rgba(21, 45, 26, 0.55), var(--color-surface));
+}
+.whatIfEyebrow {
+  margin: 0 0 var(--space-1);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.whatIfIntro {
+  margin: 0 0 var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+.whatIfGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+@media (max-width: 720px) {
+  .whatIfGrid { grid-template-columns: 1fr; }
+}
+.whatIfCard {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(7, 11, 8, 0.35);
+}
+.whatIfCard h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.whatIfCardObserved { border-color: rgba(182, 244, 71, 0.35); }
+.whatIfCardAlt { border-color: rgba(120, 180, 255, 0.35); }
+.whatIfMetric {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0.25rem 0;
+  font-size: 0.82rem;
+}
+.whatIfMetric span:last-child {
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+.whatIfVerdict {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: rgba(182, 244, 71, 0.08);
+  border: 1px solid rgba(182, 244, 71, 0.2);
+  font-size: 0.84rem;
+}
+.whatIfDisclaimer {
+  margin: var(--space-3) 0 0;
+  color: var(--color-demo);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+.whatIfActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}

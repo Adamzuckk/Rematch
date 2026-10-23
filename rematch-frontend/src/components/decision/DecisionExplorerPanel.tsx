@@ -210,8 +210,16 @@ export function DecisionExplorerPanel({
   const eligibleAlternatives = analysis.alternatives.filter(
     (alt) => alt.kind === 'hypothetical_pass' && alt.start && alt.end && isValidPitchPoint(alt.start) && isValidPitchPoint(alt.end),
   )
-  const selected = eligibleAlternatives.find((alt) => alt.actionId === selectedActionId) ?? null
-  const selectedRank = selected ? analysis.ranking.find((entry) => entry.actionId === selected.actionId)?.rank : null
+  const selected =
+    analysis.alternatives.find((alt) => alt.actionId === selectedActionId) ?? null
+  const selectedOnPitch =
+    selected &&
+    eligibleAlternatives.some((alt) => alt.actionId === selected.actionId)
+      ? selected
+      : null
+  const selectedRank = selected
+    ? analysis.ranking.find((entry) => entry.actionId === selected.actionId)?.rank
+    : null
   const observedRank = analysis.ranking.find((entry) => entry.actionId === analysis.observed.actionId)?.rank
   const selectedClaim = selected ? analysis.claims.find((claim) => claim.id === `claim-alt-score:${selected.actionId}`) : null
   const ranking = sortRanking(analysis.ranking)
@@ -670,9 +678,9 @@ export function DecisionExplorerPanel({
                     frame={frame}
                     label={t('pickPassPitch')}
                     locale={locale}
-                    highlightedPath={selected ? { start: selected.start!, end: selected.end! } : null}
+                    highlightedPath={selectedOnPitch ? { start: selectedOnPitch.start!, end: selectedOnPitch.end! } : null}
                     selectablePlayerIds={eligibleAlternatives.map((alt) => alt.targetPlayerId).filter((id): id is string => Boolean(id))}
-                    selectedPlayerId={selected?.targetPlayerId}
+                    selectedPlayerId={selectedOnPitch?.targetPlayerId}
                     selectPlayerLabel={(playerId) => `${t('pickPassSelectPlayer')} ${playerId}`}
                     onSelectPlayer={(playerId) => {
                       const target = eligibleAlternatives.find((alt) => alt.targetPlayerId === playerId)
@@ -738,6 +746,150 @@ export function DecisionExplorerPanel({
                 })}
               </ol>
             )}
+          </section>
+
+          <section
+            className={`${styles.panel} ${styles.whatIfPanel}`}
+            aria-labelledby="decision-what-if"
+          >
+            <p className={styles.whatIfEyebrow}>{t('whatIfEyebrow')}</p>
+            <h2 id="decision-what-if" className={styles.panelTitle}>
+              {t('whatIfTitle')}
+            </h2>
+            <p className={styles.whatIfIntro}>{t('whatIfIntro')}</p>
+            {analysis.alternatives.length === 0 ? (
+              <p className={styles.panelNote}>{t('whatIfNoAlternatives')}</p>
+            ) : (
+              <>
+                <label className={styles.panelNote} htmlFor="what-if-select">
+                  {t('whatIfSelectLabel')}
+                </label>
+                <select
+                  id="what-if-select"
+                  value={selected?.actionId ?? ''}
+                  onChange={(event) => selectAction(event.target.value || null)}
+                >
+                  <option value="">{t('whatIfSelectPlaceholder')}</option>
+                  {analysis.alternatives.map((alt) => {
+                    const rank = analysis.ranking.find(
+                      (entry) => entry.actionId === alt.actionId,
+                    )?.rank
+                    const scoreLabel = formatScore(alt.compositeScore)
+                    return (
+                      <option key={alt.actionId} value={alt.actionId}>
+                        {alt.label}
+                        {rank != null ? ` · #${rank}` : ''}
+                        {scoreLabel != null ? ` · ${scoreLabel}` : ''}
+                      </option>
+                    )
+                  })}
+                </select>
+                {!selected ? (
+                  <p className={styles.panelNote}>{t('whatIfNeedSelection')}</p>
+                ) : (
+                  <>
+                    <div className={styles.whatIfGrid}>
+                      <div
+                        className={`${styles.whatIfCard} ${styles.whatIfCardObserved}`}
+                      >
+                        <h3>{t('whatIfObserved')}</h3>
+                        <p className={styles.panelNote}>
+                          {analysis.observed.label}
+                        </p>
+                        <div className={styles.whatIfMetric}>
+                          <span>{t('whatIfRank')}</span>
+                          <span>
+                            {observedRank == null
+                              ? t('decisionMetricUnavailable')
+                              : `#${observedRank}`}
+                          </span>
+                        </div>
+                        <div className={styles.whatIfMetric}>
+                          <span>{t('whatIfScore')}</span>
+                          <span>
+                            {formatScore(analysis.observed.compositeScore) ??
+                              t('decisionMetricUnavailable')}
+                            {analysis.observed.compositeScore == null
+                              ? ''
+                              : ` ${t('decisionUnitPitchPercent')}`}
+                          </span>
+                        </div>
+                      </div>
+                      <div
+                        className={`${styles.whatIfCard} ${styles.whatIfCardAlt}`}
+                      >
+                        <h3>{t('whatIfAlternative')}</h3>
+                        <p className={styles.panelNote}>{selected.label}</p>
+                        <div className={styles.whatIfMetric}>
+                          <span>{t('whatIfRank')}</span>
+                          <span>
+                            {selectedRank == null
+                              ? t('decisionMetricUnavailable')
+                              : `#${selectedRank}`}
+                          </span>
+                        </div>
+                        <div className={styles.whatIfMetric}>
+                          <span>{t('whatIfScore')}</span>
+                          <span>
+                            {formatScore(selected.compositeScore) ??
+                              t('decisionMetricUnavailable')}
+                            {selected.compositeScore == null
+                              ? ''
+                              : ` ${t('decisionUnitPitchPercent')}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.whatIfMetric}>
+                      <span>{t('whatIfDeltaRank')}</span>
+                      <span>
+                        {observedRank != null && selectedRank != null
+                          ? `${observedRank - selectedRank > 0 ? '+' : ''}${observedRank - selectedRank}`
+                          : t('decisionMetricUnavailable')}
+                      </span>
+                    </div>
+                    <div className={styles.whatIfMetric}>
+                      <span>{t('whatIfDeltaScore')}</span>
+                      <span>
+                        {analysis.observed.compositeScore != null &&
+                        selected.compositeScore != null
+                          ? `${selected.compositeScore - analysis.observed.compositeScore > 0 ? '+' : ''}${formatScore(selected.compositeScore - analysis.observed.compositeScore)}`
+                          : t('decisionMetricUnavailable')}
+                      </span>
+                    </div>
+                    <p className={styles.whatIfVerdict}>
+                      {observedRank != null && selectedRank != null
+                        ? selectedRank < observedRank
+                          ? t('whatIfHigher')
+                          : selectedRank > observedRank
+                            ? t('whatIfLower')
+                            : t('whatIfSameRank')
+                        : t('whatIfSameRank')}
+                    </p>
+                    {selectedClaim ? (
+                      <>
+                        <h3 className={styles.panelTitle}>
+                          {t('whatIfClaimsHeading')}
+                        </h3>
+                        <ul className={styles.claims}>
+                          <ClaimCard claim={selectedClaim} />
+                        </ul>
+                      </>
+                    ) : null}
+                  </>
+                )}
+                <div className={styles.whatIfActions}>
+                  <Button
+                    variant="secondary"
+                    to={`/matches/${analysis.matchId}/decisions/${analysis.eventId}/pick-your-pass`}
+                  >
+                    {t('whatIfOpenPickPass')}
+                  </Button>
+                </div>
+                <p className={styles.panelNote}>{t('whatIfNarrativeHint')}</p>
+              </>
+            )}
+            <p className={styles.whatIfDisclaimer}>{t('whatIfDisclaimer')}</p>
           </section>
 
           <section
