@@ -1,5 +1,8 @@
 const { app } = require('@azure/functions')
 
+// Keep proxy POST bodies bounded before they reach the authenticated backend.
+const MAX_PROXY_BODY_BYTES = 256 * 1024
+
 const ROUTES = [
   { method: 'GET', pattern: /^\/api\/v1\/health$/ },
   { method: 'GET', pattern: /^\/api\/v1\/matches(?:\/(?:dataset|overview))?$/ },
@@ -48,11 +51,24 @@ async function proxy(request) {
   const contentType = request.headers.get('content-type')
   if (contentType) headers.set('content-type', contentType)
 
+  let body
+  if (request.method === 'POST') {
+    const declaredLength = Number(request.headers.get('content-length') || NaN)
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_PROXY_BODY_BYTES) {
+      return jsonError(413, 'Request body too large')
+    }
+    const buffer = await request.arrayBuffer()
+    if (buffer.byteLength > MAX_PROXY_BODY_BYTES) {
+      return jsonError(413, 'Request body too large')
+    }
+    body = buffer
+  }
+
   try {
     const upstream = await fetch(`${backend.origin}${path}${incoming.search}`, {
       method: request.method,
       headers,
-      body: request.method === 'POST' ? await request.arrayBuffer() : undefined,
+      body,
     })
     const responseHeaders = new Headers()
     const upstreamContentType = upstream.headers.get('content-type')
