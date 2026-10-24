@@ -189,6 +189,20 @@
   border-radius: var(--radius-sm);
   background: var(--color-surface-raised);
 }
+.pipelineCard .row dd {
+  min-width: 0;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.pipelineCard .mono {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  word-break: normal;
+}
 .pipelineHandoff {
   width: 100%;
   margin: auto 0 0;
@@ -199,6 +213,8 @@
   line-height: 1.5;
 }
 .pipelineStatus {
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   padding: var(--space-2);
   color: var(--color-accent);
@@ -208,6 +224,8 @@
   font-size: 0.72rem;
   font-weight: 650;
   line-height: 1.45;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 .pipelineFooter {
   margin: 0;
@@ -260,9 +278,12 @@
   text-transform: uppercase;
 }
 .pipelineHeadline {
+  min-width: 0;
   margin: 0;
   font-size: 0.94rem;
   line-height: 1.45;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 .pipelineSubheading {
   margin: var(--space-2) 0 0;

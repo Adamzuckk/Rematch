@@ -522,8 +522,11 @@ export function DecisionExplorerPanel({
                       <h4 className={styles.pipelineLanguageLabel}>
                         {languageLabel}
                       </h4>
-                      <h5 className={styles.pipelineHeadline}>
-                        {narrative.headline}
+                      <h5
+                        className={styles.pipelineHeadline}
+                        dir={language === 'ar' ? 'rtl' : 'ltr'}
+                      >
+                        <bdi dir="auto">{narrative.headline}</bdi>
                       </h5>
                       <h6 className={styles.pipelineSubheading}>
                         {t('decisionPipelineKeyPoints')}
