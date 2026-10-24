@@ -106,7 +106,9 @@ describe('DashboardPage', () => {
     renderWithProviders(<DashboardPage />)
     await waitForCatalogue()
     expect(
-      screen.getByRole('heading', { name: STRINGS.en.dashboardTitle }),
+      screen.getByRole('heading', {
+        name: `${STRINGS.en.dashboardTitle} ${STRINGS.en.dashboardTitleAccent}`,
+      }),
     ).toBeInTheDocument()
 
     cleanup()
@@ -114,7 +116,9 @@ describe('DashboardPage', () => {
     renderWithProviders(<DashboardPage />)
 
     expect(
-      await screen.findByRole('heading', { name: STRINGS.ar.dashboardTitle }),
+      await screen.findByRole('heading', {
+        name: `${STRINGS.ar.dashboardTitle} ${STRINGS.ar.dashboardTitleAccent}`,
+      }),
     ).toBeInTheDocument()
     expect(
       screen.getByRole('searchbox', { name: STRINGS.ar.searchLabel }),

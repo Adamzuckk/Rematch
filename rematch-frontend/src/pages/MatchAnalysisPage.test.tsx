@@ -1,28 +1,83 @@
-import { cleanup, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route, Routes } from 'react-router-dom'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { usePersona } from '../context/PersonaContext'
+import { useLocale } from '../i18n/locale'
 import { STRINGS } from '../i18n/strings'
 import * as matchServices from '../services/matches'
 import { renderWithProviders } from '../test/render'
 import { MatchAnalysisPage } from './MatchAnalysisPage'
 
+beforeEach(() => {
+  window.localStorage.setItem(
+    'rematch.persona.v1',
+    JSON.stringify({
+      mode: 'fan',
+      favoriteTeamId: null,
+      favoritePlayerId: null,
+      playerFocusId: null,
+    }),
+  )
+})
+
 afterEach(() => {
   cleanup()
   window.localStorage.setItem('rematch.locale', 'en')
+  window.localStorage.setItem(
+    'rematch.persona.v1',
+    JSON.stringify({
+      mode: 'fan',
+      favoriteTeamId: null,
+      favoritePlayerId: null,
+      playerFocusId: null,
+    }),
+  )
   vi.restoreAllMocks()
 })
 
+function ModeSwitch() {
+  const { mode, setMode } = usePersona()
+  const { t } = useLocale()
+  return (
+    <div
+      role="group"
+      aria-label={t('modeSwitchLabel')}
+      data-testid="persona-mode-switch"
+    >
+      <button
+        type="button"
+        aria-pressed={mode === 'fan'}
+        onClick={() => setMode('fan')}
+        data-testid="persona-mode-fan"
+      >
+        {t('modeFan')}
+      </button>
+      <button
+        type="button"
+        aria-pressed={mode === 'analyst'}
+        onClick={() => setMode('analyst')}
+        data-testid="persona-mode-analyst"
+      >
+        {t('modeAnalyst')}
+      </button>
+    </div>
+  )
+}
+
 function renderAnalysis(matchId: string) {
   return renderWithProviders(
-    <Routes>
-      <Route path="/matches/:matchId" element={<MatchAnalysisPage />} />
-      <Route
-        path="/matches/:matchId/decisions/:eventId"
-        element={<div>Decision placeholder</div>}
-      />
-      <Route path="/dashboard" element={<div>Dashboard</div>} />
-    </Routes>,
+    <>
+      <ModeSwitch />
+      <Routes>
+        <Route path="/matches/:matchId" element={<MatchAnalysisPage />} />
+        <Route
+          path="/matches/:matchId/decisions/:eventId"
+          element={<div>Decision placeholder</div>}
+        />
+        <Route path="/dashboard" element={<div>Dashboard</div>} />
+      </Routes>
+    </>,
     { initialEntries: [`/matches/${matchId}`] },
   )
 }
@@ -38,6 +93,7 @@ describe('MatchAnalysisPage', () => {
     renderAnalysis('m-northgate-riverside-2401')
     await waitForAnalysisReady(/Northgate FC/i)
 
+    expect(screen.getByTestId('match-view-fan')).toBeInTheDocument()
     expect(screen.getByText(/Synthetic demo data/i)).toBeInTheDocument()
     expect(screen.getByText(/rematch-phase2-v1/i)).toBeInTheDocument()
     expect(
@@ -45,15 +101,13 @@ describe('MatchAnalysisPage', () => {
     ).toBeInTheDocument()
     expect(screen.getByTestId('event-path')).toBeInTheDocument()
 
+    expect(screen.getByTestId('match-studio-panel')).toBeInTheDocument()
+    expect(screen.getByTestId('match-highlights')).toBeInTheDocument()
     expect(
       screen.getByRole('option', { name: /Pass at 12', Selected/i }),
     ).toHaveAttribute('aria-selected', 'true')
 
-    expect(screen.getByText(STRINGS.en.matchAnalysisInspector)).toBeInTheDocument()
-    expect(screen.getByText(/Jamie Cole/i)).toBeInTheDocument()
-    expect(
-      screen.getByText(STRINGS.en.matchAnalysisDecisionHint),
-    ).toBeInTheDocument()
+    expect(screen.getAllByText(/Jamie Cole/i).length).toBeGreaterThan(0)
     expect(
       screen.getByRole('link', { name: STRINGS.en.matchAnalysisDecisionCta }),
     ).toHaveAttribute(
@@ -100,7 +154,7 @@ describe('MatchAnalysisPage', () => {
     await waitForAnalysisReady(/Lakeside Town/i)
 
     expect(
-      screen.getByText(STRINGS.en.matchAnalysisTimelineEmpty),
+      screen.getByText(STRINGS.en.matchStudioLiveEmpty),
     ).toBeInTheDocument()
     expect(
       screen.getByText(STRINGS.en.matchAnalysisEmptyEventsHint),
@@ -164,17 +218,200 @@ describe('MatchAnalysisPage', () => {
     expect(getMatchById).toHaveBeenCalledTimes(2)
   })
 
-  it('surfaces missing frame data honestly', async () => {
+  it('surfaces missing frame data honestly and derives motion from events', async () => {
     renderAnalysis('m-oakwood-silvermere-2403')
     await waitForAnalysisReady(/Oakwood Wanderers/i)
 
-    expect(screen.getByText(STRINGS.en.matchAnalysisNoFrames)).toBeInTheDocument()
-    expect(screen.getByText(/No valid frame coordinates for this moment/i)).toBeInTheDocument()
-    expect(screen.queryByTestId('player-marker')).not.toBeInTheDocument()
+    expect(
+      screen.getByText(STRINGS.en.matchAnalysisEventDerivedMotion),
+    ).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.matchSimDisclaimer)).toBeInTheDocument()
+    expect(screen.getByTestId('simulation-legend')).toBeInTheDocument()
+    // Event-derived markers from verified pass/shot/tackle coordinates — not frames.
+    expect(screen.getAllByTestId('player-marker').length).toBeGreaterThan(0)
+    expect(screen.getByTestId('match-studio-panel')).toBeInTheDocument()
+  })
 
-    const inspector = screen.getByLabelText(STRINGS.en.matchAnalysisInspector)
-    expect(within(inspector).getAllByText(STRINGS.en.matchAnalysisMissing).length).toBeGreaterThan(
-      0,
+  it('syncs momentum chart, replay timeline, and LIVE feed with event selection and play/pause', async () => {
+    const user = userEvent.setup()
+    renderAnalysis('m-northgate-riverside-2401')
+    await waitForAnalysisReady(/Northgate FC/i)
+
+    expect(screen.getByTestId('match-momentum-chart')).toBeInTheDocument()
+    expect(screen.getByTestId('match-replay-timeline')).toBeInTheDocument()
+    expect(screen.getByTestId('match-studio-live')).toBeInTheDocument()
+    expect(screen.getByTestId('replay-ht-marker')).toBeInTheDocument()
+    expect(screen.getByTestId('momentum-ht-label')).toBeInTheDocument()
+
+    const next = screen.getByRole('button', {
+      name: STRINGS.en.matchAnalysisNextEvent,
+    })
+    await user.click(next)
+
+    expect(
+      screen.getByRole('option', { name: /Shot at 23', Selected/i }),
+    ).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByTestId('replay-position')).toHaveTextContent(/\d+\/\d+/)
+
+    await user.click(screen.getByRole('button', { name: STRINGS.en.replayPlay }))
+    expect(
+      screen.getByRole('button', { name: STRINGS.en.replayPause }),
+    ).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(screen.getByRole('button', { name: STRINGS.en.replayPause }))
+    expect(
+      screen.getByRole('button', { name: STRINGS.en.replayPlay }),
+    ).toHaveAttribute('aria-pressed', 'false')
+
+    await user.click(
+      screen.getByRole('button', { name: STRINGS.en.replayModeHighlights }),
     )
+    expect(
+      screen.getByRole('button', { name: STRINGS.en.replayModeHighlights }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('LIVE selection syncs replay and ASK can request the event narrative endpoint', async () => {
+    const user = userEvent.setup()
+    const getDecisionNarrative = vi
+      .spyOn(matchServices.matchService, 'getDecisionNarrative')
+      .mockRejectedValue(
+        new matchServices.DecisionNarrativeUnavailableError(
+          'Mock mode has no backend narrative.',
+          'm-northgate-riverside-2401',
+          'evt-ng-shot-23',
+        ),
+      )
+
+    renderAnalysis('m-northgate-riverside-2401')
+    await waitForAnalysisReady(/Northgate FC/i)
+
+    await user.click(screen.getByRole('option', { name: /Shot at 23'/i }))
+    expect(
+      screen.getByRole('option', { name: /Shot at 23', Selected/i }),
+    ).toHaveAttribute('aria-selected', 'true')
+
+    await user.click(
+      screen.getByRole('tab', { name: STRINGS.en.matchStudioTabAsk }),
+    )
+    await user.click(
+      screen.getByRole('button', {
+        name: STRINGS.en.matchStudioAskSelectedEvent,
+      }),
+    )
+
+    await waitFor(() => {
+      expect(getDecisionNarrative).toHaveBeenCalledWith(
+        'm-northgate-riverside-2401',
+        'evt-ng-shot-23',
+      )
+    })
+    expect(
+      await screen.findByText(/backend narrative is unavailable/i),
+    ).toBeInTheDocument()
+  })
+
+  it('defaults to Fan View with highlights and section tabs, not a long analytics dump', async () => {
+    renderAnalysis('m-northgate-riverside-2401')
+    await waitForAnalysisReady(/Northgate FC/i)
+
+    expect(screen.getByTestId('match-view-fan')).toBeInTheDocument()
+    expect(screen.getByTestId('match-highlights')).toBeInTheDocument()
+    expect(screen.getByTestId('match-fan-secondary')).toBeInTheDocument()
+    expect(screen.getByTestId('fan-tab-overview')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByTestId('match-key-metrics')).toBeInTheDocument()
+    expect(screen.queryByTestId('match-view-analyst')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('match-centre-networks')).not.toBeInTheDocument()
+  })
+
+  it('switches to a distinct Analysis View while preserving match, event, and playback', async () => {
+    const user = userEvent.setup()
+    renderAnalysis('m-northgate-riverside-2401')
+    await waitForAnalysisReady(/Northgate FC/i)
+
+    await user.click(screen.getByRole('option', { name: /Shot at 23'/i }))
+    expect(
+      screen.getByRole('option', { name: /Shot at 23', Selected/i }),
+    ).toHaveAttribute('aria-selected', 'true')
+
+    await user.click(screen.getByTestId('persona-mode-analyst'))
+
+    expect(screen.getByTestId('match-view-analyst')).toBeInTheDocument()
+    expect(screen.queryByTestId('match-view-fan')).not.toBeInTheDocument()
+    expect(screen.getByTestId('match-analysis-workspace')).toBeInTheDocument()
+    expect(screen.getByTestId('analysis-region-decisions')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(
+      screen.getByRole('option', { name: /Shot at 23', Selected/i }),
+    ).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByTestId('match-sim-stage')).toBeInTheDocument()
+    expect(screen.getByTestId('match-studio-panel')).toBeInTheDocument()
+
+    await user.click(screen.getByTestId('analysis-region-flow'))
+    expect(screen.getByTestId('match-momentum-chart')).toBeInTheDocument()
+    expect(screen.getByTestId('match-centre-shot-race')).toBeInTheDocument()
+
+    await user.click(screen.getByTestId('persona-mode-fan'))
+    expect(screen.getByTestId('match-view-fan')).toBeInTheDocument()
+    expect(
+      screen.getByRole('option', { name: /Shot at 23', Selected/i }),
+    ).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('seeks the shared replay clock from a highlight chip', async () => {
+    const user = userEvent.setup()
+    renderAnalysis('m-northgate-riverside-2401')
+    await waitForAnalysisReady(/Northgate FC/i)
+
+    const highlight = screen.getByTestId('match-highlight-evt-ng-shot-23')
+    await user.click(highlight)
+
+    expect(highlight).toHaveAttribute('aria-pressed', 'true')
+    expect(
+      screen.getByRole('option', { name: /Shot at 23', Selected/i }),
+    ).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('exposes keyboard-operable Fan section tabs and Analysis region tabs', async () => {
+    const user = userEvent.setup()
+    renderAnalysis('m-northgate-riverside-2401')
+    await waitForAnalysisReady(/Northgate FC/i)
+
+    const overview = screen.getByTestId('fan-tab-overview')
+    overview.focus()
+    await user.keyboard('{ArrowRight}')
+    expect(screen.getByTestId('fan-tab-events')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+
+    await user.click(screen.getByTestId('persona-mode-analyst'))
+    const decisions = screen.getByTestId('analysis-region-decisions')
+    decisions.focus()
+    await user.keyboard('{ArrowRight}')
+    expect(screen.getByTestId('analysis-region-flow')).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+  })
+
+  it('renders Arabic Fan View copy without inventing analytics labels', async () => {
+    window.localStorage.setItem('rematch.locale', 'ar')
+    renderAnalysis('m-northgate-riverside-2401')
+    await waitForAnalysisReady(/Northgate FC/i)
+
+    expect(screen.getByTestId('match-view-fan')).toBeInTheDocument()
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl')
+    expect(
+      screen.getByRole('tab', { name: STRINGS.ar.matchFanTabOverview }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: STRINGS.ar.matchHighlightsTitle }),
+    ).toBeInTheDocument()
   })
 })

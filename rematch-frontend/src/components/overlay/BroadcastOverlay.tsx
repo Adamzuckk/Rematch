@@ -1,5 +1,5 @@
 import styles from './BroadcastOverlay.module.css'
-import type { OverlayPayload } from './overlayTypes'
+import type { OverlayPayload } from './overlayPayload'
 
 interface BroadcastOverlayProps {
   payload: OverlayPayload | null

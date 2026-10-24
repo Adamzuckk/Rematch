@@ -1,4 +1,3 @@
-import { BarChart3, Radar } from 'lucide-react'
 import { useLocale } from '../i18n/locale'
 import type { MatchSummary } from '../types'
 import { Button } from './ui/Button'
@@ -33,87 +32,69 @@ export function MatchCard({ match }: MatchCardProps) {
         ? t('filterFinished')
         : t('filterUpcoming')
 
+  const descriptionParts = [
+    match.competition,
+    match.venue,
+    formatKickoff(match.kickoffAt, locale),
+  ].filter(Boolean)
+
   return (
     <article
       className={styles.card}
       data-status={match.status}
       aria-label={`${homeName} ${t('versus')} ${awayName}, ${statusAnnouncement}`}
     >
-      {match.status === 'live' ? (
-        <span className={styles.liveSignal} aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </span>
-      ) : null}
-      <header className={styles.header}>
-        <span className={styles.competition}>{match.competition}</span>
-        <div className={styles.badges}>
-          <StatusLabel status={match.status} />
-          {match.provenance === 'synthetic' ? (
-            <StatusLabel status="demo" showDot={false} />
-          ) : null}
+      <div className={styles.fixture}>
+        <div className={styles.teamHome}>
+          <span className={styles.teamName}>{homeName}</span>
+          <span className={styles.kitHome} aria-hidden="true" />
         </div>
-      </header>
 
-      <div className={styles.teams}>
-        <div className={styles.teamRow}>
-          <span className={styles.teamIndex} aria-hidden="true">01</span>
-          <span className={styles.teamName}>
-            {homeName}
-            {match.homeTeam.shortName ? (
-              <span className={styles.shortName}>
-                {' '}
-                ({match.homeTeam.shortName})
-              </span>
-            ) : null}
-          </span>
+        <div className={styles.scoreBlock}>
           {match.score ? (
-            <span className={styles.score} aria-label={`${homeName} ${match.score.home}`}>
-              {match.score.home}
+            <span
+              className={styles.score}
+              aria-label={`${homeName} ${match.score.home} ${t('versus')} ${awayName} ${match.score.away}`}
+            >
+              <span>{match.score.home}</span>
+              <span className={styles.scoreSep} aria-hidden="true">
+                -
+              </span>
+              <span>{match.score.away}</span>
             </span>
           ) : (
-            <span className={styles.scheduled}>{t('vsShort')}</span>
+            <span className={styles.vs}>{t('vsShort')}</span>
           )}
         </div>
-        <div className={styles.teamRow}>
-          <span className={styles.teamIndex} aria-hidden="true">02</span>
-          <span className={styles.teamName}>
-            {awayName}
-            {match.awayTeam.shortName ? (
-              <span className={styles.shortName}>
-                {' '}
-                ({match.awayTeam.shortName})
-              </span>
-            ) : null}
-          </span>
-          {match.score ? (
-            <span className={styles.score} aria-label={`${awayName} ${match.score.away}`}>
-              {match.score.away}
-            </span>
-          ) : (
-            <span className={styles.scheduled}>{t('scheduled')}</span>
-          )}
+
+        <div className={styles.teamAway}>
+          <span className={styles.kitAway} aria-hidden="true" />
+          <span className={styles.teamName}>{awayName}</span>
         </div>
       </div>
 
-      <div className={styles.meta}>
-        <span>{formatKickoff(match.kickoffAt, locale)}</span>
-        {match.status === 'live' && match.minute != null ? (
-          <span className={styles.liveMinute}>{match.minute}&prime;</span>
-        ) : null}
-        {match.venue ? <span>{match.venue}</span> : null}
-      </div>
+      <div className={styles.footer}>
+        <div className={styles.meta}>
+          <div className={styles.metaRow}>
+            <StatusLabel status={match.status} />
+            {match.provenance === 'synthetic' ? (
+              <StatusLabel status="demo" showDot={false} />
+            ) : null}
+            {match.status === 'live' && match.minute != null ? (
+              <span className={styles.liveMinute}>{match.minute}&prime;</span>
+            ) : null}
+          </div>
+          <p className={styles.description}>{descriptionParts.join(' · ')}</p>
+        </div>
 
-      <div className={styles.actions}>
-        <Button variant="primary" to={analysisPath}>
-          <Radar size={16} aria-hidden="true" />
-          {t('analyseMatch')}
-        </Button>
-        <Button variant="secondary" to={insightsPath}>
-          <BarChart3 size={16} aria-hidden="true" />
-          {t('insights')}
-        </Button>
+        <div className={styles.actions}>
+          <Button variant="primary" to={analysisPath} className={styles.cta}>
+            {t('analyseMatch')}
+          </Button>
+          <Button variant="secondary" to={insightsPath} className={styles.secondaryCta}>
+            {t('insights')}
+          </Button>
+        </div>
       </div>
     </article>
   )

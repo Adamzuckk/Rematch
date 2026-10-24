@@ -190,6 +190,7 @@ export interface DecisionExplorerPanelProps {
   match?: MatchSummary
   frame?: MatchFrame | null
   narrativeState?: DecisionNarrativeState
+  onAskAgents?: () => void
   onNarrativeRetry?: () => void
 }
 
@@ -199,6 +200,7 @@ export function DecisionExplorerPanel({
   match,
   frame,
   narrativeState,
+  onAskAgents,
   onNarrativeRetry,
 }: DecisionExplorerPanelProps) {
   const { locale, t } = useLocale()
@@ -284,12 +286,20 @@ export function DecisionExplorerPanel({
         ? 'decisionPipelineOrchestratorLoading'
         : 'decisionPipelineOrchestratorWaiting'
 
+  const hasPartialNarrative =
+    narrativeState?.status === 'ready' &&
+    (narrativeState.response.analysis.completeness.level !== 'complete' ||
+      narrativeState.response.verificationResults.some(
+        (result) => result.evidenceValidationStatus !== 'verified',
+      ))
+
   return (
     <article className={styles.root} aria-labelledby="decision-explorer-title">
       <header className={styles.header}>
         <div className={styles.titleBlock}>
           <h1 id="decision-explorer-title" className={styles.title}>
-            {t('decisionTitle')}
+            {t('decisionTitle')}{' '}
+            <span className={styles.titleAccent}>{t('decisionTitleAccent')}</span>
           </h1>
           <div className={styles.meta}>
             <span
@@ -822,6 +832,87 @@ export function DecisionExplorerPanel({
               <p className={styles.panelNote} role="status">{t('decisionNoClaims')}</p>
             )}
           </details>
+
+          {narrativeState ? (
+            <section className={styles.panel} aria-labelledby="ask-agents-narrative">
+              <h2 id="ask-agents-narrative" className={styles.panelTitle}>
+                {t('askAgentsHeading')}
+              </h2>
+              <p className={styles.panelNote}>{t('askAgentsDescription')}</p>
+              {narrativeState.status === 'idle' && onAskAgents ? (
+                <Button variant="secondary" onClick={onAskAgents}>
+                  {t('askAgentsAction')}
+                </Button>
+              ) : null}
+              {narrativeState.status === 'loading' ? (
+                <p className={styles.panelNote} role="status" aria-live="polite">
+                  {t('decisionNarrativeLoading')}
+                </p>
+              ) : null}
+              {narrativeState.status === 'unavailable' ? (
+                <p className={styles.panelNote} role="status">
+                  {t('decisionNarrativeUnavailable')} {narrativeState.message}
+                </p>
+              ) : null}
+              {narrativeState.status === 'error' ? (
+                <div>
+                  <p className={styles.panelNote} role="alert">
+                    {t('decisionNarrativeError')} {narrativeState.message}
+                  </p>
+                  {onNarrativeRetry ? (
+                    <Button variant="secondary" onClick={onNarrativeRetry}>
+                      {t('decisionNarrativeRetry')}
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+              {localizedNarrative ? (
+                <div data-testid="ask-agents-narrative-content">
+                  {hasPartialNarrative ? (
+                    <p className={styles.panelNote} role="status">
+                      {t('askAgentsPartial')}
+                    </p>
+                  ) : null}
+                  <p className={styles.panelNote}>
+                    {t('decisionNarrativeProvenance')}: {narrativeProvenance === 'synthetic'
+                      ? t('decisionProvenanceSynthetic')
+                      : t('decisionProvenanceApi')}
+                  </p>
+                  <h3 className={styles.panelTitle}>{localizedNarrative.headline}</h3>
+                  <h4 className={styles.panelTitle}>{t('decisionNarrativeObservations')}</h4>
+                  <ul className={styles.limitList}>
+                    {localizedNarrative.keyObservations.map((observation) => (
+                      <li key={observation}>{observation}</li>
+                    ))}
+                  </ul>
+                  <h4 className={styles.panelTitle}>{t('decisionLimitationsHeading')}</h4>
+                  <ul className={styles.limitList}>
+                    {localizedNarrative.limitations.map((limitation) => (
+                      <li key={limitation}>{limitation}</li>
+                    ))}
+                  </ul>
+                  {narrativeState.status === 'ready' &&
+                  narrativeState.response.verificationResults.length > 0 ? (
+                    <>
+                      <h4 className={styles.panelTitle}>
+                        {t('askAgentsValidationHeading')}
+                      </h4>
+                      <ul className={styles.limitList}>
+                        {narrativeState.response.verificationResults.map((result) => (
+                          <li key={result.claimId}>
+                            {result.claimId}: {claimStatusLabel(result.evidenceValidationStatus, t)}
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : null}
+                  <p className={styles.panelNote}>
+                    {t('askAgentsTruthScope')}
+                  </p>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
 
           <details className={styles.disclosurePanel}>
             <summary><span className={styles.panelTitle}>{t('decisionLimitationsHeading')}</span></summary>

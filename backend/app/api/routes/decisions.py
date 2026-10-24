@@ -1,6 +1,7 @@
 """Decision analysis and evidence verification endpoints."""
 
-from typing import Annotated
+from time import perf_counter
+from typing import Annotated, Callable, TypeVar
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
@@ -25,11 +26,13 @@ from app.services.decision import (
 )
 from app.services.decision.evidence import Claim, EvidenceReference, verify_claims
 from app.services.match_intelligence import build_match_intelligence_narrative
+from app.services.operational_metrics import MetricOperation, record_operation
 
 router = APIRouter(prefix="/matches", tags=["decisions"])
 
 MatchIdPath = Annotated[str, Path(min_length=1, max_length=128)]
 EventIdPath = Annotated[str, Path(min_length=1, max_length=128)]
+_ResponseT = TypeVar("_ResponseT")
 
 CLAIM_VERIFICATION_LIMITATIONS = (
     "Validated evidence references and registered calculation values do not prove the submitted statement is true.",
@@ -65,6 +68,64 @@ def _http_for_engine(exc: Exception) -> HTTPException:
     raise exc
 
 
+def _metric_failure_code(exc: Exception) -> str:
+    if isinstance(exc, MatchNotFoundError):
+        return "match_not_found"
+    if isinstance(exc, EventNotFoundError):
+        return "event_not_found"
+    if isinstance(exc, InsufficientEvidenceError):
+        return "insufficient_evidence"
+    return "internal_error"
+
+
+def _verification_statuses(value: object) -> list[str]:
+    """Read verifier outcomes from a response without re-running verification."""
+    candidates = getattr(value, "claims", None)
+    if candidates is None:
+        candidates = getattr(value, "verificationResults", None)
+    if candidates is None and isinstance(value, list):
+        candidates = value
+    if not isinstance(candidates, list):
+        return []
+    statuses: list[str] = []
+    for item in candidates:
+        status = getattr(item, "status", None)
+        if status is None:
+            status = getattr(item, "evidenceValidationStatus", None)
+        if isinstance(status, str):
+            statuses.append(status)
+    return statuses
+
+
+def _recorded_operation(
+    db: Session,
+    *,
+    operation: MetricOperation,
+    execute: Callable[[], _ResponseT],
+) -> _ResponseT:
+    """Measure one real API operation, including known and unexpected failures."""
+    started = perf_counter()
+    try:
+        response = execute()
+    except Exception as exc:
+        record_operation(
+            db,
+            operation=operation,
+            outcome="failure",
+            failure_code=_metric_failure_code(exc),
+            latency_ms=round((perf_counter() - started) * 1000),
+        )
+        raise
+    record_operation(
+        db,
+        operation=operation,
+        outcome="success",
+        latency_ms=round((perf_counter() - started) * 1000),
+        verification_statuses=_verification_statuses(response),
+    )
+    return response
+
+
 @router.get(
     "/{match_id}/events/{event_id}/decision-analysis",
     response_model=DecisionAnalysisSchema,
@@ -80,10 +141,13 @@ def get_decision_analysis(
 ) -> DecisionAnalysisSchema:
     """Score the observed action and any frame-backed alternatives."""
     try:
-        result = analyze_decision(db, match_id, event_id)
+        return _recorded_operation(
+            db,
+            operation="analysis",
+            execute=lambda: analysis_to_schema(analyze_decision(db, match_id, event_id)),
+        )
     except (MatchNotFoundError, EventNotFoundError, InsufficientEvidenceError) as exc:
         raise _http_for_engine(exc) from None
-    return analysis_to_schema(result)
 
 
 @router.get(
@@ -101,7 +165,11 @@ def get_decision_narrative(
 ) -> MatchIntelligenceNarrativeResponseSchema:
     """Return one Agent 1 analysis with evidence validation and bilingual narration."""
     try:
-        return build_match_intelligence_narrative(db, match_id, event_id)
+        return _recorded_operation(
+            db,
+            operation="analysis",
+            execute=lambda: build_match_intelligence_narrative(db, match_id, event_id),
+        )
     except (MatchNotFoundError, EventNotFoundError, InsufficientEvidenceError) as exc:
         raise _http_for_engine(exc) from None
 
@@ -121,10 +189,13 @@ def get_decision_evidence(
 ) -> EvidenceBundleSchema:
     """Return verified claims and registered evidence for an analysis."""
     try:
-        result = analyze_decision(db, match_id, event_id)
+        return _recorded_operation(
+            db,
+            operation="analysis",
+            execute=lambda: evidence_to_schema(analyze_decision(db, match_id, event_id)),
+        )
     except (MatchNotFoundError, EventNotFoundError, InsufficientEvidenceError) as exc:
         raise _http_for_engine(exc) from None
-    return evidence_to_schema(result)
 
 
 @router.post(
@@ -142,55 +213,62 @@ def verify_decision_claims(
     db: Annotated[Session, Depends(get_db_dep)],
 ) -> list[ClaimVerificationResponseSchema]:
     """Validate evidence references and calculations, not natural-language truth."""
-    try:
+    def execute_verification() -> list[ClaimVerificationResponseSchema]:
+        # The evidence catalog is built as part of this verification request.
+        # It is measured as one verification operation rather than a second,
+        # separate analysis request.
         result = analyze_decision(db, match_id, event_id)
+        claims = [
+            Claim(
+                id=c.id,
+                statement=c.statement,
+                status=c.status,
+                evidence=[
+                    EvidenceReference(
+                        kind=ref.kind,
+                        id=ref.id,
+                        match_id=ref.matchId,
+                        detail=ref.detail,
+                    )
+                    for ref in c.evidence
+                ],
+                reason=c.reason,
+                limitations=list(c.limitations),
+                calculation=c.calculation,
+            )
+            for c in body.claims
+        ]
+        verified = verify_claims(claims, result.evidence_catalog)
+        return [
+            ClaimVerificationResponseSchema(
+                id=c.id,
+                statement=c.statement,
+                status=c.status,
+                evidenceValidationStatus=c.status,
+                claimSupportStatus="not_assessed",
+                validationMethod="match_event_evidence_catalog_v1",
+                validationScope=(
+                    "evidence_reference_membership_and_registered_calculation_consistency"
+                ),
+                evidence=[
+                    EvidenceReferenceSchema(
+                        kind=ref.kind,
+                        id=ref.id,
+                        matchId=ref.match_id,
+                        detail=ref.detail,
+                    )
+                    for ref in c.evidence
+                ],
+                reason=c.reason,
+                limitations=list(dict.fromkeys([*c.limitations, *CLAIM_VERIFICATION_LIMITATIONS])),
+                calculation=c.calculation,
+            )
+            for c in verified
+        ]
+
+    try:
+        return _recorded_operation(
+            db, operation="verification", execute=execute_verification
+        )
     except (MatchNotFoundError, EventNotFoundError, InsufficientEvidenceError) as exc:
         raise _http_for_engine(exc) from None
-
-    claims = [
-        Claim(
-            id=c.id,
-            statement=c.statement,
-            status=c.status,
-            evidence=[
-                EvidenceReference(
-                    kind=ref.kind,
-                    id=ref.id,
-                    match_id=ref.matchId,
-                    detail=ref.detail,
-                )
-                for ref in c.evidence
-            ],
-            reason=c.reason,
-            limitations=list(c.limitations),
-            calculation=c.calculation,
-        )
-        for c in body.claims
-    ]
-    verified = verify_claims(claims, result.evidence_catalog)
-    return [
-        ClaimVerificationResponseSchema(
-            id=c.id,
-            statement=c.statement,
-            status=c.status,
-            evidenceValidationStatus=c.status,
-            claimSupportStatus="not_assessed",
-            validationMethod="match_event_evidence_catalog_v1",
-            validationScope=(
-                "evidence_reference_membership_and_registered_calculation_consistency"
-            ),
-            evidence=[
-                EvidenceReferenceSchema(
-                    kind=ref.kind,
-                    id=ref.id,
-                    matchId=ref.match_id,
-                    detail=ref.detail,
-                )
-                for ref in c.evidence
-            ],
-            reason=c.reason,
-            limitations=list(dict.fromkeys([*c.limitations, *CLAIM_VERIFICATION_LIMITATIONS])),
-            calculation=c.calculation,
-        )
-        for c in verified
-    ]

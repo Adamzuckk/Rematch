@@ -138,3 +138,27 @@ def test_match_players(client: TestClient) -> None:
         "player-northgate-9",
         "player-northgate-11",
     }
+
+
+def test_match_intelligence_returns_only_typed_seed_aggregates(
+    client: TestClient,
+) -> None:
+    response = client.get(f"/api/v1/matches/{NORTHGATE}/intelligence")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["matchId"] == NORTHGATE
+    assert body["provenance"] == "synthetic"
+    assert body["source"] == "seeded_events_only"
+    assert body["totalEvents"] == sum(body["eventCounts"].values())
+    assert isinstance(body["keyMoments"], list)
+    assert isinstance(body["limitations"], list)
+
+
+def test_match_intelligence_missing_match_uses_match_not_found_error(
+    client: TestClient,
+) -> None:
+    response = client.get("/api/v1/matches/missing/intelligence")
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "match_not_found"

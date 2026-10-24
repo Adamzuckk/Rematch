@@ -1,3 +1,243 @@
-.root { display:flex; flex-direction:column; gap:var(--space-3); width:100%; min-width:0; margin:0; }
-.svg { display:block; inline-size:100%; max-inline-size:100%; block-size:auto; aspect-ratio:105/68; overflow:hidden; border:1px solid rgba(182,244,71,.32); border-radius:var(--radius-lg); background:var(--color-pitch-turf); box-shadow:inset 0 0 0 1px rgba(241,244,237,.04),0 20px 44px rgba(0,0,0,.25); }
-.stripeA{fill:var(--color-pitch-turf)}.stripeB{fill:var(--color-pitch-turf-stripe)}.line{stroke:var(--color-pitch-line);stroke-width:3;vector-effect:non-scaling-stroke}.spot{fill:var(--color-pitch-line)}.goal{fill:none;stroke:var(--color-pitch-line);stroke-width:3}.eventPathUnderlay{stroke:rgba(255,255,255,.14);stroke-width:8;stroke-linecap:round;fill:none;vector-effect:non-scaling-stroke}.eventPath{stroke:var(--color-pitch-path);stroke-width:3.5;stroke-linecap:round;stroke-dasharray:10 10;fill:none;vector-effect:non-scaling-stroke}.eventArrow{fill:var(--color-pitch-event)}.selectedPath{stroke:var(--color-accent);stroke-width:6;stroke-linecap:round;fill:none;vector-effect:non-scaling-stroke;filter:drop-shadow(0 0 5px rgba(182,244,71,.64))}.playerMotion{will-change:transform}.playerSelectable{cursor:pointer}.playerSelectable:hover{filter:brightness(1.12)}.playerSelected{fill:none;stroke:var(--color-chalk);stroke-width:2.5;vector-effect:non-scaling-stroke}.playerSelectable:focus-visible{outline:4px solid var(--color-focus);outline-offset:3px}.playerShadow,.ballShadow{fill:rgba(0,0,0,.34);filter:blur(1.2px)}.eventHalo{fill:rgba(217,181,104,.16);stroke:rgba(255,235,184,.72);stroke-width:1;transform-box:fill-box;transform-origin:center}.eventToken{filter:drop-shadow(0 3px 3px rgba(0,0,0,.35))}.eventMarker{fill:var(--color-pitch-event);stroke:#fff4d5;stroke-width:1.5}.eventBallSeam{fill:none;stroke:#553d18;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}.playerHome{fill:var(--color-pitch-home);stroke:#eaffce;stroke-width:1.7;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(0,0,0,.32))}.playerAway{fill:var(--color-pitch-away);stroke:#d9f5ff;stroke-width:1.7;stroke-linejoin:round;filter:drop-shadow(0 2px 2px rgba(0,0,0,.32))}.playerUnknown{fill:var(--color-text-muted);stroke:var(--color-chalk);stroke-width:1.7;stroke-linejoin:round}.shirtNumber{fill:#102015;font-family:var(--font-mono);font-size:7px;font-weight:800;text-anchor:middle;pointer-events:none}.ball{filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));transform-box:fill-box;transform-origin:center}.ballShell{fill:var(--color-pitch-ball);stroke:#152018;stroke-width:1.4}.ballSeam{fill:none;stroke:#172019;stroke-width:1.15;stroke-linecap:round;stroke-linejoin:round}.legend{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-2) var(--space-4);padding:0 var(--space-1);color:var(--color-text-secondary);font-size:.77rem}.legendItem{display:inline-flex;align-items:center;gap:var(--space-2)}.swatch{width:.72rem;height:.72rem;border-radius:3px 3px 5px 5px;clip-path:polygon(25% 0,0 18%,12% 52%,29% 45%,29% 100%,71% 100%,71% 45%,88% 52%,100% 18%,75% 0);border:1px solid var(--color-border-strong)}.swatchHome{background:var(--color-pitch-home)}.swatchAway{background:var(--color-pitch-away)}.swatchEvent{background:var(--color-pitch-event);border-radius:50%;clip-path:none}.legendNote{color:var(--color-text-muted);font-size:.72rem}
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--bg-light-card);
+  box-shadow: var(--shadow-light);
+}
+
+.svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: auto;
+  aspect-ratio: 105 / 68;
+  overflow: hidden;
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-pitch-turf);
+  box-shadow: inset 0 0 0 1px rgba(241, 244, 237, 0.04);
+}
+
+.stripeA {
+  fill: var(--color-pitch-turf);
+}
+
+.stripeB {
+  fill: var(--color-pitch-turf-stripe);
+}
+
+.line {
+  stroke: var(--color-pitch-line);
+  stroke-width: 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.spot {
+  fill: var(--color-pitch-line);
+}
+
+.goal {
+  fill: none;
+  stroke: var(--color-pitch-line);
+  stroke-width: 3;
+}
+
+.eventPath {
+  stroke: var(--color-pitch-path);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 10 8;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  animation: path-flow 1.8s linear infinite;
+}
+
+.selectedPath {
+  stroke: var(--color-accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 5px var(--accent-glow));
+  animation: selected-path var(--duration-normal) var(--ease-out) both;
+}
+
+.playerSelectable {
+  cursor: pointer;
+  stroke-width: 4;
+  transition: r 0.15s var(--ease-out);
+}
+
+.playerSelectable:hover {
+  r: 13;
+}
+
+.playerSelected {
+  stroke: var(--color-chalk);
+  stroke-width: 6;
+}
+
+.playerSelectable:focus-visible {
+  outline: 4px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.eventHalo {
+  fill: rgba(245, 158, 11, 0.22);
+  stroke: none;
+  animation: event-halo 1.7s var(--ease-out) infinite;
+}
+
+.eventMarker {
+  fill: var(--color-pitch-event);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.playerHome {
+  fill: var(--color-pitch-home);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.playerAway {
+  fill: var(--color-pitch-away);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.playerUnknown {
+  fill: var(--color-text-muted);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+.ball {
+  fill: var(--color-pitch-ball);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+}
+
+.roleHaloCarrier {
+  fill: rgba(250, 204, 21, 0.28);
+  stroke: rgba(250, 204, 21, 0.65);
+  stroke-width: 2;
+}
+
+.roleHaloReceiver {
+  fill: rgba(56, 189, 248, 0.22);
+  stroke: rgba(56, 189, 248, 0.55);
+  stroke-width: 2;
+}
+
+.playerGeneric {
+  stroke-dasharray: 3 2;
+}
+
+.labelBgHome {
+  fill: color-mix(in srgb, var(--color-pitch-home) 88%, #0a0a0a);
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 1;
+}
+
+.labelBgAway {
+  fill: color-mix(in srgb, var(--color-pitch-away) 88%, #0a0a0a);
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 1;
+}
+
+.labelBgUnknown {
+  fill: rgba(40, 40, 40, 0.85);
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 1;
+}
+
+.labelText {
+  fill: #f8fafc;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-ui, system-ui, sans-serif);
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eventPath,
+  .selectedPath,
+  .eventHalo {
+    animation: none !important;
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: 0 var(--space-1);
+  color: var(--text-on-light-secondary);
+  font-size: 0.77rem;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.swatch {
+  width: 0.62rem;
+  height: 0.62rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-light-strong);
+}
+
+.swatchHome {
+  background: var(--color-pitch-home);
+}
+
+.swatchAway {
+  background: var(--color-pitch-away);
+}
+
+.swatchEvent {
+  background: var(--color-pitch-event);
+}
+
+.legendNote {
+  color: var(--text-on-light-muted);
+  font-size: 0.72rem;
+}
+
+@keyframes path-flow {
+  to {
+    stroke-dashoffset: -36;
+  }
+}
+
+@keyframes selected-path {
+  from {
+    opacity: 0.2;
+    stroke-dasharray: 8 20;
+  }
+  to {
+    opacity: 1;
+    stroke-dasharray: none;
+  }
+}
+
+@keyframes event-halo {
+  50% {
+    opacity: 0.45;
+    transform: scale(1.18);
+  }
+}

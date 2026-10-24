@@ -44,18 +44,27 @@ export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
         </span>
       </div>
       <div className={styles.end}>
-        <div className={styles.modeSwitch} role="group" aria-label="View mode">
+        <div
+          className={styles.modeSwitch}
+          role="group"
+          aria-label={t('modeSwitchLabel')}
+          data-testid="persona-mode-switch"
+        >
           <button
             type="button"
             className={mode === 'fan' ? styles.modeActive : styles.modeBtn}
+            aria-pressed={mode === 'fan'}
             onClick={() => setMode('fan')}
+            data-testid="persona-mode-fan"
           >
             {t('modeFan')}
           </button>
           <button
             type="button"
             className={mode === 'analyst' ? styles.modeActive : styles.modeBtn}
+            aria-pressed={mode === 'analyst'}
             onClick={() => setMode('analyst')}
+            data-testid="persona-mode-analyst"
           >
             {t('modeAnalyst')}
           </button>

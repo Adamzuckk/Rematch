@@ -100,4 +100,13 @@ describe('mockMatchService', () => {
     )
     expect(frames).toEqual([])
   })
+
+  it('does not fabricate match intelligence aggregates from static fixtures', async () => {
+    await expect(
+      mockMatchService.getMatchIntelligence('m-northgate-riverside-2401'),
+    ).resolves.toBeNull()
+    await expect(
+      mockMatchService.getMatchIntelligence('does-not-exist'),
+    ).rejects.toBeInstanceOf(MatchNotFoundError)
+  })
 })

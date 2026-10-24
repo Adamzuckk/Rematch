@@ -1,6 +1,8 @@
 export {
   PITCH_VIEWBOX,
   mapPitchPointToSvg,
+  clampPitchPoint,
+  mapPitchPointToSvgClamped,
   type SvgPoint,
 } from './coordinates'
 export { sortMatchEvents, formatEventMinute } from './sortEvents'

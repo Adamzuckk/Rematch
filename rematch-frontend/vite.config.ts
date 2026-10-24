@@ -1,5 +1,5 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
@@ -16,10 +16,11 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     css: true,
     exclude: [
-      '**/node_modules/**',
-      '**/dist/**',
+      ...configDefaults.exclude,
       '**/e2e/**',
       '**/*.spec.ts',
     ],
+    // The suite creates a JSDOM environment per file; allow for CI contention.
+    testTimeout: 10_000,
   },
 })

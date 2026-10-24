@@ -1,5 +1,4 @@
 import type { MatchEvent, PitchPoint } from '../../types'
-import { isValidPitchPoint } from '../../types/coordinates'
 
 export interface EventPath {
   start: PitchPoint
@@ -22,21 +21,17 @@ export function getEventGeometry(event: MatchEvent): EventGeometry {
     case 'carry': {
       const start = event.start
       const end = event.end
-      const validStart = start && isValidPitchPoint(start) ? start : undefined
-      const validEnd = end && isValidPitchPoint(end) ? end : undefined
-      if (validStart && validEnd) {
-        return { path: { start: validStart, end: validEnd }, location: validEnd }
+      if (start && end) {
+        return { path: { start, end }, location: end }
       }
-      if (validStart) return { location: validStart }
-      if (validEnd) return { location: validEnd }
+      if (start) return { location: start }
+      if (end) return { location: end }
       return {}
     }
     case 'shot':
     case 'tackle':
     case 'pressure':
-      return event.location && isValidPitchPoint(event.location)
-        ? { location: event.location }
-        : {}
+      return event.location ? { location: event.location } : {}
     case 'possession_change':
       return {}
     default: {

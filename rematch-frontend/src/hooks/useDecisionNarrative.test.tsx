@@ -26,8 +26,8 @@ const response: DecisionNarrativeResponse = {
   },
 }
 
-function Probe() {
-  const { state, retry } = useDecisionNarrative('m-1', 'evt-1', true)
+function Probe({ enabled = true }: { enabled?: boolean }) {
+  const { state, retry } = useDecisionNarrative('m-1', 'evt-1', enabled)
   return (
     <div>
       <p data-testid="status">{state.status}</p>
@@ -40,6 +40,22 @@ function Probe() {
 }
 
 describe('useDecisionNarrative', () => {
+  it('does not call the backend workflow until it is explicitly enabled', async () => {
+    const getDecisionNarrative = vi
+      .spyOn(matchServices.matchService, 'getDecisionNarrative')
+      .mockResolvedValue(response)
+    const { rerender } = render(<Probe enabled={false} />)
+
+    expect(screen.getByTestId('status')).toHaveTextContent('idle')
+    expect(getDecisionNarrative).not.toHaveBeenCalled()
+
+    rerender(<Probe enabled />)
+    await waitFor(() => {
+      expect(screen.getByTestId('status')).toHaveTextContent('ready')
+    })
+    expect(getDecisionNarrative).toHaveBeenCalledWith('m-1', 'evt-1')
+  })
+
   it('surfaces an HTTP error and retries the same backend request', async () => {
     const getDecisionNarrative = vi
       .spyOn(matchServices.matchService, 'getDecisionNarrative')

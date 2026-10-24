@@ -1,0 +1,222 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--plate);
+  border: 1px solid var(--border);
+  color: var(--ink);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.headerCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  max-width: 36rem;
+}
+
+.score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--border-strong);
+  background: var(--cream);
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+  font-size: 1.15rem;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.scoreSep {
+  color: var(--ink-4);
+  font-weight: 600;
+}
+
+.chartWrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 9rem;
+  background: linear-gradient(
+    180deg,
+    #f7f9f5 0%,
+    #ffffff 55%,
+    #f3f6f1 100%
+  );
+}
+
+.grid {
+  stroke: rgba(18, 21, 19, 0.08);
+  stroke-width: 1;
+}
+
+.axis {
+  stroke: rgba(18, 21, 19, 0.18);
+  stroke-width: 1.25;
+}
+
+.htLine {
+  stroke: rgba(18, 21, 19, 0.28);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.htLabel {
+  fill: var(--ink-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.homeLine {
+  stroke: var(--color-pitch-home);
+  stroke-width: 2.5;
+  stroke-linejoin: miter;
+  stroke-linecap: square;
+}
+
+.awayLine {
+  stroke: var(--color-pitch-away);
+  stroke-width: 2.5;
+  stroke-linejoin: miter;
+  stroke-linecap: square;
+}
+
+.playhead {
+  stroke: var(--flare);
+  stroke-width: 1.5;
+  opacity: 0.9;
+}
+
+.marker {
+  cursor: pointer;
+  outline: none;
+}
+
+.markerCircle {
+  fill: var(--plate);
+  stroke-width: 2;
+}
+
+.markerHome .markerCircle {
+  stroke: var(--color-pitch-home);
+}
+
+.markerAway .markerCircle {
+  stroke: var(--color-pitch-away);
+}
+
+.markerNeutral .markerCircle {
+  stroke: var(--ink-3);
+}
+
+.markerGoal .markerCircle {
+  fill: var(--flare);
+  stroke: var(--ink);
+}
+
+.markerSelected .markerCircle {
+  stroke-width: 3;
+  filter: drop-shadow(0 0 0.2rem rgba(232, 93, 59, 0.45));
+}
+
+.marker:focus-visible .markerCircle {
+  stroke: var(--accent-deep);
+  stroke-width: 3;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.swatchHome,
+.swatchAway {
+  width: 1.1rem;
+  height: 0.2rem;
+  display: inline-block;
+}
+
+.swatchHome {
+  background: var(--color-pitch-home);
+}
+
+.swatchAway {
+  background: var(--color-pitch-away);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-4);
+  font-size: 0.85rem;
+  color: var(--ink-3);
+  text-align: center;
+  background: var(--cream);
+  border: 1px dashed var(--border);
+}
+
+@media (max-width: 640px) {
+  .root {
+    padding: var(--space-3);
+  }
+
+  .score {
+    font-size: 1rem;
+  }
+
+  .chart {
+    min-height: 7.5rem;
+  }
+}

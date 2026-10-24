@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   formatMatchLabel,
   useMatchSummary,
@@ -8,35 +8,15 @@ import { useLocale } from '../i18n/locale'
 import { usePersona } from '../context/PersonaContext'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'
+import { matchService } from '../services/matches'
+import type { MatchIntelligence } from '../types'
 import styles from './InsightsPage.module.css'
-
-type Intelligence = {
-  matchId: string
-  provenance: string
-  source: string
-  eventCounts: Record<string, number>
-  totalEvents: number
-  eventsWithCoordinates: number
-  alignedFrames: number
-  pathMetricsPresent: number
-  avgBallSpeedMps: number | null
-  avgShotSpeedMps: number | null
-  avgPassDistanceM: number | null
-  keyMoments: Array<{
-    eventId: string
-    type: string
-    minute: number | null
-    hasAlignedFrame: boolean
-    label: string
-  }>
-  limitations: string[]
-}
 
 function templateSummary(
   mode: 'fan' | 'analyst',
   locale: 'en' | 'ar',
   matchLabel: string,
-  intel: Intelligence,
+  intel: MatchIntelligence,
 ): string {
   const top = intel.keyMoments.slice(0, 3).map((m) => m.label).join(', ')
   if (locale === 'ar') {
@@ -56,37 +36,46 @@ export function InsightsPage() {
   const { mode } = usePersona()
   const { matchId } = useParams()
   const matchState = useMatchSummary(matchId)
-  const [intel, setIntel] = useState<Intelligence | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [reloadToken, setReloadToken] = useState(0)
+  const [result, setResult] = useState<{
+    matchId: string
+    intelligence: MatchIntelligence | null
+  } | null>(null)
+  const [error, setError] = useState<{ matchId: string; message: string } | null>(
+    null,
+  )
 
   useEffect(() => {
     if (!matchId) return
     let cancelled = false
-    const url = `/api/v1/matches/${encodeURIComponent(matchId)}/intelligence`
-
-    void (async () => {
-      try {
-        const res = await fetch(url)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const data = (await res.json()) as Intelligence
+    void matchService
+      .getMatchIntelligence(matchId)
+      .then((intelligence) => {
+        if (cancelled) return
+        setResult({ matchId, intelligence })
+        setError(null)
+      })
+      .catch((cause: unknown) => {
         if (!cancelled) {
-          setIntel(data)
-          setError(null)
-          setLoading(false)
+          setError({
+            matchId,
+            message:
+              cause instanceof Error
+                ? cause.message
+                : 'Failed to load match intelligence',
+          })
         }
-      } catch (err: unknown) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load intelligence')
-          setIntel(null)
-          setLoading(false)
-        }
-      }
-    })()
-
+      })
     return () => {
       cancelled = true
     }
+  }, [matchId, reloadToken])
+
+  const retry = useCallback(() => {
+    if (!matchId) return
+    setResult(null)
+    setError(null)
+    setReloadToken((value) => value + 1)
   }, [matchId])
 
   const label =
@@ -94,18 +83,40 @@ export function InsightsPage() {
       ? formatMatchLabel(matchState.match)
       : `${t('breadcrumbMatch')} ${matchId ?? ''}`
 
-  if (loading) {
-    return <p className={styles.muted}>{t('insightsLoading')}</p>
+  const isCurrentResult = result?.matchId === matchId
+  const currentError = error?.matchId === matchId ? error : null
+
+  if (!matchId || (!isCurrentResult && !currentError)) {
+    return (
+      <p className={styles.muted} role="status" aria-live="polite">
+        {t('insightsLoading')}
+      </p>
+    )
   }
 
-  if (error || !intel) {
+  if (currentError) {
     return (
       <EmptyState
         title={t('insightsErrorTitle')}
-        description={error ?? t('insightsErrorBody')}
+        description={`${t('insightsErrorBody')} ${currentError.message}`}
         action={
-          <Button variant="secondary" to="/dashboard">
-            {t('backToDashboard')}
+          <Button variant="secondary" onClick={retry}>
+            {t('insightsRetry')}
+          </Button>
+        }
+      />
+    )
+  }
+
+  const intel = result?.intelligence ?? null
+  if (!intel) {
+    return (
+      <EmptyState
+        title={t('insightsMockTitle')}
+        description={t('insightsMockBody')}
+        action={
+          <Button variant="secondary" to={`/matches/${matchId}`}>
+            {t('decisionBackToMatch')}
           </Button>
         }
       />
@@ -119,7 +130,9 @@ export function InsightsPage() {
       <header className={styles.header}>
         <p className={styles.eyebrow}>{t('statusSynthetic')}</p>
         <h1>
-          {t('insightsTitle')} — {label}
+          {t('insightsTitle')}
+          <span aria-hidden="true"> · </span>
+          {label}
         </h1>
         <p className={styles.mode}>{mode === 'fan' ? t('modeFan') : t('modeAnalyst')}</p>
       </header>

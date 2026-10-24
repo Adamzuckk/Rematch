@@ -1,0 +1,542 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  color: var(--ink);
+}
+
+.dense {
+  gap: var(--space-5);
+}
+
+.numbersSingle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.dense .title {
+  font-size: clamp(1.35rem, 3vw, 1.85rem);
+}
+
+.expandable {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+}
+
+.expandSummary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent-hover);
+  list-style: none;
+}
+
+.expandSummary::-webkit-details-marker {
+  display: none;
+}
+
+.expandable[open] .expandSummary {
+  margin-block-end: var(--space-3);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .expandable {
+    transition: box-shadow 180ms ease;
+  }
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-5) var(--space-8);
+  padding-block-end: var(--space-2);
+}
+
+.headerCopy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent-hover);
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: 70%;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.titleAccent {
+  font-weight: 300;
+  color: var(--ink-3);
+}
+
+.titleDot {
+  display: inline-block;
+  width: 0.28em;
+  height: 0.28em;
+  margin-inline-start: 0.12em;
+  vertical-align: 0.08em;
+  background: var(--accent);
+  border-radius: 50%;
+}
+
+.note {
+  margin: 0;
+  max-width: 24rem;
+  color: var(--ink-2);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  color: var(--ink-3);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+}
+
+.emptyInline {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 0.85rem;
+}
+
+.numbersGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.rightColumn {
+  display: grid;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-5);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+}
+
+.panelTitle,
+.sectionTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-stretch: 110%;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.sectionTitle {
+  font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+  font-stretch: 125%;
+  letter-spacing: -0.015em;
+  line-height: 0.95;
+}
+
+.panelHint {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.teamLegend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0.45rem 0.75rem;
+  margin: 0;
+}
+
+.homeBadge,
+.awayBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.85rem;
+  font-size: 14px;
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.homeBadge {
+  background: var(--accent);
+  color: var(--accent-ink);
+  clip-path: var(--cut-r);
+}
+
+.awayBadge {
+  background: var(--color-opposition);
+  color: #fff;
+  clip-path: var(--cut-l);
+}
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.barMeta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.barValue {
+  width: 3.5rem;
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.barValueEnd {
+  text-align: end;
+}
+
+.barValueLead {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.barLabel {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  font-stretch: 70%;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.barTrack {
+  display: flex;
+  height: 6px;
+  gap: 3px;
+  overflow: hidden;
+  background: transparent;
+}
+
+.barHome {
+  background: var(--accent);
+  transition:
+    width var(--duration-normal) var(--ease-out),
+    opacity var(--duration-normal) var(--ease-out);
+}
+
+.barAway {
+  background: var(--color-opposition);
+  transition:
+    width var(--duration-normal) var(--ease-out),
+    opacity var(--duration-normal) var(--ease-out);
+}
+
+.raceHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.raceScore {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  font-stretch: 125%;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.raceScoreSep {
+  margin-inline: 0.35rem;
+  font-weight: 300;
+  color: var(--ink-4);
+}
+
+.raceChart {
+  width: 100%;
+  height: auto;
+  margin-top: var(--space-1);
+  overflow: visible;
+}
+
+.raceGrid {
+  stroke: var(--ink);
+  stroke-opacity: 0.07;
+  stroke-width: 1;
+}
+
+.raceAxis {
+  stroke: var(--ink);
+  stroke-width: 1.25;
+}
+
+.raceHome {
+  stroke: var(--accent);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.raceAway {
+  stroke: var(--color-opposition);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.raceLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin-top: var(--space-2);
+  font-size: 12px;
+  font-weight: 650;
+  color: var(--ink-2);
+}
+
+.raceLegendHome,
+.raceLegendAway {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.raceSwatchHome,
+.raceSwatchAway {
+  display: inline-block;
+  width: 1.25rem;
+  height: 3px;
+}
+
+.raceSwatchHome {
+  background: var(--accent);
+}
+
+.raceSwatchAway {
+  background: var(--color-opposition);
+}
+
+.tableWrap {
+  overflow: auto;
+  max-height: 16rem;
+  margin-top: var(--space-1);
+  border-top: 1px solid var(--line);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.table th,
+.table td {
+  padding: 0.6rem 0.7rem;
+  text-align: start;
+  border-bottom: 1px solid var(--line);
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  background: var(--concrete);
+  color: var(--ink-3);
+  font-size: 11px;
+  font-weight: 700;
+  font-stretch: 70%;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.table td {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.table tbody tr:hover {
+  background: var(--concrete);
+}
+
+.playerName {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 650;
+}
+
+.shirt {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.4rem;
+  height: 1.35rem;
+  padding: 0 0.25rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.65rem;
+  font-weight: 800;
+  clip-path: var(--cut);
+}
+
+.totalCell {
+  font-weight: 750;
+  color: var(--accent-deep);
+}
+
+.passSection,
+.squadSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.passHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.passGrid,
+.squadGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
+}
+
+.squadPanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-5);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+}
+
+.squadHead {
+  display: flex;
+  align-items: center;
+}
+
+.squadList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.squadRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.squadShirtHome,
+.squadShirtAway {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.75rem;
+  height: 1.5rem;
+  padding: 0 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  clip-path: var(--cut);
+}
+
+.squadShirtHome {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.squadShirtAway {
+  background: var(--color-opposition);
+  color: #fff;
+}
+
+.squadName {
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+@media (max-width: 1023px) {
+  .numbersGrid,
+  .passGrid,
+  .squadGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .panel,
+  .squadPanel {
+    padding: var(--space-4);
+  }
+
+  .barValue {
+    width: 2.5rem;
+  }
+
+  .title {
+    font-size: clamp(1.85rem, 9vw, 2.5rem);
+  }
+}

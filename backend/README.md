@@ -102,6 +102,7 @@ All routes live under `/api/v1`. See [docs/api-contract.md](../docs/api-contract
 | GET | `/api/v1/matches/{match_id}/players` | Players referenced by events/frames |
 | GET | `/api/v1/matches/dataset` | Phase 8 metadata when seeded; otherwise latest available scenario |
 | GET | `/api/v1/matches/overview` | Counts from seeded data; the analysis moment count requires scoring coordinates |
+| GET | `/api/v1/system-metrics` | Stored API-operation telemetry; filters: `range`, `operation` |
 | GET | `/api/v1/matches/{id}/events/{event_id}/decision-analysis` | Geometric decision analysis |
 | GET | `/api/v1/matches/{id}/events/{event_id}/decision-analysis/evidence` | Verified claims + evidence catalog |
 | POST | `/api/v1/matches/{id}/events/{event_id}/decision-analysis/verify` | Validate caller-supplied claims |
@@ -133,6 +134,17 @@ Stored and returned as the same 0–100 `PitchPoint` space as `rematch-frontend/
 See [docs/decision-engine.md](../docs/decision-engine.md). Scoring is `geometric_progression_v1` (deterministic Python). Alternatives require an aligned frame. Unsupported event types / missing coordinates return `422 insufficient_evidence`.
 
 Pick Your Pass uses the alternatives returned by `GET /api/v1/matches/{id}/events/{event_id}/decision-analysis`. Each frame-backed alternative already includes its candidate geometry, backend-computed metrics/composite score and ranking entry. The client selects among those returned records; there is no candidate submission/evaluation endpoint and the client does not calculate scores. Alternatives are sparse-frame hypotheticals and do not predict pass completion.
+
+## System metrics
+
+`GET /api/v1/system-metrics` reports append-only, request-level telemetry for
+decision analysis and claim verification operations. It supports `range=24h|7d|30d|all`
+and `operation=all|analysis|verification`. Telemetry begins at deployment and
+is never inferred from seed data or historical access logs. The endpoint also
+reports separately scoped decision-engine eligibility calculated from the
+current catalogue; that coverage is not an analysis-request count. Static
+frontend mock mode has no operational history and deliberately displays no
+substitute values.
 
 ## Agent 2 — Narrator
 

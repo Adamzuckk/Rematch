@@ -1,56 +1,130 @@
 .page {
-  max-width: 40rem;
+  max-width: 44rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-6);
 }
 
 .eyebrow {
-  margin: 0;
-  color: #7dd3fc;
+  margin: 0 0 var(--space-2);
+  color: var(--accent-hover);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  font-size: 0.68rem;
+  font-weight: 650;
+}
+
+.page h1 {
+  margin: 0 0 var(--space-3);
+  font-size: clamp(2rem, 4.5vw, 2.9rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  color: var(--ink);
+}
+
+.page > header p:last-child {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 1rem;
+  line-height: 1.6;
+  max-width: 36rem;
 }
 
 .steps {
-  padding-inline-start: 1.2rem;
-  line-height: 1.55;
+  margin: 0;
+  padding: var(--space-5) var(--space-5) var(--space-5) 2.5rem;
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+  line-height: 1.7;
+  color: var(--ink-2);
+  counter-reset: judge-step;
+  list-style: none;
+}
+
+.steps li {
+  position: relative;
+  padding-block: 0.45rem;
+  counter-increment: judge-step;
+}
+
+.steps li::before {
+  content: counter(judge-step, decimal-leading-zero);
+  position: absolute;
+  inset-inline-start: -1.85rem;
+  color: var(--accent-hover);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: var(--space-3);
 }
 
 .cta {
-  display: inline-block;
-  padding: 0.85rem 1rem;
-  border-radius: 10px;
-  background: #0ea5e9;
-  color: #041018;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.85rem 1.1rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  clip-path: var(--cut);
+  font-weight: 750;
+  font-stretch: 75%;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   text-decoration: none;
   text-align: center;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.cta:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
 }
 
 .secondary {
   text-align: center;
-  color: #7dd3fc;
+  color: var(--ink-2);
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.secondary:hover {
+  color: var(--accent-hover);
 }
 
 .note {
-  padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid var(--border-subtle, #243041);
-  background: var(--surface-elevated, #12181f);
+  padding: var(--space-5);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+}
+
+.note h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 1rem;
+  color: var(--ink);
+}
+
+.note p {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  line-height: 1.55;
 }
 
 .error {
-  color: #fca5a5;
+  color: #b91c1c;
 }
 
 .muted {
-  opacity: 0.8;
+  color: var(--ink-3);
 }

@@ -79,6 +79,18 @@ export const mockMatchService: MatchService = {
     return SYNTHETIC_OVERVIEW_STATS
   },
 
+  async getSystemMetrics() {
+    // Static fixtures cannot truthfully represent process telemetry.
+    return null
+  },
+
+  async getMatchIntelligence(matchId) {
+    requireMatch(matchId)
+    // The static catalogue has no backend-derived aggregate payload. Returning
+    // null makes the limitation explicit instead of reconstructing insights.
+    return null
+  },
+
   async getMatches(filters) {
     return filterSyntheticMatches(SYNTHETIC_MATCHES, filters)
   },

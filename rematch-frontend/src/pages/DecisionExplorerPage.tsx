@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { DecisionExplorerPanel } from '../components/decision/DecisionExplorerPanel'
 import { Button } from '../components/ui/Button'
@@ -13,10 +14,12 @@ export function DecisionExplorerPage() {
   const { matchId, eventId } = useParams()
   const { t } = useLocale()
   const { state, retry } = useDecisionAnalysis(matchId, eventId)
+  const [askedDecisionKey, setAskedDecisionKey] = useState<string | null>(null)
+  const decisionKey = matchId && eventId ? `${matchId}:${eventId}` : null
   const narrative = useDecisionNarrative(
     matchId,
     eventId,
-    state.status === 'ready',
+    state.status === 'ready' && askedDecisionKey === decisionKey,
   )
   const matchState = useMatchSummary(matchId)
   const matchAnalysis = useMatchAnalysis(matchId)
@@ -131,6 +134,7 @@ export function DecisionExplorerPage() {
         match={matchAnalysis.state.status === 'ready' ? matchAnalysis.state.match : undefined}
         frame={matchAnalysis.state.status === 'ready' ? matchAnalysis.state.frames.find((item) => item.eventId === eventId) ?? null : null}
         narrativeState={narrative.state}
+        onAskAgents={() => setAskedDecisionKey(decisionKey)}
         onNarrativeRetry={narrative.retry}
       />
     </div>

@@ -1,5 +1,382 @@
-.page { display:flex; flex-direction:column; gap:var(--space-6); min-width:0; width:100%; overflow-x:hidden; }.loading { margin:0; padding:var(--space-8) 0; color:var(--color-text-secondary); font-size:.95rem; }.notice { margin:0; padding:var(--space-3) var(--space-4); border-inline-start:3px solid var(--color-demo); border-radius:var(--radius-sm); background:var(--color-demo-bg); color:var(--color-demo); font-size:.83rem; }.layout { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(18rem,.8fr); gap:var(--space-6); align-items:start; min-width:0; }.pitchColumn,.inspectorColumn { min-width:0; } @media(max-width:1023px){.layout{grid-template-columns:1fr;}}
-.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:.75rem;margin-bottom:.5rem;font-size:.85rem}
-.toggle{display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
-.linkish{background:none;border:none;color:#7dd3fc;cursor:pointer;text-decoration:underline;padding:0;font:inherit}
-.modeTag{opacity:.8;margin-inline-start:auto}
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.fanPage,
+.analysisPage {
+  gap: var(--space-4);
+}
+
+.fanPage {
+  animation: view-in 220ms ease;
+}
+
+.analysisPage {
+  animation: view-in 220ms ease;
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0.72;
+    transform: translateY(0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.loading {
+  margin: 0;
+  padding: var(--space-8) 0;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: 70%;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.notice {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: 3px solid #eab308;
+  background: var(--color-demo-bg);
+  color: var(--color-demo);
+  font-size: 0.83rem;
+}
+
+.fanLayout,
+.analysisLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.4fr) minmax(16rem, 0.75fr);
+  gap: var(--space-4);
+  align-items: start;
+  min-width: 0;
+}
+
+.pitchColumn,
+.inspectorColumn {
+  min-width: 0;
+}
+
+.simStage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+}
+
+.simHud {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--concrete);
+}
+
+.hudScore {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-weight: 750;
+}
+
+.hudTeam {
+  font-size: 0.78rem;
+  font-stretch: 75%;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.hudDigits {
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.hudMeta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.hudMinute {
+  font-size: 1.1rem;
+  font-weight: 750;
+  color: var(--accent-hover);
+}
+
+.hudStatus {
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-stretch: 75%;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.hudNote {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+}
+
+.pitchWrap {
+  min-width: 0;
+}
+
+.pitchDominant :global(svg) {
+  min-block-size: min(62vh, 44rem);
+}
+
+.pitchAnalysis :global(svg) {
+  min-block-size: min(48vh, 34rem);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: var(--space-3) var(--space-4);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+  font-size: 0.85rem;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.linkish,
+.studioToggle {
+  background: none;
+  border: none;
+  color: var(--accent-hover);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+}
+
+.studioToggle {
+  text-decoration: none;
+  border: 1px solid var(--border);
+  padding: 0.3rem 0.65rem;
+  background: var(--concrete);
+  color: var(--ink-2);
+}
+
+.studioToggle:hover {
+  color: var(--ink);
+}
+
+.modeTag {
+  margin-inline-start: auto;
+  padding: 0.25rem 0.55rem;
+  background: var(--accent-subtle);
+  color: var(--accent-hover);
+  font-size: 11px;
+  font-weight: 750;
+  font-stretch: 75%;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  clip-path: var(--cut);
+}
+
+.studioCollapsed {
+  display: none;
+}
+
+.studioOpen {
+  display: block;
+}
+
+.analysisStudio {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--space-3));
+}
+
+.secondary,
+.analysisWorkspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+}
+
+.sectionTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  background: var(--concrete);
+}
+
+.sectionTab,
+.sectionTabActive {
+  appearance: none;
+  border: 0;
+  padding: 0.45rem 0.75rem;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.sectionTab:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.sectionTab:focus-visible,
+.sectionTabActive:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.sectionTabActive {
+  background: var(--ink);
+  color: var(--cream);
+}
+
+.sectionPanel {
+  min-width: 0;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.sectionHint {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.provenanceChip {
+  margin: 0;
+  width: fit-content;
+  padding: 0.2rem 0.5rem;
+  background: var(--accent-subtle);
+  color: var(--accent-deep);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.provenanceList {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  color: var(--ink-2);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.decisionCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--concrete);
+}
+
+.decisionMeta {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.unavailable {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 0.85rem;
+}
+
+.evidenceStudio {
+  min-width: 0;
+}
+
+@media (max-width: 1023px) {
+  .fanLayout,
+  .analysisLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .pitchDominant :global(svg) {
+    min-block-size: min(48vh, 28rem);
+  }
+
+  .pitchAnalysis :global(svg) {
+    min-block-size: min(40vh, 24rem);
+  }
+
+  .analysisStudio {
+    position: static;
+  }
+
+  .inspectorColumn.studioOpen {
+    display: block;
+  }
+
+  .inspectorColumn.studioCollapsed {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .studioToggle {
+    display: none;
+  }
+
+  .inspectorColumn.studioCollapsed,
+  .inspectorColumn.studioOpen {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fanPage,
+  .analysisPage {
+    animation: none;
+  }
+
+  .simStage {
+    scroll-behavior: auto;
+  }
+}

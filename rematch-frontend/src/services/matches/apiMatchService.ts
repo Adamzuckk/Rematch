@@ -5,8 +5,12 @@ import type {
   MatchDatasetInfo,
   MatchEvent,
   MatchFrame,
+  MatchIntelligence,
   MatchSummary,
   Player,
+  MetricsOperation,
+  MetricsRange,
+  SystemMetrics,
 } from '../../types'
 import {
   DecisionInsufficientEvidenceError,
@@ -39,6 +43,19 @@ function buildQuery(filters: MatchListFilters = {}): string {
   }
   if (filters.status && filters.status !== 'all') {
     params.set('status', filters.status)
+  }
+  const qs = params.toString()
+  return qs ? `?${qs}` : ''
+}
+
+function buildMetricsQuery(filters: {
+  range?: MetricsRange
+  operation?: MetricsOperation
+} = {}): string {
+  const params = new URLSearchParams()
+  if (filters.range) params.set('range', filters.range)
+  if (filters.operation && filters.operation !== 'all') {
+    params.set('operation', filters.operation)
   }
   const qs = params.toString()
   return qs ? `?${qs}` : ''
@@ -110,6 +127,28 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
 
     async getOverviewStats() {
       return getJson<DashboardOverviewStat[]>(`${API_PREFIX}/matches/overview`)
+    },
+
+    async getSystemMetrics(filters) {
+      return getJson<SystemMetrics>(
+        `${API_PREFIX}/system-metrics${buildMetricsQuery(filters)}`,
+      )
+    },
+
+    async getMatchIntelligence(matchId) {
+      try {
+        return await getJson<MatchIntelligence>(
+          `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/intelligence`,
+        )
+      } catch (error) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'match_not_found')
+        ) {
+          throw new MatchNotFoundError(matchId)
+        }
+        throw error
+      }
     },
 
     async getMatches(filters) {

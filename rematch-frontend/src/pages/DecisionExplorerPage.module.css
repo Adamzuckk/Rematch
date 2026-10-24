@@ -6,15 +6,17 @@
   width: 100%;
   overflow-x: hidden;
 }
+
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  padding-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
 }
+
 .loading {
   margin: 0;
   padding: var(--space-8) 0;
-  color: var(--color-text-secondary);
+  color: var(--ink-2);
   font-size: 0.95rem;
 }

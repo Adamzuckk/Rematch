@@ -29,9 +29,9 @@ export const SYNTHETIC_OVERVIEW_STATS: DashboardOverviewStat[] = [
   },
   {
     id: 'stat-coverage',
-    label: 'Analysis coverage',
+    label: 'Operational telemetry',
     value: '—',
-    hint: 'Not measured yet; backend metrics arrive later',
+    hint: 'Static mock data has no operational history; use API mode for System Metrics',
     isDemoValue: true,
   },
 ]

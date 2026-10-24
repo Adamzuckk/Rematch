@@ -1,6 +1,7 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import type { MatchEvent, MatchFrame, Player, Team } from '../../types'
+import type { MatchEvent, MatchFrame, Team } from '../../types'
+import type { SimPlayerState } from '../../lib/matchSimulation'
 import { FootballPitch } from './FootballPitch'
 
 afterEach(() => {
@@ -51,11 +52,6 @@ const frameWithPlayers: MatchFrame = {
   provenance: 'synthetic',
 }
 
-const roster: Player[] = [
-  { id: 'player-home-1', name: 'Home Eight', teamId: homeTeam.id, shirtNumber: 8 },
-  { id: 'player-away-1', name: 'Away Ten', teamId: awayTeam.id, shirtNumber: 10 },
-]
-
 describe('FootballPitch', () => {
   it('renders pitch markings and team legend', () => {
     render(
@@ -69,7 +65,7 @@ describe('FootballPitch', () => {
     expect(screen.getByRole('img', { name: 'Test pitch' })).toBeInTheDocument()
     expect(screen.getByText('HOM')).toBeInTheDocument()
     expect(screen.getByText('AWY')).toBeInTheDocument()
-    expect(screen.getByText(/No valid frame coordinates for this moment/i)).toBeInTheDocument()
+    expect(screen.getByText(/No player frame/i)).toBeInTheDocument()
   })
 
   it('renders event path and location when coordinates exist', () => {
@@ -122,7 +118,6 @@ describe('FootballPitch', () => {
         awayTeam={awayTeam}
         selectedEvent={passEvent}
         frame={frameWithPlayers}
-        players={roster}
       />,
     )
 
@@ -139,8 +134,6 @@ describe('FootballPitch', () => {
       }),
     ).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Ball' })).toBeInTheDocument()
-    expect(screen.getByText('8')).toBeInTheDocument()
-    expect(screen.getByText('10')).toBeInTheDocument()
   })
 
   it('skips invalid player coordinates instead of inventing positions', () => {
@@ -257,6 +250,50 @@ describe('FootballPitch', () => {
 
     unmount()
     expect(newLocation.isConnected).toBe(false)
+  })
+
+  it('renders known player names from simulation state and generic markers without inventing names', () => {
+    const simPlayers: SimPlayerState[] = [
+      {
+        playerId: 'player-home-1',
+        teamId: homeTeam.id,
+        position: { x: 30, y: 50 },
+        name: 'Jamie Cole',
+        role: 'carrier',
+        source: 'event_derived',
+        generic: false,
+      },
+      {
+        playerId: 'player-away-missing',
+        teamId: awayTeam.id,
+        position: { x: 70, y: 45 },
+        name: null,
+        role: 'other',
+        source: 'event_derived',
+        generic: true,
+      },
+    ]
+
+    render(
+      <FootballPitch
+        homeTeam={homeTeam}
+        awayTeam={awayTeam}
+        simulation={{
+          players: simPlayers,
+          ball: { position: { x: 50, y: 50 }, source: 'interpolated' },
+          showLabels: true,
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Cole')).toBeInTheDocument()
+    expect(screen.getByTestId('simulation-legend')).toBeInTheDocument()
+    const markers = screen.getAllByTestId('player-marker')
+    expect(markers[0]).toHaveAttribute('data-role', 'carrier')
+    expect(markers[1]).toHaveAttribute('data-generic', 'true')
+    expect(
+      within(markers[1]!).getByRole('img', { name: /Unnamed player/i }),
+    ).toBeInTheDocument()
   })
 
   it('restarts the selected-path entry motion when its geometry changes', () => {

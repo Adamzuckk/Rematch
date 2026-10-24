@@ -89,7 +89,10 @@ export function DashboardPage() {
       <header className={styles.hero}>
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>{t('dashboardEyebrow')}</p>
-          <h1 className={styles.title}>{t('dashboardTitle')}</h1>
+          <h1 className={styles.title}>
+            {t('dashboardTitle')}{' '}
+            <span className={styles.titleAccent}>{t('dashboardTitleAccent')}</span>
+          </h1>
           <p className={styles.intro}>{t('dashboardIntro')}</p>
           {isReady ? (
             <p className={styles.seed}>
@@ -137,8 +140,11 @@ export function DashboardPage() {
       <section className={styles.toolbar} aria-label={t('matchesHeading')}>
         <div className={styles.toolbarHeader}>
           <div>
-            <h2 className={styles.sectionTitle}>{t('matchesHeading')}</h2>
-            <p className={styles.sectionHint}>{t('matchesHint')}</p>
+          <h2 className={styles.sectionTitle}>
+            {t('matchesHeading')}
+            <span className={styles.sectionTitleAccent}> / {t('dashboardTitleAccent')}</span>
+          </h2>
+          <p className={styles.sectionHint}>{t('matchesHint')}</p>
           </div>
           {isReady ? (
             <p className={styles.resultsMeta} aria-live="polite">

@@ -44,3 +44,16 @@ export type {
   NarrativeVerificationResult,
   DecisionNarrativeResponse,
 } from './decision'
+export type {
+  MetricsRange,
+  MetricsOperation,
+  OperationMetricSummary,
+  VerificationOutcomeSummary,
+  FallbackUsage,
+  CatalogueCoverage,
+  SystemMetrics,
+} from './systemMetrics'
+export type {
+  MatchIntelligence,
+  MatchIntelligenceKeyMoment,
+} from './matchIntelligence'

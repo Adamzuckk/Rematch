@@ -73,6 +73,9 @@ export function PersonaProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// This provider intentionally exports its companion hook from the same module.
+// A context module is not hot-reloaded as a component boundary.
+// eslint-disable-next-line react-refresh/only-export-components
 export function usePersona(): PersonaContextValue {
   const ctx = useContext(PersonaContext)
   if (!ctx) {

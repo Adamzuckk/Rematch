@@ -3,52 +3,71 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  background: var(--surface-elevated, #12181f);
-  border: 1px solid var(--border-subtle, #243041);
-  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
 }
 
 .play {
-  min-width: 4.5rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
-  border: 1px solid var(--border-subtle, #334155);
-  background: var(--accent, #0ea5e9);
-  color: #041018;
-  font-weight: 600;
+  min-width: 5rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
   cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.play:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .slider {
   flex: 1 1 12rem;
   min-width: 8rem;
+  accent-color: var(--accent);
 }
 
 .pos {
   font-variant-numeric: tabular-nums;
   font-size: 0.85rem;
-  opacity: 0.85;
+  font-weight: 650;
+  color: var(--ink-2);
 }
 
 .speeds {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.3rem;
 }
 
 .speed,
 .speedActive {
   padding: 0.3rem 0.55rem;
-  border-radius: 6px;
-  border: 1px solid var(--border-subtle, #334155);
+  border-radius: 0;
+  border: 0;
+  box-shadow: inset 0 -2px 0 var(--accent);
   background: transparent;
-  color: inherit;
+  color: var(--ink-2);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.speed:hover {
+  color: var(--ink);
+  border-color: var(--accent);
 }
 
 .speedActive {
-  background: rgba(14, 165, 233, 0.2);
-  border-color: var(--accent, #0ea5e9);
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent-hover);
 }

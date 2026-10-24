@@ -61,6 +61,7 @@ Backend storage uses FLOAT columns (`start_x`/`start_y`, `ball_x`/`ball_y`, etc.
 | `match_events` | `MatchEvent` | Polymorphic columns; unused type fields stay NULL |
 | `match_frames` | `MatchFrame` | Optional FK → `match_events`; optional ball x/y |
 | `player_frame_positions` | `PlayerFrame` | FK → `match_frames`, `players`, `teams` |
+| `operational_metric_events` | `SystemMetrics` aggregate | Append-only measured analysis/verification request outcome, latency, and verifier-status counts; never seed-generated |
 
 Relationships:
 
@@ -72,7 +73,10 @@ Scenario 1──* Match 1──* MatchEvent
                               └──? MatchEvent (event-aligned frames)
 ```
 
-Decision-analysis results are computed **on demand** in Phase 5 (no new tables). Explanation/LLM and metrics-persistence tables remain intentionally absent.
+Decision-analysis results remain computed **on demand** in Phase 5 (they are not
+persisted). `operational_metric_events` is intentionally limited to measured
+request telemetry; it stores neither analyses nor synthetic seed metrics.
+Explanation/LLM persistence remains absent.
 
 Migrations: `backend/alembic/versions/`. Do not use `create_all` as the production schema path.
 

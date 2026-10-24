@@ -1,50 +1,146 @@
 :root {
-  /* ReMatch brand: black pitch, chalk white, player green, and signal accents. */
-  --color-bg: #080b09;
-  --color-surface: #101612;
-  --color-surface-raised: #161d18;
-  --color-surface-hover: #1c2720;
-  --color-surface-strong: #243027;
-  --color-field-ink: #0b150e;
-  --color-accent: #b6f447;
-  --color-accent-strong: #93dc39;
-  --color-accent-ink: #112008;
-  --color-accent-muted: rgba(182, 244, 71, 0.12);
-  --color-accent-border: rgba(182, 244, 71, 0.5);
-  --color-chalk: #f5f4e9;
-  --color-text: #f5f4e9;
-  --color-text-secondary: #bec7ba;
-  --color-text-muted: #7d897d;
-  --color-border: #29362c;
-  --color-border-strong: #4a5a4c;
-  --color-focus: #a5ec72;
-  --color-live: #ff7765;
-  --color-live-bg: rgba(255, 107, 93, 0.12);
-  --color-finished: #a2afa4;
-  --color-finished-bg: rgba(162, 175, 164, 0.1);
-  --color-upcoming: #7bd143;
-  --color-upcoming-bg: rgba(123, 209, 67, 0.12);
-  --color-demo: #d9b568;
-  --color-demo-bg: rgba(217, 181, 104, 0.11);
-  --color-signal: #ffbd5b;
-  --color-opposition: #77d1ef;
-  --color-pitch-turf: #102a18;
-  --color-pitch-turf-stripe: #173b20;
-  --color-pitch-line: rgba(241, 244, 237, 0.76);
-  --color-pitch-home: #7bd143;
-  --color-pitch-away: #78c7e8;
-  --color-pitch-ball: #f1f4ed;
-  --color-pitch-event: #d9b568;
-  --color-pitch-path: rgba(217, 181, 104, 0.92);
-  --font-sans: 'Manrope', 'Segoe UI', Tahoma, Arial, sans-serif;
-  --font-display: 'Sora', 'Manrope', 'Segoe UI', Tahoma, Arial, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
-  --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-7: 1.75rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --space-16: 4rem;
-  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 18px; --radius-xl: 28px;
-  --shadow-sm: 0 1px 0 rgba(255,255,255,.04), 0 10px 28px rgba(0,0,0,.2);
-  --shadow-md: 0 24px 60px rgba(0,0,0,.42);
-  --sidebar-width: 288px; --topbar-height: 68px; --content-max: 1320px;
-  --bp-tablet: 768px; --bp-desktop: 1024px;
-  --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-in-out: cubic-bezier(.65, 0, .35, 1);
-  --duration-fast: 150ms; --duration-normal: 220ms; --duration-slow: 420ms;
+  /*
+   * ReMatch identity — calm broadcast intelligence.
+   * Logo green (#6bbd45) + cream wordmark (#f1f4ed) on dark ink.
+   * Soft concrete content plates; dark chrome shell. Not MatchMind volt.
+   */
+  --ink: #121513;
+  --ink-2: #3f4742;
+  --ink-3: #6d766f;
+  --ink-4: #9aa49c;
+  --line: rgba(18, 21, 19, 0.1);
+  --plate: #ffffff;
+  --concrete: #e8ebe6;
+  --concrete-2: #dce1db;
+  --cream: #f1f4ed;
+  --flare: #e85d3b;
+  --turf: #2f6b2a;
+
+  /* Logo silhouette green */
+  --accent: #6bbd45;
+  --accent-hover: #5aa938;
+  --accent-deep: #458a2c;
+  --accent-subtle: rgba(107, 189, 69, 0.14);
+  --accent-glow: rgba(107, 189, 69, 0.28);
+  --accent-ink: #121513;
+
+  /* Dark chrome (shell) */
+  --bg-chrome: var(--ink);
+  --bg-chrome-elevated: #1a1f1c;
+  --bg-chrome-hover: #232a26;
+  --border-chrome: rgba(241, 244, 237, 0.08);
+  --border-chrome-strong: rgba(241, 244, 237, 0.14);
+  --text-on-dark: var(--cream);
+  --text-on-dark-secondary: rgba(241, 244, 237, 0.68);
+  --text-on-dark-muted: rgba(241, 244, 237, 0.42);
+
+  /* Content */
+  --bg-primary: var(--concrete);
+  --bg-secondary: var(--concrete-2);
+  --bg-elevated: var(--plate);
+  --bg-card: var(--plate);
+  --bg-muted: var(--concrete-2);
+  --bg-dark-panel: var(--ink);
+  --bg-dark-elevated: #1a1f1c;
+  --bg-light: var(--concrete);
+  --bg-light-elevated: var(--concrete-2);
+  --bg-light-card: var(--plate);
+
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-2);
+  --text-muted: var(--ink-3);
+  --text-on-light: var(--ink);
+  --text-on-light-secondary: var(--ink-2);
+  --text-on-light-muted: var(--ink-3);
+
+  --border: var(--line);
+  --border-strong: rgba(18, 21, 19, 0.16);
+  --border-light: var(--line);
+  --border-light-strong: rgba(18, 21, 19, 0.16);
+
+  --danger: var(--flare);
+  --success: var(--accent);
+
+  /* Legacy aliases */
+  --color-bg: var(--bg-primary);
+  --color-surface: var(--bg-elevated);
+  --color-surface-raised: var(--bg-card);
+  --color-surface-hover: var(--bg-secondary);
+  --color-surface-strong: var(--bg-muted);
+  --color-field-ink: var(--ink);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-muted: var(--accent-subtle);
+  --color-accent-border: rgba(107, 189, 69, 0.4);
+  --color-chalk: var(--text-primary);
+  --color-text: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-focus: var(--accent);
+  --color-live: var(--flare);
+  --color-live-bg: rgba(232, 93, 59, 0.1);
+  --color-finished: var(--ink-3);
+  --color-finished-bg: rgba(109, 118, 111, 0.1);
+  --color-upcoming: var(--accent-hover);
+  --color-upcoming-bg: var(--accent-subtle);
+  --color-demo: #a16207;
+  --color-demo-bg: rgba(234, 179, 8, 0.12);
+  --color-signal: #d97706;
+  --color-opposition: #3d8fb5;
+  --color-pitch-turf: #3a7a36;
+  --color-pitch-turf-stripe: #458a40;
+  --color-pitch-line: rgba(255, 255, 255, 0.88);
+  --color-pitch-home: var(--accent);
+  --color-pitch-away: #5bb8e0;
+  --color-pitch-ball: var(--cream);
+  --color-pitch-event: #f59e0b;
+  --color-pitch-path: rgba(245, 158, 11, 0.92);
+
+  --font-sans: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', ui-monospace, Consolas,
+    monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 1.75rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-14: 3.5rem;
+  --space-16: 4rem;
+
+  /* Sharp plates + ReMatch cut CTAs */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --cut: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  --cut-r: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  --cut-l: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+
+  --shadow-sm: 0 1px 2px rgba(18, 21, 19, 0.04);
+  --shadow-md: 0 14px 40px rgba(18, 21, 19, 0.07);
+  --shadow-light: 0 14px 40px rgba(18, 21, 19, 0.07);
+  --shadow-chrome: 0 18px 48px rgba(0, 0, 0, 0.45);
+  --shadow-plate: 0 14px 40px rgba(18, 21, 19, 0.07);
+
+  --sidebar-width: 248px;
+  --topbar-height: 52px;
+  --content-max: 1480px;
+  --bp-tablet: 768px;
+  --bp-desktop: 1024px;
+
+  --ease-out: cubic-bezier(0.7, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 220ms;
+  --duration-slow: 400ms;
 }

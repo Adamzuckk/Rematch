@@ -223,6 +223,91 @@ describe('createApiMatchService decision analysis', () => {
     expect(matches).toHaveLength(1)
     expect(matches[0]?.id).toBe('m-1')
   })
+
+  it('GETs match intelligence through the shared API service', async () => {
+    const intelligence = {
+      matchId: 'm-1',
+      provenance: 'synthetic',
+      source: 'seeded_events_only',
+      eventCounts: { pass: 2 },
+      totalEvents: 2,
+      eventsWithCoordinates: 2,
+      alignedFrames: 1,
+      pathMetricsPresent: 1,
+      avgBallSpeedMps: 12.4,
+      avgShotSpeedMps: null,
+      avgPassDistanceM: 16.2,
+      keyMoments: [],
+      limitations: ['Synthetic data only.'],
+    }
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(intelligence))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const service = createApiMatchService('http://localhost:8000/')
+    await expect(service.getMatchIntelligence('m-1')).resolves.toEqual(intelligence)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/matches/m-1/intelligence',
+      { headers: {} },
+    )
+  })
+
+  it('maps a missing intelligence match without falling back to mock data', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          { error: { code: 'match_not_found', message: 'Match not found: m-x' } },
+          404,
+        ),
+      ),
+    )
+
+    const service = createApiMatchService('http://localhost:8000')
+    await expect(service.getMatchIntelligence('m-x')).rejects.toMatchObject({
+      name: 'MatchNotFoundError',
+      matchId: 'm-x',
+    })
+  })
+
+  it('keeps non-not-found intelligence API failures explicit', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          { error: { code: 'internal_error', message: 'Intelligence unavailable' } },
+          500,
+        ),
+      ),
+    )
+
+    const service = createApiMatchService('http://localhost:8000')
+    await expect(service.getMatchIntelligence('m-1')).rejects.toMatchObject({
+      name: 'MatchApiError',
+      status: 500,
+      code: 'internal_error',
+      message: 'Intelligence unavailable',
+    })
+  })
+
+  it('GETs filtered stored system telemetry without substituting mock values', async () => {
+    const metrics = {
+      generatedAt: '2026-10-22T10:00:00Z',
+      range: '7d', operation: 'analysis', source: 'Stored ReMatch operational telemetry.',
+      operations: { attempts: 2, succeeded: 1, failed: 1, successRatePercent: 50, averageLatencyMs: 8, p95LatencyMs: 12 },
+      verification: { checked: 3, verified: 2, partiallySupported: 1, unsupported: 0 },
+      fallbackUsage: { available: false, count: null, reason: 'No fallback path.' },
+      catalogueCoverage: { source: 'Current catalogue (synthetic data)', provenance: 'synthetic', totalEvents: 10, eligibleEvents: 6, coveragePercent: 60, description: 'Eligibility only.' },
+    }
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(metrics))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const service = createApiMatchService('http://localhost:8000')
+    await expect(service.getSystemMetrics({ range: '7d', operation: 'analysis' })).resolves.toEqual(metrics)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/system-metrics?range=7d&operation=analysis',
+      { headers: {} },
+    )
+  })
 })
 
 describe('DecisionNotFoundError typing', () => {

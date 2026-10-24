@@ -91,6 +91,25 @@ Returns `MatchDatasetInfo` for `rematch-phase8-v1` when it is seeded, otherwise 
 
 Dashboard catalogue counts and the count of pass/carry events with start/end coordinates plus shots with location coordinates (`DashboardOverviewStat[]`). All values are explicitly labelled as synthetic/demo data; the analysis-moment count is a count of coordinate-backed candidates, not a count of completed analyses or match importance.
 
+### `GET /api/v1/system-metrics`
+
+Returns measured, append-only API-operation telemetry. This endpoint never
+derives runs, latency, success rates, or verifier outcomes from synthetic match
+fixtures. Query parameters are optional:
+
+| Param | Values | Default |
+|-------|--------|---------|
+| `range` | `24h`, `7d`, `30d`, `all` | `7d` |
+| `operation` | `all`, `analysis`, `verification` | `all` |
+
+The response contains `operations` (attempts, outcome counts, success rate,
+average latency, and P95 latency), `verification` status totals, and an
+explicitly unavailable `fallbackUsage` value while the deterministic engine has
+no fallback path. `catalogueCoverage` is a separate, live calculation of
+coordinate/type eligibility in the current catalogue; it is not operational
+telemetry and carries its provenance. A fresh deployment returns zero attempts
+and `null` rate/latency values until a measured operation occurs.
+
 ---
 
 ## Decision analysis (Phase 5)

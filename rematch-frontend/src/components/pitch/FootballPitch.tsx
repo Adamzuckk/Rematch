@@ -1,21 +1,29 @@
 import { useId, type KeyboardEvent } from 'react'
-import type { MatchEvent, MatchFrame, Player, Team } from '../../types'
+import type { MatchEvent, MatchFrame, Team } from '../../types'
 import type { PitchPoint } from '../../types/coordinates'
+import type { SimBallState, SimPlayerState } from '../../lib/matchSimulation'
 import {
   getEventGeometry,
-  mapPitchPointToSvg,
+  mapPitchPointToSvgClamped,
   PITCH_VIEWBOX,
 } from '../../lib/pitch'
-import { isValidPitchPoint } from '../../types/coordinates'
 import styles from './FootballPitch.module.css'
+
+/** Optional continuous simulation overlay — overrides static frame markers when set. */
+export interface PitchSimulationView {
+  players: readonly SimPlayerState[]
+  ball: SimBallState | null
+  /** When false, hide name chips (reduced clutter / reduced motion). */
+  showLabels?: boolean
+}
 
 export interface FootballPitchProps {
   homeTeam: Team
   awayTeam: Team
   selectedEvent?: MatchEvent | null
   frame?: MatchFrame | null
-  /** Roster metadata lets frame markers show the actual shirt number. */
-  players?: readonly Player[]
+  /** Continuous simulation sample; takes precedence over frame markers. */
+  simulation?: PitchSimulationView | null
   /** Accessible name for the pitch diagram */
   label?: string
   locale?: 'en' | 'ar'
@@ -52,12 +60,48 @@ function teamSide(
   return 'unknown'
 }
 
+function shortLabel(
+  player: SimPlayerState,
+  locale: 'en' | 'ar',
+): string | null {
+  if (player.name) {
+    const parts = player.name.trim().split(/\s+/)
+    if (parts.length >= 2) {
+      const last = parts[parts.length - 1]!
+      return last.length > 10 ? `${last.slice(0, 9)}…` : last
+    }
+    return player.name.length > 12
+      ? `${player.name.slice(0, 11)}…`
+      : player.name
+  }
+  if (player.shirtNumber != null) return `#${player.shirtNumber}`
+  return locale === 'ar' ? 'لاعب' : 'Player'
+}
+
+function shouldShowLabel(
+  player: SimPlayerState,
+  totalPlayers: number,
+  showLabels: boolean,
+): boolean {
+  if (!showLabels) return false
+  if (
+    player.role === 'carrier' ||
+    player.role === 'receiver' ||
+    player.role === 'actor'
+  ) {
+    return true
+  }
+  // Avoid clutter on full-XI frames: named off-ball only when sparse.
+  if (totalPlayers > 8) return false
+  return player.name != null || player.shirtNumber != null
+}
+
 export function FootballPitch({
   homeTeam,
   awayTeam,
   selectedEvent = null,
   frame = null,
-  players: roster = [],
+  simulation = null,
   label = 'Football pitch',
   locale = 'en',
   className,
@@ -69,38 +113,43 @@ export function FootballPitch({
 }: FootballPitchProps) {
   // SVG fragment identifiers are document-global. A component-scoped ID avoids
   // one pitch borrowing another pitch's stripe pattern when two are mounted.
-  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, '')
-  const stripePatternId = `pitch-stripes-${instanceId}`
-  const turfShadeId = `pitch-shade-${instanceId}`
-  const eventArrowId = `event-arrow-${instanceId}`
+  const stripePatternId = `pitch-stripes-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
   const geometry = selectedEvent ? getEventGeometry(selectedEvent) : {}
-  const locationSvg = geometry.location ? mapPitchPointToSvg(geometry.location) : null
+  const locationSvg = geometry.location
+    ? mapPitchPointToSvgClamped(geometry.location)
+    : null
   const pathStart = geometry.path
-    ? mapPitchPointToSvg(geometry.path.start)
+    ? mapPitchPointToSvgClamped(geometry.path.start)
     : null
   const pathEnd = geometry.path
-    ? mapPitchPointToSvg(geometry.path.end)
+    ? mapPitchPointToSvgClamped(geometry.path.end)
     : null
   const selectedStart = highlightedPath
-    ? mapPitchPointToSvg(highlightedPath.start)
+    ? mapPitchPointToSvgClamped(highlightedPath.start)
     : null
   const selectedEnd = highlightedPath
-    ? mapPitchPointToSvg(highlightedPath.end)
+    ? mapPitchPointToSvgClamped(highlightedPath.end)
     : null
 
+  const simPlayers = simulation?.players ?? null
+  const showLabels = simulation?.showLabels !== false
   const framePlayers = frame?.players ?? []
   // Event, player, and ball data all share one normalized coordinate system.
-  // Invalid points are omitted; clamping would fabricate a pitch location.
-  const players = framePlayers.filter((player) => isValidPitchPoint(player.position))
-  const ballSvg = frame?.ball
-    ? mapPitchPointToSvg(frame.ball.position)
-    : null
-  const omittedFrameMarkers =
-    framePlayers.length - players.length + (frame?.ball && !ballSvg ? 1 : 0)
+  // Clamp finite upstream edge drift consistently; reject non-finite points.
+  const ballSvg = simulation
+    ? simulation.ball
+      ? mapPitchPointToSvgClamped(simulation.ball.position)
+      : null
+    : frame?.ball
+      ? mapPitchPointToSvgClamped(frame.ball.position)
+      : null
 
   const penaltyY = (H - MARK.penaltyWidth) / 2
   const goalY = (H - MARK.goalWidth) / 2
   const goalMouthY = (H - MARK.goalMouth) / 2
+  const hasPlayerLayer =
+    (simPlayers != null && simPlayers.length > 0) ||
+    (simPlayers == null && framePlayers.length > 0)
 
   return (
     <figure className={[styles.root, className ?? ''].filter(Boolean).join(' ')}>
@@ -122,25 +171,9 @@ export function FootballPitch({
             <rect width="35" height={H} className={styles.stripeA} />
             <rect x="35" width="35" height={H} className={styles.stripeB} />
           </pattern>
-          <radialGradient id={turfShadeId} cx="50%" cy="48%" r="70%">
-            <stop offset="55%" stopColor="#0b2012" stopOpacity="0" />
-            <stop offset="100%" stopColor="#061109" stopOpacity=".48" />
-          </radialGradient>
-          <marker
-            id={eventArrowId}
-            viewBox="0 0 10 10"
-            refX="8"
-            refY="5"
-            markerWidth="7"
-            markerHeight="7"
-            orient="auto-start-reverse"
-          >
-            <path d="M 1 1 L 9 5 L 1 9 z" className={styles.eventArrow} />
-          </marker>
         </defs>
 
         <rect width={W} height={H} fill={`url(#${stripePatternId})`} />
-        <rect width={W} height={H} fill={`url(#${turfShadeId})`} />
 
         {/* Boundary */}
         <rect
@@ -227,9 +260,6 @@ export function FootballPitch({
           width={10}
           height={MARK.goalMouth}
           className={styles.goal}
-          data-testid="away-goal"
-          data-goal-side="left"
-          data-team="away"
         />
         <rect
           x={W - 12}
@@ -237,9 +267,6 @@ export function FootballPitch({
           width={10}
           height={MARK.goalMouth}
           className={styles.goal}
-          data-testid="home-goal"
-          data-goal-side="right"
-          data-team="home"
         />
 
         {/* Corner arcs */}
@@ -266,26 +293,15 @@ export function FootballPitch({
 
         {/* Event path */}
         {pathStart && pathEnd ? (
-          <g
+          <line
             key={`event-path-${selectedEvent?.id ?? ''}-${pathStart.x}-${pathStart.y}-${pathEnd.x}-${pathEnd.y}`}
+            x1={pathStart.x}
+            y1={pathStart.y}
+            x2={pathEnd.x}
+            y2={pathEnd.y}
+            className={styles.eventPath}
             data-testid="event-path"
-          >
-            <line
-              x1={pathStart.x}
-              y1={pathStart.y}
-              x2={pathEnd.x}
-              y2={pathEnd.y}
-              className={styles.eventPathUnderlay}
-            />
-            <line
-              x1={pathStart.x}
-              y1={pathStart.y}
-              x2={pathEnd.x}
-              y2={pathEnd.y}
-              className={styles.eventPath}
-              markerEnd={`url(#${eventArrowId})`}
-            />
-          </g>
+          />
         ) : null}
         {selectedStart && selectedEnd ? (
           <line
@@ -306,14 +322,8 @@ export function FootballPitch({
             transform={`translate(${locationSvg.x}, ${locationSvg.y})`}
             data-testid="event-location"
           >
-            <circle r={19} className={styles.eventHalo} />
-            <g className={styles.eventToken} aria-hidden="true">
-              <circle r={11} className={styles.eventMarker} />
-              <path
-                d="M 0 -6 L 5 -2 L 3 4 L -3 4 L -5 -2 Z M -5 -2 L -9 -5 M 5 -2 L 9 -5 M 3 4 L 6 8 M -3 4 L -6 8"
-                className={styles.eventBallSeam}
-              />
-            </g>
+            <circle r={14} className={styles.eventHalo} />
+            <circle r={7} className={styles.eventMarker} />
             <title>
               {selectedEvent
                 ? `Selected ${selectedEvent.type} location`
@@ -322,90 +332,208 @@ export function FootballPitch({
           </g>
         ) : null}
 
-        {/* Player markers from frame only */}
-        {players.map((player) => {
-          const svgPoint = mapPitchPointToSvg(player.position)
-          if (!svgPoint) return null
-          const side = teamSide(player.teamId, homeTeam.id, awayTeam.id)
-          const teamLabel =
-            side === 'home'
-              ? homeTeam.name
-              : side === 'away'
-                ? awayTeam.name
-                : 'Unknown team'
-          const selectable = selectablePlayerIds.includes(player.playerId)
-          const rosterPlayer = roster.find((item) => item.id === player.playerId)
-          const shirtNumber = rosterPlayer?.shirtNumber
-          const markerProps = selectable
-            ? {
-                role: 'button' as const,
-                tabIndex: 0,
-                'aria-label': selectPlayerLabel(player.playerId),
-                'aria-pressed': selectedPlayerId === player.playerId,
-                onClick: () => onSelectPlayer?.(player.playerId),
-                onKeyDown: (event: KeyboardEvent<SVGGElement>) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    onSelectPlayer?.(player.playerId)
+        {/* Player markers: simulation sample or static frame */}
+        {simPlayers
+          ? simPlayers.map((player) => {
+              const svgPoint = mapPitchPointToSvgClamped(player.position)
+              if (!svgPoint) return null
+              const side = teamSide(player.teamId, homeTeam.id, awayTeam.id)
+              const teamLabel =
+                side === 'home'
+                  ? homeTeam.name
+                  : side === 'away'
+                    ? awayTeam.name
+                    : 'Unknown team'
+              const displayName = player.name
+              const accessibleName = displayName
+                ? `${displayName}, ${teamLabel}`
+                : player.generic
+                  ? locale === 'ar'
+                    ? `لاعب غير مسمّى، ${teamLabel}`
+                    : `Unnamed player, ${teamLabel}`
+                  : `Player ${player.playerId}, ${teamLabel}`
+              const selectable = selectablePlayerIds.includes(player.playerId)
+              const highlighted =
+                player.role === 'carrier' || player.role === 'receiver'
+              const labelText = shouldShowLabel(
+                player,
+                simPlayers.length,
+                showLabels,
+              )
+                ? shortLabel(player, locale)
+                : null
+              // Keep labels above the marker and clear of the ball when possible.
+              const labelDy =
+                ballSvg &&
+                Math.hypot(svgPoint.x - ballSvg.x, svgPoint.y - ballSvg.y) < 36
+                  ? -28
+                  : -18
+              const markerProps = selectable
+                ? {
+                    role: 'button' as const,
+                    tabIndex: 0,
+                    'aria-label': selectPlayerLabel(player.playerId),
+                    'aria-pressed': selectedPlayerId === player.playerId,
+                    onClick: () => onSelectPlayer?.(player.playerId),
+                    onKeyDown: (event: KeyboardEvent<SVGGElement>) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        onSelectPlayer?.(player.playerId)
+                      }
+                    },
                   }
-                },
-              }
-            : {}
-          return (
-            <g
-              key={`${player.playerId}-${player.teamId}`}
-              transform={`translate(${svgPoint.x}, ${svgPoint.y})`}
-              className={styles.playerMotion}
-              data-testid="player-marker"
-              data-team={side}
-              data-selectable={selectable || undefined}
-              {...markerProps}
-            >
-              <ellipse cx="0" cy="12" rx="10" ry="3.2" className={styles.playerShadow} />
-              {selectedPlayerId === player.playerId ? (
-                <circle r={17} className={styles.playerSelected} aria-hidden="true" />
-              ) : null}
-              <path
-                d="M -6 -10 L -12 -6 L -9 2 L -5 0 L -5 10 L 5 10 L 5 0 L 9 2 L 12 -6 L 6 -10 Z"
-                className={[
-                  side === 'home'
-                    ? styles.playerHome
-                    : side === 'away'
-                      ? styles.playerAway
-                      : styles.playerUnknown,
-                  selectable ? styles.playerSelectable : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-                role="img"
-                aria-label={`Player ${player.playerId}, ${teamLabel}`}
-              >
-                <title>{`Player ${player.playerId} (${teamLabel})`}</title>
-              </path>
-              {shirtNumber != null ? (
-                <text x="0" y="4" className={styles.shirtNumber} aria-hidden="true">
-                  {shirtNumber}
-                </text>
-              ) : null}
-            </g>
-          )
-        })}
+                : {}
+              return (
+                <g
+                  key={`${player.playerId}-${player.teamId}`}
+                  transform={`translate(${svgPoint.x}, ${svgPoint.y})`}
+                  data-testid="player-marker"
+                  data-team={side}
+                  data-role={player.role}
+                  data-source={player.source}
+                  data-generic={player.generic || undefined}
+                  data-selectable={selectable || undefined}
+                  {...markerProps}
+                >
+                  {highlighted ? (
+                    <circle
+                      r={16}
+                      className={
+                        player.role === 'carrier'
+                          ? styles.roleHaloCarrier
+                          : styles.roleHaloReceiver
+                      }
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                  <circle
+                    r={highlighted ? 12 : 11}
+                    className={[
+                      side === 'home'
+                        ? styles.playerHome
+                        : side === 'away'
+                          ? styles.playerAway
+                          : styles.playerUnknown,
+                      selectable ? styles.playerSelectable : '',
+                      selectedPlayerId === player.playerId
+                        ? styles.playerSelected
+                        : '',
+                      player.generic ? styles.playerGeneric : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    role="img"
+                    aria-label={accessibleName}
+                  >
+                    <title>{accessibleName}</title>
+                  </circle>
+                  {labelText ? (
+                    <g
+                      transform={`translate(0, ${labelDy})`}
+                      data-testid="player-label"
+                      pointerEvents="none"
+                    >
+                      <rect
+                        x={-28}
+                        y={-9}
+                        width={56}
+                        height={14}
+                        rx={2}
+                        className={
+                          side === 'home'
+                            ? styles.labelBgHome
+                            : side === 'away'
+                              ? styles.labelBgAway
+                              : styles.labelBgUnknown
+                        }
+                      />
+                      <text
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                        y={-1}
+                        className={styles.labelText}
+                        direction={locale === 'ar' ? 'rtl' : 'ltr'}
+                      >
+                        {labelText}
+                      </text>
+                    </g>
+                  ) : null}
+                </g>
+              )
+            })
+          : framePlayers.map((player) => {
+              const svgPoint = mapPitchPointToSvgClamped(player.position)
+              if (!svgPoint) return null
+              const side = teamSide(player.teamId, homeTeam.id, awayTeam.id)
+              const teamLabel =
+                side === 'home'
+                  ? homeTeam.name
+                  : side === 'away'
+                    ? awayTeam.name
+                    : 'Unknown team'
+              const selectable = selectablePlayerIds.includes(player.playerId)
+              const markerProps = selectable
+                ? {
+                    role: 'button' as const,
+                    tabIndex: 0,
+                    'aria-label': selectPlayerLabel(player.playerId),
+                    'aria-pressed': selectedPlayerId === player.playerId,
+                    onClick: () => onSelectPlayer?.(player.playerId),
+                    onKeyDown: (event: KeyboardEvent<SVGGElement>) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        onSelectPlayer?.(player.playerId)
+                      }
+                    },
+                  }
+                : {}
+              return (
+                <g
+                  key={`${player.playerId}-${player.teamId}`}
+                  transform={`translate(${svgPoint.x}, ${svgPoint.y})`}
+                  data-testid="player-marker"
+                  data-team={side}
+                  data-selectable={selectable || undefined}
+                  {...markerProps}
+                >
+                  <circle
+                    r={11}
+                    className={[
+                      side === 'home'
+                        ? styles.playerHome
+                        : side === 'away'
+                          ? styles.playerAway
+                          : styles.playerUnknown,
+                      selectable ? styles.playerSelectable : '',
+                      selectedPlayerId === player.playerId
+                        ? styles.playerSelected
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    role="img"
+                    aria-label={`Player ${player.playerId}, ${teamLabel}`}
+                  >
+                    <title>{`Player ${player.playerId} (${teamLabel})`}</title>
+                  </circle>
+                </g>
+              )
+            })}
 
-        {/* Ball marker from frame only */}
+        {/* Ball on top so labels/markers do not cover it */}
         {ballSvg ? (
           <g
             transform={`translate(${ballSvg.x}, ${ballSvg.y})`}
             data-testid="ball-marker"
           >
-            <ellipse cx="1.5" cy="8" rx="8" ry="2.6" className={styles.ballShadow} />
-            <g className={styles.ball} role="img" aria-label="Ball">
+            <circle
+              r={8}
+              className={styles.ball}
+              role="img"
+              aria-label="Ball"
+            >
               <title>Ball</title>
-              <circle r={8} className={styles.ballShell} />
-              <path
-                d="M 0 -4 L 3 -1 L 2 3 L -2 3 L -3 -1 Z M -3 -1 L -7 -3 M 3 -1 L 7 -3 M 2 3 L 5 6 M -2 3 L -5 6"
-                className={styles.ballSeam}
-              />
-            </g>
+            </circle>
           </g>
         ) : null}
       </svg>
@@ -423,18 +551,17 @@ export function FootballPitch({
           <span className={[styles.swatch, styles.swatchEvent].join(' ')} />
           {locale === 'ar' ? 'حدث' : 'Event'}
         </span>
-        {frame == null || (players.length === 0 && !ballSvg) ? (
+        {simulation ? (
+          <span className={styles.legendNote} data-testid="simulation-legend">
+            {locale === 'ar'
+              ? 'محاكاة من بيانات ري ماتش — ليست تتبّعًا حيًا'
+              : 'Simulated from Rematch data — not live tracking'}
+          </span>
+        ) : !hasPlayerLayer ? (
           <span className={styles.legendNote}>
             {locale === 'ar'
-              ? 'لا توجد إحداثيات إطار صالحة لهذه اللحظة'
-              : 'No valid frame coordinates for this moment'}
-          </span>
-        ) : null}
-        {omittedFrameMarkers > 0 ? (
-          <span className={styles.legendNote} role="note">
-            {locale === 'ar'
-              ? `تم إخفاء ${omittedFrameMarkers} إحداثيات إطار غير صالحة`
-              : `${omittedFrameMarkers} invalid frame coordinate${omittedFrameMarkers === 1 ? '' : 's'} hidden`}
+              ? 'لا يوجد إطار للاعبين لهذه اللحظة'
+              : 'No player frame for this moment'}
           </span>
         ) : null}
       </figcaption>

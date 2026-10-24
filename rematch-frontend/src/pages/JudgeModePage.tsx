@@ -15,21 +15,17 @@ export function JudgeModePage() {
 
   useEffect(() => {
     let cancelled = false
-    try {
-      matchService
-        .getMatches({})
-        .then((list) => {
-          if (cancelled) return
-          setMatches(Array.isArray(list) ? list : [])
-        })
-        .catch((err: unknown) => {
-          if (!cancelled) {
-            setError(err instanceof Error ? err.message : 'Failed to load matches')
-          }
-        })
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Service unavailable')
-    }
+    Promise.resolve()
+      .then(() => matchService.getMatches({}))
+      .then((items) => {
+        if (cancelled) return
+        setMatches(Array.isArray(items) ? items : [])
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load matches')
+        }
+      })
     return () => {
       cancelled = true
     }

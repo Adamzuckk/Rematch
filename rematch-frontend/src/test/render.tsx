@@ -1,8 +1,8 @@
 import { render, type RenderOptions } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
 import { MemoryRouter } from 'react-router-dom'
-import { LocaleProvider } from '../i18n/locale'
 import { PersonaProvider } from '../context/PersonaContext'
+import { LocaleProvider } from '../i18n/locale'
 
 interface ProvidersProps {
   children: ReactNode

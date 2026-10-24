@@ -291,8 +291,8 @@ def get_overview_stats(db: Session) -> list[DashboardOverviewStatSchema]:
         ),
         DashboardOverviewStatSchema(
             id="stat-coverage",
-            label="Analysis coverage",
+            label="Operational telemetry",
             value="—",
-            hint="System metrics dashboard not implemented yet",
+            hint="Recorded analysis coverage and latency are available on System Metrics",
         ),
     ]

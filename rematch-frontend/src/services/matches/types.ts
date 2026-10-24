@@ -5,9 +5,13 @@ import type {
   MatchDatasetInfo,
   MatchEvent,
   MatchFrame,
+  MatchIntelligence,
   MatchStatusFilter,
   MatchSummary,
   Player,
+  MetricsOperation,
+  MetricsRange,
+  SystemMetrics,
 } from '../../types'
 
 export interface MatchListFilters {
@@ -22,6 +26,21 @@ export interface MatchService {
 
   /** Demo overview chips when the source supplies them; otherwise empty */
   getOverviewStats(): Promise<DashboardOverviewStat[]>
+
+  /**
+   * Persisted backend telemetry. `null` means this source has no operational
+   * telemetry (for example the static synthetic mock catalogue).
+   */
+  getSystemMetrics(
+    filters?: { range?: MetricsRange; operation?: MetricsOperation },
+  ): Promise<SystemMetrics | null>
+
+  /**
+   * Backend-derived event/frame aggregates for one match. `null` means the
+   * active source intentionally does not provide intelligence data; callers
+   * must not manufacture equivalent values from static fixtures.
+   */
+  getMatchIntelligence(matchId: string): Promise<MatchIntelligence | null>
 
   getMatches(filters?: MatchListFilters): Promise<MatchSummary[]>
 

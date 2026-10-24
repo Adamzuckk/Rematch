@@ -9,7 +9,5 @@ export function resolveFrameForEvent(
   event: MatchEvent | null,
 ): MatchFrame | undefined {
   if (!event || frames.length === 0) return undefined
-  return frames.find(
-    (frame) => frame.matchId === event.matchId && frame.eventId === event.id,
-  )
+  return frames.find((frame) => frame.eventId === event.id)
 }

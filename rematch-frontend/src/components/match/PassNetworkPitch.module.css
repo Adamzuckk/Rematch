@@ -1,0 +1,109 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-5);
+  background: var(--plate);
+  box-shadow: var(--shadow-plate);
+  color: var(--ink);
+}
+
+.caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+}
+
+.teamHome,
+.teamAway {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.75rem;
+  font-size: 13px;
+  font-weight: 800;
+  font-stretch: 125%;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.teamHome {
+  background: var(--accent);
+  color: var(--accent-ink);
+  clip-path: var(--cut-r);
+}
+
+.teamAway {
+  background: var(--color-opposition);
+  color: #fff;
+  clip-path: var(--cut-l);
+}
+
+.captionText {
+  font-size: 12px;
+  font-weight: 700;
+  font-stretch: 70%;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.empty {
+  margin: 0;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--ink-3);
+  font-size: 0.88rem;
+  background: var(--concrete);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 105 / 68;
+  overflow: hidden;
+}
+
+.stripeA {
+  fill: var(--color-pitch-turf);
+}
+
+.stripeB {
+  fill: var(--color-pitch-turf-stripe);
+}
+
+.line {
+  stroke: var(--color-pitch-line);
+  stroke-width: 3;
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.spot {
+  fill: var(--color-pitch-line);
+}
+
+.edge {
+  stroke: rgba(241, 244, 237, 0.55);
+  stroke-linecap: round;
+  fill: none;
+}
+
+.node {
+  fill: var(--accent);
+  stroke: rgba(18, 21, 19, 0.45);
+  stroke-width: 2;
+}
+
+.nodeLabel {
+  fill: var(--accent-ink);
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  pointer-events: none;
+}

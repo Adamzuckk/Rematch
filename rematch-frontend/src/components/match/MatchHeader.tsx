@@ -1,4 +1,5 @@
 import type { MatchSummary } from '../../types'
+import { useLocale } from '../../i18n/locale'
 import { StatusLabel } from '../ui/StatusLabel'
 import styles from './MatchHeader.module.css'
 
@@ -7,6 +8,9 @@ export interface MatchHeaderProps {
   versusLabel?: string
   scheduledLabel?: string
   locale?: string
+  /** Compact score-first chrome for Match Centre views. */
+  compact?: boolean
+  viewBadge?: string
 }
 
 function formatKickoff(iso: string, locale: string): string {
@@ -25,16 +29,33 @@ export function MatchHeader({
   versusLabel = 'versus',
   scheduledLabel = 'Scheduled',
   locale = 'en',
+  compact = false,
+  viewBadge,
 }: MatchHeaderProps) {
+  const { t } = useLocale()
+
   return (
     <header
-      className={[styles.root, match.status === 'live' ? styles.live : '']
+      className={[
+        styles.root,
+        compact ? styles.compact : '',
+        match.status === 'live' ? styles.live : '',
+      ]
         .filter(Boolean)
         .join(' ')}
+      data-compact={compact ? 'true' : undefined}
     >
       {match.status === 'live' ? <span className={styles.liveScan} aria-hidden="true" /> : null}
       <div className={styles.top}>
-        <p className={styles.competition}>{match.competition}</p>
+        <p className={styles.competition}>
+          {t('matchCentreHeaderPrefix')} · {match.competition}
+          {viewBadge ? (
+            <>
+              {' · '}
+              <span className={styles.viewBadge}>{viewBadge}</span>
+            </>
+          ) : null}
+        </p>
         <div className={styles.badges}>
           <StatusLabel status={match.status} />
           {match.provenance === 'synthetic' ? (
@@ -84,8 +105,8 @@ export function MatchHeader({
       </div>
 
       <div className={styles.meta}>
-        <span>{formatKickoff(match.kickoffAt, locale)}</span>
-        {match.venue ? <span>{match.venue}</span> : null}
+        {!compact ? <span>{formatKickoff(match.kickoffAt, locale)}</span> : null}
+        {!compact && match.venue ? <span>{match.venue}</span> : null}
         <span className={styles.seed}>
           {match.scenarioId} · {match.provenance}
         </span>

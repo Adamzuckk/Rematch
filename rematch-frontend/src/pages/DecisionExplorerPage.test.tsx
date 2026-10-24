@@ -220,7 +220,11 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
     window.localStorage.setItem('rematch.locale', 'ar')
     renderWithProviders(<DecisionExplorerPanel analysis={analysis} />)
 
-    expect(screen.getByRole('heading', { name: STRINGS.ar.decisionTitle })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', {
+        name: `${STRINGS.ar.decisionTitle} ${STRINGS.ar.decisionTitleAccent}`,
+      }),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText(STRINGS.ar.pickPassSelect)).toBeInTheDocument()
     await waitFor(() => {
       expect(document.documentElement).toHaveAttribute('dir', 'rtl')
@@ -269,7 +273,13 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
     expect(englishNarrative.getByText(narrativeResponse.narrative.english.headline)).toBeInTheDocument()
     expect(englishNarrative.getByText('The backend returned a geometric score.')).toBeInTheDocument()
     expect(englishNarrative.getByText('Synthetic match data only.')).toBeInTheDocument()
-    expect(screen.getByText(/Narrative provenance: Synthetic data/)).toBeInTheDocument()
+    // Pipeline narrator and Ask the Agents both surface the same backend headline.
+    expect(
+      screen.getAllByText(narrativeResponse.narrative.english.headline).length,
+    ).toBeGreaterThan(0)
+    expect(screen.getByText(STRINGS.en.askAgentsTruthScope)).toBeInTheDocument()
+    expect(screen.getByTestId('ask-agents-narrative-content')).toBeInTheDocument()
+    expect(screen.getAllByText(/Narrative provenance: Synthetic data/).length).toBeGreaterThan(0)
 
     window.localStorage.setItem('rematch.locale', 'ar')
     cleanup()
@@ -291,7 +301,61 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
         ),
       ).toBeInTheDocument()
       expect(screen.getByText(STRINGS.ar.decisionPipelineVerifierNote)).toBeInTheDocument()
+      expect(
+        screen.getAllByText(narrativeResponse.narrative.arabic.headline).length,
+      ).toBeGreaterThan(0)
+      expect(screen.getByText(STRINGS.ar.askAgentsTruthScope)).toBeInTheDocument()
     })
+  })
+
+  it('offers an explicit Ask the Agents action before calling the workflow', async () => {
+    const askAgents = vi.fn()
+    renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        narrativeState={{ status: 'idle' }}
+        onAskAgents={askAgents}
+      />,
+    )
+
+    expect(screen.getByText(STRINGS.en.askAgentsDescription)).toBeInTheDocument()
+    await userEvent.setup().click(
+      screen.getByRole('button', { name: STRINGS.en.askAgentsAction }),
+    )
+    expect(askAgents).toHaveBeenCalledTimes(1)
+  })
+
+  it('labels a partial agent result only when the backend response is partial', () => {
+    const partialResponse: DecisionNarrativeResponse = {
+      ...narrativeResponse,
+      analysis: {
+        ...analysis,
+        completeness: { ...analysis.completeness, level: 'partial' },
+      },
+      verificationResults: [
+        {
+          ...narrativeResponse.verificationResults[0]!,
+          evidenceValidationStatus: 'partially_supported',
+        },
+      ],
+    }
+    renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        narrativeState={{
+          status: 'ready',
+          matchId: base.matchId,
+          eventId: base.eventId,
+          response: partialResponse,
+        }}
+      />,
+    )
+
+    expect(screen.getByText(STRINGS.en.askAgentsPartial)).toHaveAttribute(
+      'role',
+      'status',
+    )
+    expect(screen.getByText(/claim-observed-score: Partially supported/)).toBeInTheDocument()
   })
 
   it('shows narrative unavailability explicitly and lets API errors retry', async () => {

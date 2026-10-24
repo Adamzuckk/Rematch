@@ -93,7 +93,23 @@ flowchart LR
 
 **Prerequisites:** Node.js 22.23.1+, Python 3.11–3.14, and [uv](https://docs.astral.sh/uv/). The production image uses Python 3.12.
 
-### Start the API
+### One command (API + frontend)
+
+```bash
+./scripts/run-local.sh
+```
+
+This syncs dependencies, runs migrations, seeds the synthetic catalogue, then starts the API and the frontend in API mode. Press Ctrl+C to stop both.
+
+If port `8000` is already taken on your machine:
+
+```bash
+REMATCH_API_PORT=8001 ./scripts/run-local.sh
+```
+
+Optional: `REMATCH_FE_PORT`, `REMATCH_API_HOST`, `REMATCH_FE_HOST`, or `--skip-setup` to skip sync/migrate/seed.
+
+### Start the API only
 
 ```bash
 cd backend
@@ -243,7 +259,8 @@ Rematch/
 - [x] Deterministic decision engine with evidence and claim-reference verification.
 - [x] Frame-backed alternatives, bilingual deterministic narration, and API-backed journeys.
 - [x] Locked dependencies, audit automation, production docs protection, and containerized API setup.
-- [ ] Complete the Insights and System Metrics views.
+- [x] Deliver System Metrics from persisted, measured API telemetry; static mock mode deliberately reports no operational history.
+- [x] Route Insights through the shared data-service boundary with explicit mock/API, error/retry, route-change, and RTL coverage.
 - [ ] Add durable storage and a real data-ingestion pipeline.
 - [ ] Design identity, authorization, and production operations for a real deployment.
 - [ ] Evaluate any optional external AI/Foundry integration under a separate security, data-rights, and product review.
