@@ -89,6 +89,36 @@ flowchart LR
 | Data | Alembic, SQLite locally | Idempotent synthetic seeds, fictional teams, typed events, and aligned player frames. |
 | Delivery | Docker, `uv`, Azure Container Apps template | Reproducible backend image and a reviewable deployment starting point. |
 
+## Microsoft technologies used
+
+Built for the **Microsoft Inside the Game Hackathon**. Rematch runs on Azure, uses GitHub for source control and automation, and exposes its decision-analysis API to a Microsoft Foundry agent as OpenAPI tools. Each row names the product, its role in this project, and where to verify it in the repository.
+
+```mermaid
+flowchart LR
+  GH["GitHub repository"] --> GA["GitHub Actions<br/>CI · security · deploy"]
+  GA -->|"OIDC sign-in<br/>(Microsoft Entra ID)"| ACR["Azure Container Registry"]
+  ACR --> ACA["Azure Container Apps<br/>FastAPI backend"]
+  GA --> SWA["Azure Static Web Apps<br/>React frontend"]
+  SWA --> FN["Azure Functions<br/>same-origin API proxy"]
+  FN --> ACA
+  FD["Microsoft Foundry agent"] -->|"OpenAPI tools"| ACA
+```
+
+| Product | What it does in Rematch | Where to verify |
+|---|---|---|
+| <img src="rematch-frontend/src/assets/brand/microsoft-foundry.svg" alt="Microsoft Foundry" height="18" /> **Microsoft Foundry** | Hosts the Rematch agent. The agent calls the decision-analysis endpoints as OpenAPI tools and is instructed to explain only from tool output, never to invent numbers. | `docs/FOUNDRY_AGENT_INSTRUCTIONS.md`, `docs/rematch-foundry-openapi.json`, `docs/FOUNDRY_*.md` |
+| ![Azure Container Apps](https://img.shields.io/badge/Azure%20Container%20Apps-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Runs the FastAPI backend: read-only API, secret references for the bearer token, ingress and health probes. | `backend/containerapp.yaml`, `docs/AZURE_CONTAINER_APPS.md` |
+| ![Azure Container Registry](https://img.shields.io/badge/Azure%20Container%20Registry-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Stores the commit-tagged `rematch-api` image. The Container App pulls it with a system-assigned managed identity. | `.github/workflows/rematch-AutoDeployTrigger-*.yml` |
+| ![Azure Static Web Apps](https://img.shields.io/badge/Azure%20Static%20Web%20Apps-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Hosts the React frontend with single-page-app fallback routing. | `rematch-frontend/public/staticwebapp.config.json`, `.github/workflows/azure-static-web-apps-*.yml` |
+| ![Azure Functions](https://img.shields.io/badge/Azure%20Functions-0062AD?style=for-the-badge&logo=azurefunctions&logoColor=white) | Static Web Apps managed API: a same-origin proxy that injects the bearer token on the server, allows only listed routes, and bounds request size, so no secret reaches the browser. | `api/src/functions/backendProxy.js` |
+| ![Microsoft Entra ID](https://img.shields.io/badge/Microsoft%20Entra%20ID-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Passwordless deployment: GitHub Actions signs in to Azure through OIDC federation, and the Container App uses a managed identity instead of stored registry credentials. | `azure/login` step in the deploy workflow |
+| ![Azure CLI](https://img.shields.io/badge/Azure%20CLI-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Deployment pre-checks, registry login, and Container App updates inside the pipeline. | `.github/workflows/rematch-AutoDeployTrigger-*.yml` |
+| ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white) | Source control, pull requests, and the project repository. | This repository |
+| ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) | CI (backend tests; frontend tests and build), security (Python dependency audit and container vulnerability scan), and automated deployment to Azure. | `.github/workflows/ci.yml`, `security.yml`, deploy workflows |
+| ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) | The language of the entire frontend, with strict typed API contracts. | `rematch-frontend/` |
+
+> Microsoft, Azure, Microsoft Foundry, Microsoft Entra, GitHub, and TypeScript are trademarks of Microsoft Corporation or its affiliates. Logos and names appear only to identify the technologies used. Rematch is an independent hackathon submission and does not imply Microsoft endorsement.
+
 ## Run it locally
 
 **Prerequisites:** Node.js 22.23.1+, Python 3.11–3.14, and [uv](https://docs.astral.sh/uv/). The production image uses Python 3.12.
