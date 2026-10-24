@@ -831,7 +831,13 @@ export function DecisionExplorerPanel({
           </details>
         </div>
       </div>
-      <DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />
+      <DecisionAnalystChat
+        matchId={analysis.matchId}
+        eventId={analysis.eventId}
+        match={match}
+        analysis={analysis}
+        narrativeState={narrativeState}
+      />
     </article>
   )
 }

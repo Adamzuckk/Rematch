@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DecisionAnalystChat } from './DecisionAnalystChat'
 import * as matchServices from '../../services/matches'
 import { SYNTHETIC_DECISION_ANALYSES } from '../../mocks/decisionAnalysis'
-import type { DecisionNarrativeResponse } from '../../types'
+import type { DecisionAnalysis, DecisionNarrativeResponse } from '../../types'
 import { STRINGS } from '../../i18n/strings'
 import { renderWithProviders } from '../../test/render'
 
@@ -15,24 +15,53 @@ afterEach(() => {
   window.localStorage.setItem('rematch.locale', 'en')
 })
 
-const analysis = SYNTHETIC_DECISION_ANALYSES[
-  'm-northgate-riverside-2401::evt-ng-carry-64'
-]!
+const fixture = SYNTHETIC_DECISION_ANALYSES['m-northgate-riverside-2401::evt-ng-carry-64']!
+const analysis: DecisionAnalysis = {
+  ...fixture,
+  provenance: 'api',
+  observed: {
+    ...fixture.observed,
+    compositeScore: 14.125,
+    metrics: [{ name: 'progressive_distance', status: 'available', value: 4.125, unit: 'pitch_percent', formula: 'returned by backend', inputs: {} }],
+  },
+  completeness: {
+    ...fixture.completeness,
+    hasAlignedFrame: true,
+    teammatePositionsInFrame: 10,
+    opponentPositionsInFrame: 9,
+    alternativeCount: 2,
+  },
+  alternatives: [
+    { actionId: 'alt-one', kind: 'hypothetical_pass', label: 'Alternative One', start: null, end: null, targetPlayerId: 'player-one', metrics: [], compositeScore: 18.75, rankable: true, limitations: [] },
+    { actionId: 'alt-two', kind: 'hypothetical_pass', label: 'Alternative Two', start: null, end: null, targetPlayerId: 'player-two', metrics: [], compositeScore: 16.4, rankable: true, limitations: [] },
+  ],
+  ranking: [
+    { rank: 1, actionId: 'alt-one', kind: 'hypothetical_pass', label: 'Alternative One', compositeScore: 18.75, targetPlayerId: 'player-one', rankable: true },
+    { rank: 2, actionId: 'alt-two', kind: 'hypothetical_pass', label: 'Alternative Two', compositeScore: 16.4, targetPlayerId: 'player-two', rankable: true },
+    { rank: 3, actionId: analysisObservedId(fixture), kind: fixture.observed.kind, label: fixture.observed.label, compositeScore: 14.125, targetPlayerId: null, rankable: true },
+  ],
+  context: { ...fixture.context, playerName: 'API Player', minute: 64 },
+}
+
+function analysisObservedId(value: DecisionAnalysis): string {
+  return value.observed.actionId
+}
 
 const narrativeResponse: DecisionNarrativeResponse = {
   matchId: analysis.matchId,
   eventId: analysis.eventId,
-  provenance: analysis.provenance,
+  provenance: 'api',
   analysis,
   verificationResults: [
     {
-      claimId: 'claim-1',
-      submittedStatement: 'Evidence statement',
-      evidenceValidationStatus: 'verified',
-      claimSupportStatus: 'not_assessed',
-      reason: 'Reference matched',
-      evidence: [],
-      limitations: [],
+      claimId: 'claim-1', submittedStatement: 'Evidence statement', evidenceValidationStatus: 'verified',
+      claimSupportStatus: 'not_assessed', reason: 'Reference matched', evidence: [], limitations: [],
+      validationMethod: 'match_event_evidence_catalog_v1',
+      validationScope: 'evidence_reference_membership_and_registered_calculation_consistency',
+    },
+    {
+      claimId: 'claim-2', submittedStatement: 'Another statement', evidenceValidationStatus: 'unsupported',
+      claimSupportStatus: 'not_assessed', reason: 'No registered reference', evidence: [], limitations: [],
       validationMethod: 'match_event_evidence_catalog_v1',
       validationScope: 'evidence_reference_membership_and_registered_calculation_consistency',
     },
@@ -40,7 +69,7 @@ const narrativeResponse: DecisionNarrativeResponse = {
   narrative: {
     matchId: analysis.matchId,
     eventId: analysis.eventId,
-    provenance: analysis.provenance,
+    provenance: 'api',
     english: {
       headline: 'Backend decision summary',
       keyObservations: ['Observed action comes from the analysis response.'],
@@ -55,67 +84,127 @@ const narrativeResponse: DecisionNarrativeResponse = {
 }
 
 describe('DecisionAnalystChat', () => {
-  beforeEach(() => {
-    vi.stubEnv('VITE_MATCH_DATA_SOURCE', 'api')
+  beforeEach(() => vi.stubEnv('VITE_MATCH_DATA_SOURCE', 'api'))
+
+  async function openChat(user = userEvent.setup()) {
+    renderWithProviders(<DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />)
+    await user.click(screen.getByRole('button', { name: STRINGS.en.analystOpen }))
+    return user
+  }
+
+  async function askTyped(user: ReturnType<typeof userEvent.setup>, text: string) {
+    await user.type(screen.getByRole('textbox'), text)
+    const send = screen.getAllByRole('button').find((button) =>
+      [STRINGS.en.analystSend, STRINGS.ar.analystSend].includes(button.textContent?.trim() ?? ''),
+    )
+    if (!send) throw new Error('Send button was not found')
+    await user.click(send)
+  }
+
+  it('answers score and metric questions from the API response and caches analysis for follow-ups', async () => {
+    const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const user = await openChat()
+    await askTyped(user, 'show the observed score and metrics')
+    expect(await screen.findByText(/14\.125/)).toBeInTheDocument()
+    expect(screen.getByText(/4\.125 pitch_percent/)).toBeInTheDocument()
+    expect(screen.getByText(/Geometric scores are not probabilities/)).toBeInTheDocument()
+    await askTyped(user, 'what was the score?')
+    await waitFor(() => expect(getAnalysis).toHaveBeenCalledTimes(1))
   })
 
-  it('answers ranking questions with API analysis values only', async () => {
-    const getAnalysis = vi
-      .spyOn(matchServices.matchService, 'getDecisionAnalysis')
-      .mockResolvedValue(analysis)
-    const getNarrative = vi.spyOn(matchServices.matchService, 'getDecisionNarrative')
+  it('answers what ranked higher using backend ranks and scores', async () => {
+    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const user = await openChat()
+    await askTyped(user, 'what ranked higher than the observed pass?')
+    expect(await screen.findByText(/#1 Alternative One/)).toBeInTheDocument()
+    expect(screen.getByText(/18\.75/)).toBeInTheDocument()
+  })
+
+  it('lists the requested alternatives from the analysis payload', async () => {
+    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const user = await openChat()
+    await askTyped(user, 'how many alternatives? show top 2')
+    expect(await screen.findByText(/Available alternatives \(2\)/)).toBeInTheDocument()
+    expect(screen.getByText(/#1 Alternative One/)).toBeInTheDocument()
+    expect(screen.getByText(/#2 Alternative Two/)).toBeInTheDocument()
+  })
+
+  it('answers player and frame questions from completeness fields', async () => {
+    const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const user = await openChat()
+    await askTyped(user, 'how many players here?')
+    expect(await screen.findByText(/10/)).toBeInTheDocument()
+    expect(screen.getByText(/9/)).toBeInTheDocument()
+    expect(screen.getByText(/Alternative count: 2/)).toBeInTheDocument()
+    expect(screen.getByText(/Aligned frame available: Yes/)).toBeInTheDocument()
+    await askTyped(user, 'how many teammates in the frame?')
+    expect(await screen.findAllByText(/Alternative count: 2/)).toHaveLength(2)
+    expect(getAnalysis).toHaveBeenCalledTimes(1)
+  })
+
+  it('uses verificationResults counts and explains not_assessed', async () => {
+    const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const getNarrative = vi.spyOn(matchServices.matchService, 'getDecisionNarrative').mockResolvedValue(narrativeResponse)
+    const user = await openChat()
+    await user.click(screen.getByRole('button', { name: STRINGS.en.analystChipVerification }))
+    expect(await screen.findByText(/claimSupportStatus is not_assessed/)).toBeInTheDocument()
+    expect(screen.getByText(/Verification results: 2/)).toBeInTheDocument()
+    await askTyped(user, 'are the evidence claims true?')
+    await waitFor(() => expect(getAnalysis).toHaveBeenCalledTimes(1))
+    expect(getNarrative).toHaveBeenCalledTimes(1)
+  })
+
+  it('uses the locale-specific backend narrative and reuses it for follow-up verification', async () => {
+    window.localStorage.setItem('rematch.locale', 'ar')
+    const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const getNarrative = vi.spyOn(matchServices.matchService, 'getDecisionNarrative').mockResolvedValue(narrativeResponse)
+    renderWithProviders(<DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />)
     const user = userEvent.setup()
-    renderWithProviders(
-      <DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />,
-    )
+    await user.click(screen.getByRole('button', { name: STRINGS.ar.analystOpen }))
+    await user.click(screen.getByRole('button', { name: STRINGS.ar.analystChipSummary }))
+    expect(await screen.findByText(/ملخص القرار من الخادم/)).toBeInTheDocument()
+    await askTyped(user, 'نتائج التحقق لهذه اللحظة')
+    expect(await screen.findByText(/claimSupportStatus هو not_assessed/)).toBeInTheDocument()
+    expect(getAnalysis).toHaveBeenCalledTimes(1)
+    expect(getNarrative).toHaveBeenCalledTimes(1)
+  })
 
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystOpen }))
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystChipRanking }))
+  it('shows help and chips for unknown questions without false citations or API calls', async () => {
+    const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis')
+    const user = await openChat()
+    await askTyped(user, 'tell me a joke about football')
+    expect(await screen.findByText(STRINGS.en.analystHelp)).toBeInTheDocument()
+    expect(getAnalysis).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: STRINGS.en.analystChipFrame })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: STRINGS.en.analystCitation })).not.toBeInTheDocument()
+  })
 
-    const expectedScore = String(analysis.observed.compositeScore)
-    await waitFor(() => {
-      expect(screen.getByText(new RegExp(expectedScore.replace('.', '\\.')))).toBeInTheDocument()
+  it('keeps limitations short and does not merge duplicate narrative limitations', async () => {
+    const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue({
+      ...analysis,
+      limitations: ['Synthetic demo data.', 'Synthetic demo data.', 'No aligned frame.', 'Geometric scores are not probability.'],
     })
-    expect(getAnalysis).toHaveBeenCalledWith(analysis.matchId, analysis.eventId)
+    const getNarrative = vi.spyOn(matchServices.matchService, 'getDecisionNarrative')
+    const user = await openChat()
+    await askTyped(user, 'what are the limitations?')
+    expect(await screen.findByText(/Limitations returned for this decision/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Synthetic demo data/)).toHaveLength(1)
+    expect(getAnalysis).toHaveBeenCalledTimes(1)
     expect(getNarrative).not.toHaveBeenCalled()
   })
 
-  it('loads the composed narrative for summary and verification questions', async () => {
-    const getAnalysis = vi
-      .spyOn(matchServices.matchService, 'getDecisionAnalysis')
-      .mockResolvedValue(analysis)
-    const getNarrative = vi
-      .spyOn(matchServices.matchService, 'getDecisionNarrative')
-      .mockResolvedValue(narrativeResponse)
-    const user = userEvent.setup()
-    renderWithProviders(
-      <DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystOpen }))
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystChipSummary }))
-    expect(await screen.findByText(/Backend decision summary/)).toBeInTheDocument()
-    expect(getNarrative).toHaveBeenCalledWith(analysis.matchId, analysis.eventId)
-
-    const input = screen.getByRole('textbox', { name: STRINGS.en.analystPlaceholder })
-    await user.type(input, 'verification results for this moment')
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystSend }))
-    expect(await screen.findByText(/claimSupportStatus is not_assessed/)).toBeInTheDocument()
-    expect(getAnalysis).toHaveBeenCalledTimes(2)
-    expect(getNarrative).toHaveBeenCalledTimes(2)
+  it('answers the event context only with fields returned by analysis', async () => {
+    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const user = await openChat()
+    await askTyped(user, 'who was the player and what minute was this event?')
+    expect(await screen.findByText(/API Player/)).toBeInTheDocument()
+    expect(screen.getByText(/64/)).toBeInTheDocument()
   })
 
   it('shows a friendly error without rendering service error details', async () => {
-    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockRejectedValue(
-      new Error('Authorization: Bearer do-not-render-this'),
-    )
-    const user = userEvent.setup()
-    renderWithProviders(
-      <DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />,
-    )
-
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystOpen }))
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystChipRanking }))
+    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockRejectedValue(new Error('Authorization: Bearer do-not-render-this'))
+    const user = await openChat()
+    await askTyped(user, 'what ranked higher?')
     expect(await screen.findByText(STRINGS.en.analystError)).toBeInTheDocument()
     expect(screen.queryByText(/do-not-render-this/)).not.toBeInTheDocument()
   })
