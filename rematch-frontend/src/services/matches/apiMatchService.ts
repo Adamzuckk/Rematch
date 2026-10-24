@@ -2,6 +2,7 @@ import type {
   DashboardOverviewStat,
   DecisionAnalysis,
   DecisionNarrativeResponse,
+  MatchContext,
   MatchDatasetInfo,
   MatchEvent,
   MatchFrame,
@@ -10,7 +11,9 @@ import type {
   Player,
   MetricsOperation,
   MetricsRange,
+  StartMatchResponse,
   SystemMetrics,
+  TeamFormResult,
 } from '../../types'
 import {
   DecisionInsufficientEvidenceError,
@@ -280,6 +283,56 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
             matchId,
             eventId,
           )
+        }
+        throw error
+      }
+    },
+
+    async getMatchContext(matchId) {
+      try {
+        return await getJson<MatchContext>(
+          `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/context`,
+        )
+      } catch (error) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'match_not_found')
+        ) {
+          throw new MatchNotFoundError(matchId)
+        }
+        throw error
+      }
+    },
+
+    async getTeamForm(teamId) {
+      try {
+        return await getJson<TeamFormResult[]>(
+          `${API_PREFIX}/matches/teams/${encodeURIComponent(teamId)}/form`,
+        )
+      } catch (error) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'team_not_found')
+        ) {
+          return []
+        }
+        throw error
+      }
+    },
+
+    async startMatch(matchId) {
+      try {
+        const { body } = await request<StartMatchResponse>(
+          `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/start`,
+          { method: 'POST' },
+        )
+        return body
+      } catch (error) {
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'match_not_found')
+        ) {
+          throw new MatchNotFoundError(matchId)
         }
         throw error
       }

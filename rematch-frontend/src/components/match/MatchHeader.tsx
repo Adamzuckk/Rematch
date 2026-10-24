@@ -107,6 +107,23 @@ export function MatchHeader({
       <div className={styles.meta}>
         {!compact ? <span>{formatKickoff(match.kickoffAt, locale)}</span> : null}
         {!compact && match.venue ? <span>{match.venue}</span> : null}
+        {!compact && match.homeTeam.coachName ? (
+          <span>
+            {match.homeTeam.shortName ?? match.homeTeam.name}:{' '}
+            {match.homeTeam.coachName}
+          </span>
+        ) : null}
+        {!compact && match.awayTeam.coachName ? (
+          <span>
+            {match.awayTeam.shortName ?? match.awayTeam.name}:{' '}
+            {match.awayTeam.coachName}
+          </span>
+        ) : null}
+        {match.homeFormation && match.awayFormation ? (
+          <span>
+            {match.homeFormation} · {match.awayFormation}
+          </span>
+        ) : null}
         <span className={styles.seed}>
           {match.scenarioId} · {match.provenance}
         </span>

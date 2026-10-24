@@ -235,6 +235,13 @@
   flex-shrink: 0;
 }
 
+.startError {
+  margin: var(--space-2) 0 0;
+  width: 100%;
+  color: var(--flare, #c2410c);
+  font-size: 0.8rem;
+}
+
 .cta {
   min-height: 36px;
   padding: 8px 16px;

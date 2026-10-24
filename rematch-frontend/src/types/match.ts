@@ -31,6 +31,12 @@ export interface MatchSummary {
   provenance: DataProvenance
   /** Scenario / seed identifier that produced this fixture */
   scenarioId: string
+  homeFormation?: string
+  awayFormation?: string
+  /** Real-world seconds covering 0–90' for live / startable fixtures */
+  liveRealDurationSeconds?: number
+  /** True when the fixture can be started via POST /matches/{id}/start */
+  canStart?: boolean
 }
 
 export interface DashboardOverviewStat {

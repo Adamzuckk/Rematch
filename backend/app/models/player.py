@@ -27,6 +27,8 @@ class Player(Base):
     )
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     shirt_number: Mapped[int | None] = mapped_column(Integer)
+    role: Mapped[str | None] = mapped_column(String(16))
+    position_slot: Mapped[str | None] = mapped_column(String(16))
     provenance: Mapped[str] = mapped_column(String(32), nullable=False, default="synthetic")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

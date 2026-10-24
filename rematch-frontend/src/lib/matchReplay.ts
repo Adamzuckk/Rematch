@@ -42,6 +42,18 @@ export interface ScoreRaceSeries {
  */
 export function isHighlightEvent(event: MatchEvent): boolean {
   if (event.type === 'shot') return true
+  if (
+    event.type === 'foul' ||
+    event.type === 'yellow_card' ||
+    event.type === 'red_card' ||
+    event.type === 'substitution' ||
+    event.type === 'offside' ||
+    event.type === 'counterattack' ||
+    event.type === 'reverse_attack' ||
+    event.type === 'counter_press'
+  ) {
+    return true
+  }
   if (isDecisionCandidate(event)) return true
   return false
 }

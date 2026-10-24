@@ -13,7 +13,22 @@ export type {
   TackleEvent,
   PressureEvent,
   PossessionChangeEvent,
+  FoulEvent,
+  YellowCardEvent,
+  RedCardEvent,
+  SubstitutionEvent,
+  OffsideEvent,
+  CounterattackEvent,
+  ReverseAttackEvent,
+  CounterPressEvent,
 } from './event'
+export type {
+  TeamFormResult,
+  PlayerMatchStats,
+  MatchContext,
+  StartMatchResponse,
+  TeamDetail,
+} from './enrichment'
 export type { MatchFrame, PlayerFrame, BallFrame } from './frame'
 export type {
   MatchStatus,

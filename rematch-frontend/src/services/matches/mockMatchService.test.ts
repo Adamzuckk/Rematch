@@ -34,13 +34,13 @@ describe('filterSyntheticMatches', () => {
   it('filters each match status', () => {
     expect(
       filterSyntheticMatches(SYNTHETIC_MATCHES, { status: 'live' }),
-    ).toHaveLength(2)
+    ).toHaveLength(3)
     expect(
       filterSyntheticMatches(SYNTHETIC_MATCHES, { status: 'finished' }),
     ).toHaveLength(2)
     expect(
       filterSyntheticMatches(SYNTHETIC_MATCHES, { status: 'upcoming' }),
-    ).toHaveLength(2)
+    ).toHaveLength(1)
     expect(
       filterSyntheticMatches(SYNTHETIC_MATCHES, { status: 'all' }),
     ).toHaveLength(SYNTHETIC_MATCHES.length)

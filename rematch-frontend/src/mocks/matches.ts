@@ -3,8 +3,8 @@ import { SYNTHETIC_PROVENANCE, SYNTHETIC_SCENARIO_ID } from './scenario'
 import { SYNTHETIC_TEAMS } from './teams'
 
 /**
- * Deterministic match catalogue for rematch-phase2-v1.
- * Same order and IDs every time — do not shuffle or invent extra stats.
+ * Deterministic match catalogue aligned with the rich 6-match simulation:
+ * 3 live (independent 3-minute clocks), 2 finished, 1 upcoming (start on request).
  */
 export const SYNTHETIC_MATCHES: MatchSummary[] = [
   {
@@ -14,11 +14,15 @@ export const SYNTHETIC_MATCHES: MatchSummary[] = [
     awayTeam: SYNTHETIC_TEAMS.riverside,
     status: 'live',
     kickoffAt: '2026-10-18T18:00:00.000Z',
-    score: { home: 1, away: 1 },
+    score: { home: 2, away: 1 },
     minute: 67,
     venue: 'Northgate Arena',
     provenance: SYNTHETIC_PROVENANCE,
     scenarioId: SYNTHETIC_SCENARIO_ID,
+    homeFormation: '4-3-3',
+    awayFormation: '4-2-3-1',
+    liveRealDurationSeconds: 180,
+    canStart: false,
   },
   {
     id: 'm-harbor-eastbridge-2402',
@@ -27,11 +31,32 @@ export const SYNTHETIC_MATCHES: MatchSummary[] = [
     awayTeam: SYNTHETIC_TEAMS.eastbridge,
     status: 'live',
     kickoffAt: '2026-10-18T19:15:00.000Z',
-    score: { home: 2, away: 0 },
+    score: { home: 1, away: 0 },
     minute: 34,
     venue: 'Harbor Docklands',
     provenance: SYNTHETIC_PROVENANCE,
     scenarioId: SYNTHETIC_SCENARIO_ID,
+    homeFormation: '4-3-3',
+    awayFormation: '4-2-3-1',
+    liveRealDurationSeconds: 180,
+    canStart: false,
+  },
+  {
+    id: 'm-westfield-portside-2406',
+    competition: 'Metro Premier Cup',
+    homeTeam: SYNTHETIC_TEAMS.westfield,
+    awayTeam: SYNTHETIC_TEAMS.portside,
+    status: 'live',
+    kickoffAt: '2026-10-21T19:45:00.000Z',
+    score: { home: 0, away: 1 },
+    minute: 12,
+    venue: 'Westfield Terrace',
+    provenance: SYNTHETIC_PROVENANCE,
+    scenarioId: SYNTHETIC_SCENARIO_ID,
+    homeFormation: '4-3-3',
+    awayFormation: '4-2-3-1',
+    liveRealDurationSeconds: 180,
+    canStart: false,
   },
   {
     id: 'm-oakwood-silvermere-2403',
@@ -44,6 +69,9 @@ export const SYNTHETIC_MATCHES: MatchSummary[] = [
     venue: 'Oakwood Park',
     provenance: SYNTHETIC_PROVENANCE,
     scenarioId: SYNTHETIC_SCENARIO_ID,
+    homeFormation: '4-3-3',
+    awayFormation: '4-2-3-1',
+    canStart: false,
   },
   {
     id: 'm-crestvale-milltown-2404',
@@ -52,10 +80,13 @@ export const SYNTHETIC_MATCHES: MatchSummary[] = [
     awayTeam: SYNTHETIC_TEAMS.milltown,
     status: 'finished',
     kickoffAt: '2026-10-16T20:00:00.000Z',
-    score: { home: 0, away: 0 },
+    score: { home: 1, away: 1 },
     venue: 'Crestvale Ground',
     provenance: SYNTHETIC_PROVENANCE,
     scenarioId: SYNTHETIC_SCENARIO_ID,
+    homeFormation: '4-3-3',
+    awayFormation: '4-2-3-1',
+    canStart: false,
   },
   {
     id: 'm-lakeside-ironford-2405',
@@ -67,17 +98,10 @@ export const SYNTHETIC_MATCHES: MatchSummary[] = [
     venue: 'Lakeside Basin',
     provenance: SYNTHETIC_PROVENANCE,
     scenarioId: SYNTHETIC_SCENARIO_ID,
-  },
-  {
-    id: 'm-westfield-portside-2406',
-    competition: 'Metro Premier Cup',
-    homeTeam: SYNTHETIC_TEAMS.westfield,
-    awayTeam: SYNTHETIC_TEAMS.portside,
-    status: 'upcoming',
-    kickoffAt: '2026-10-21T19:45:00.000Z',
-    venue: 'Westfield Terrace',
-    provenance: SYNTHETIC_PROVENANCE,
-    scenarioId: SYNTHETIC_SCENARIO_ID,
+    homeFormation: '4-3-3',
+    awayFormation: '4-2-3-1',
+    liveRealDurationSeconds: 180,
+    canStart: true,
   },
 ]
 

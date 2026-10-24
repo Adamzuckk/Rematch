@@ -9,15 +9,93 @@ import {
   getSyntheticEventsForMatch,
   getSyntheticFramesForMatch,
 } from '../../mocks'
-import type { MatchSummary, Player } from '../../types'
+import type {
+  MatchContext,
+  MatchSummary,
+  Player,
+  StartMatchResponse,
+  TeamFormResult,
+} from '../../types'
 import {
   DecisionInsufficientEvidenceError,
   DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
+  MatchApiError,
   MatchNotFoundError,
   type MatchListFilters,
   type MatchService,
 } from './types'
+
+const MOCK_FORM: TeamFormResult[] = [
+  {
+    id: 'mock-form-1',
+    teamId: 'team-placeholder',
+    playedAt: '2026-09-20T15:00:00.000Z',
+    opponentName: 'Ashford Town',
+    isHome: true,
+    goalsFor: 2,
+    goalsAgainst: 1,
+    result: 'W',
+    competition: 'Metro Premier Cup',
+    provenance: 'synthetic',
+  },
+  {
+    id: 'mock-form-2',
+    teamId: 'team-placeholder',
+    playedAt: '2026-09-13T15:00:00.000Z',
+    opponentName: 'Bramley United',
+    isHome: false,
+    goalsFor: 1,
+    goalsAgainst: 1,
+    result: 'D',
+    competition: 'Metro Premier Cup',
+    provenance: 'synthetic',
+  },
+  {
+    id: 'mock-form-3',
+    teamId: 'team-placeholder',
+    playedAt: '2026-09-06T15:00:00.000Z',
+    opponentName: 'Cedar Hill',
+    isHome: true,
+    goalsFor: 0,
+    goalsAgainst: 2,
+    result: 'L',
+    competition: 'Coastal League',
+    provenance: 'synthetic',
+  },
+  {
+    id: 'mock-form-4',
+    teamId: 'team-placeholder',
+    playedAt: '2026-08-30T15:00:00.000Z',
+    opponentName: 'Dunmere Athletic',
+    isHome: false,
+    goalsFor: 3,
+    goalsAgainst: 0,
+    result: 'W',
+    competition: 'Northern Circuit',
+    provenance: 'synthetic',
+  },
+  {
+    id: 'mock-form-5',
+    teamId: 'team-placeholder',
+    playedAt: '2026-08-23T15:00:00.000Z',
+    opponentName: 'Elmwood Rovers',
+    isHome: true,
+    goalsFor: 1,
+    goalsAgainst: 0,
+    result: 'W',
+    competition: 'Metro Premier Cup',
+    provenance: 'synthetic',
+  },
+]
+
+function formForTeam(teamId: string): TeamFormResult[] {
+  return MOCK_FORM.map((row, index) => ({
+    ...row,
+    id: `form-${teamId}-${index + 1}`,
+    teamId,
+  }))
+}
 
 function normalize(value: string): string {
   return value.trim().toLowerCase()
@@ -164,5 +242,41 @@ export const mockMatchService: MatchService = {
       matchId,
       eventId,
     )
+  },
+
+  async getMatchContext(matchId) {
+    const match = requireMatch(matchId)
+    const players = getSyntheticPlayersForMatch(matchId)
+    return {
+      match,
+      homeCoachName: match.homeTeam.coachName ?? null,
+      awayCoachName: match.awayTeam.coachName ?? null,
+      homeForm: formForTeam(match.homeTeam.id),
+      awayForm: formForTeam(match.awayTeam.id),
+      playerStats: [],
+      homePlayers: players.filter((p) => p.teamId === match.homeTeam.id),
+      awayPlayers: players.filter((p) => p.teamId === match.awayTeam.id),
+    } satisfies MatchContext
+  },
+
+  async getTeamForm(teamId) {
+    return formForTeam(teamId)
+  },
+
+  async startMatch(matchId) {
+    const match = requireMatch(matchId)
+    if (match.status !== 'upcoming' || !match.canStart) {
+      throw new MatchApiError(
+        `Match ${matchId} cannot be started (status=${match.status})`,
+        409,
+        'match_not_startable',
+      )
+    }
+    match.status = 'live'
+    match.minute = 0
+    match.score = { home: 0, away: 0 }
+    match.canStart = false
+    match.liveRealDurationSeconds = 180
+    return { match, started: true } satisfies StartMatchResponse
   },
 }

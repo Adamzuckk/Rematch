@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { useLocale } from '../i18n/locale'
+import { matchService, MatchApiError } from '../services/matches'
 import type { MatchSummary } from '../types'
 import { Button } from './ui/Button'
 import { StatusLabel } from './ui/StatusLabel'
@@ -6,6 +8,7 @@ import styles from './MatchCard.module.css'
 
 interface MatchCardProps {
   match: MatchSummary
+  onMatchUpdated?: (match: MatchSummary) => void
 }
 
 function formatKickoff(iso: string, locale: string): string {
@@ -19,8 +22,10 @@ function formatKickoff(iso: string, locale: string): string {
   }
 }
 
-export function MatchCard({ match }: MatchCardProps) {
+export function MatchCard({ match, onMatchUpdated }: MatchCardProps) {
   const { t, locale } = useLocale()
+  const [starting, setStarting] = useState(false)
+  const [startError, setStartError] = useState<string | null>(null)
   const analysisPath = `/matches/${match.id}`
   const insightsPath = `/matches/${match.id}/insights`
   const homeName = match.homeTeam.name
@@ -36,7 +41,29 @@ export function MatchCard({ match }: MatchCardProps) {
     match.competition,
     match.venue,
     formatKickoff(match.kickoffAt, locale),
+    match.homeTeam.coachName && match.awayTeam.coachName
+      ? `${match.homeTeam.coachName} · ${match.awayTeam.coachName}`
+      : null,
   ].filter(Boolean)
+
+  async function handleStart() {
+    setStarting(true)
+    setStartError(null)
+    try {
+      const result = await matchService.startMatch(match.id)
+      onMatchUpdated?.(result.match)
+    } catch (cause) {
+      const message =
+        cause instanceof MatchApiError
+          ? cause.message
+          : cause instanceof Error
+            ? cause.message
+            : t('startMatchError')
+      setStartError(message)
+    } finally {
+      setStarting(false)
+    }
+  }
 
   return (
     <article
@@ -88,13 +115,25 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
 
         <div className={styles.actions}>
-          <Button variant="primary" to={analysisPath} className={styles.cta}>
-            {t('analyseMatch')}
-          </Button>
+          {match.canStart && match.status === 'upcoming' ? (
+            <Button
+              variant="primary"
+              className={styles.cta}
+              onClick={() => void handleStart()}
+              disabled={starting}
+            >
+              {starting ? t('startingMatch') : t('startMatch')}
+            </Button>
+          ) : (
+            <Button variant="primary" to={analysisPath} className={styles.cta}>
+              {t('analyseMatch')}
+            </Button>
+          )}
           <Button variant="secondary" to={insightsPath} className={styles.secondaryCta}>
             {t('insights')}
           </Button>
         </div>
+        {startError ? <p className={styles.startError}>{startError}</p> : null}
       </div>
     </article>
   )

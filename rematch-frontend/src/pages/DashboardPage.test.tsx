@@ -49,6 +49,7 @@ describe('DashboardPage', () => {
     await user.click(screen.getByRole('button', { name: STRINGS.en.filterLive }))
     expect(await screen.findByText(/Northgate FC/i)).toBeInTheDocument()
     expect(screen.getByText(/Harbor Athletic/i)).toBeInTheDocument()
+    expect(screen.getByText(/Westfield Borough/i)).toBeInTheDocument()
     expect(screen.queryByText(/Oakwood Wanderers/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Lakeside Town/i)).not.toBeInTheDocument()
 
@@ -63,7 +64,7 @@ describe('DashboardPage', () => {
       screen.getByRole('button', { name: STRINGS.en.filterUpcoming }),
     )
     expect(await screen.findByText(/Lakeside Town/i)).toBeInTheDocument()
-    expect(screen.getByText(/Westfield Borough/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Westfield Borough/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Oakwood Wanderers/i)).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: STRINGS.en.filterAll }))

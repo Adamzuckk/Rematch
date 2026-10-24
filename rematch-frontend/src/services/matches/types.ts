@@ -2,6 +2,7 @@ import type {
   DashboardOverviewStat,
   DecisionAnalysis,
   DecisionNarrativeResponse,
+  MatchContext,
   MatchDatasetInfo,
   MatchEvent,
   MatchFrame,
@@ -11,7 +12,9 @@ import type {
   Player,
   MetricsOperation,
   MetricsRange,
+  StartMatchResponse,
   SystemMetrics,
+  TeamFormResult,
 } from '../../types'
 
 export interface MatchListFilters {
@@ -85,6 +88,21 @@ export interface MatchService {
     matchId: string,
     eventId: string,
   ): Promise<DecisionNarrativeResponse>
+
+  /**
+   * Coaches, 5-match form, squads, and player stats. Returns null when the
+   * active source does not provide enrichment (static mock catalogue).
+   */
+  getMatchContext(matchId: string): Promise<MatchContext | null>
+
+  /** Recent form rows for one team. Empty when unknown / unavailable. */
+  getTeamForm(teamId: string): Promise<TeamFormResult[]>
+
+  /**
+   * Start an upcoming fixture on request. Throws MatchApiError 409 when the
+   * match is not startable. Mock mode mutates the in-memory catalogue.
+   */
+  startMatch(matchId: string): Promise<StartMatchResponse>
 }
 
 export class MatchNotFoundError extends Error {

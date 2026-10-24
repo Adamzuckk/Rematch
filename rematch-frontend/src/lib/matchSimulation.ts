@@ -187,9 +187,22 @@ function buildEventDerivedPlayers(
   } else if (
     event.type === 'shot' ||
     event.type === 'tackle' ||
-    event.type === 'pressure'
+    event.type === 'pressure' ||
+    event.type === 'foul' ||
+    event.type === 'yellow_card' ||
+    event.type === 'red_card' ||
+    event.type === 'offside' ||
+    event.type === 'counter_press' ||
+    event.type === 'substitution'
   ) {
-    push(roles.actorId, event.teamId, event.location ?? null, 'actor')
+    const location =
+      'location' in event ? (event.location ?? null) : null
+    push(roles.actorId, event.teamId, location, 'actor')
+  } else if (
+    event.type === 'counterattack' ||
+    event.type === 'reverse_attack'
+  ) {
+    push(roles.actorId, event.teamId, event.end ?? event.start ?? null, 'carrier')
   }
 
   return out
@@ -236,6 +249,13 @@ function incomingPaths(event: MatchEvent): {
   if (event.type === 'carry' && event.start && event.end) {
     const path = { start: event.start, end: event.end }
     return { ball: path, carry: path }
+  }
+  if (
+    (event.type === 'counterattack' || event.type === 'reverse_attack') &&
+    event.start &&
+    event.end
+  ) {
+    return { ball: { start: event.start, end: event.end }, carry: null }
   }
   if (event.type === 'shot' && event.location && event.playerId) {
     // Shot: ball ends at location; no start on event — no fabricated launch point.

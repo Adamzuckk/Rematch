@@ -8,6 +8,14 @@ export type MatchEventType =
   | 'tackle'
   | 'pressure'
   | 'possession_change'
+  | 'foul'
+  | 'yellow_card'
+  | 'red_card'
+  | 'substitution'
+  | 'offside'
+  | 'counterattack'
+  | 'reverse_attack'
+  | 'counter_press'
 
 interface MatchEventBase {
   id: string
@@ -27,12 +35,16 @@ export interface PassEvent extends MatchEventBase {
   end?: PitchPoint
   receiverId?: string
   outcome?: 'complete' | 'incomplete' | 'unknown'
+  detail?: string
 }
 
 export interface ShotEvent extends MatchEventBase {
   type: 'shot'
   location?: PitchPoint
   outcome?: 'goal' | 'saved' | 'blocked' | 'off_target' | 'unknown'
+  assistPlayerId?: string
+  goalType?: 'open_play' | 'penalty' | 'free_kick' | 'own_goal'
+  detail?: string
 }
 
 export interface CarryEvent extends MatchEventBase {
@@ -50,12 +62,66 @@ export interface TackleEvent extends MatchEventBase {
 export interface PressureEvent extends MatchEventBase {
   type: 'pressure'
   location?: PitchPoint
+  detail?: string
 }
 
 export interface PossessionChangeEvent extends MatchEventBase {
   type: 'possession_change'
   /** Team that gained possession, when known */
   gainedByTeamId?: string
+}
+
+export interface FoulEvent extends MatchEventBase {
+  type: 'foul'
+  location?: PitchPoint
+  relatedPlayerId?: string
+  outcome?: 'conceded' | 'won' | 'unknown'
+  detail?: string
+}
+
+export interface YellowCardEvent extends MatchEventBase {
+  type: 'yellow_card'
+  location?: PitchPoint
+  detail?: string
+}
+
+export interface RedCardEvent extends MatchEventBase {
+  type: 'red_card'
+  location?: PitchPoint
+  detail?: string
+}
+
+export interface SubstitutionEvent extends MatchEventBase {
+  type: 'substitution'
+  location?: PitchPoint
+  relatedPlayerId?: string
+  detail?: string
+}
+
+export interface OffsideEvent extends MatchEventBase {
+  type: 'offside'
+  location?: PitchPoint
+  outcome?: 'flagged' | 'unknown'
+}
+
+export interface CounterattackEvent extends MatchEventBase {
+  type: 'counterattack'
+  start?: PitchPoint
+  end?: PitchPoint
+  detail?: string
+}
+
+export interface ReverseAttackEvent extends MatchEventBase {
+  type: 'reverse_attack'
+  start?: PitchPoint
+  end?: PitchPoint
+  detail?: string
+}
+
+export interface CounterPressEvent extends MatchEventBase {
+  type: 'counter_press'
+  location?: PitchPoint
+  detail?: string
 }
 
 export type MatchEvent =
@@ -65,3 +131,11 @@ export type MatchEvent =
   | TackleEvent
   | PressureEvent
   | PossessionChangeEvent
+  | FoulEvent
+  | YellowCardEvent
+  | RedCardEvent
+  | SubstitutionEvent
+  | OffsideEvent
+  | CounterattackEvent
+  | ReverseAttackEvent
+  | CounterPressEvent

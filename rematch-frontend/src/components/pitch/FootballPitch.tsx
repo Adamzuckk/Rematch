@@ -96,6 +96,10 @@ function shouldShowLabel(
   return player.name != null || player.shirtNumber != null
 }
 
+function markerNumber(player: { shirtNumber?: number | null }): string | null {
+  return player.shirtNumber != null ? String(player.shirtNumber) : null
+}
+
 export function FootballPitch({
   homeTeam,
   awayTeam,
@@ -407,7 +411,7 @@ export function FootballPitch({
                     />
                   ) : null}
                   <circle
-                    r={highlighted ? 12 : 11}
+                    r={highlighted ? 13 : 12}
                     className={[
                       side === 'home'
                         ? styles.playerHome
@@ -419,6 +423,7 @@ export function FootballPitch({
                         ? styles.playerSelected
                         : '',
                       player.generic ? styles.playerGeneric : '',
+                      styles.playerMarker,
                     ]
                       .filter(Boolean)
                       .join(' ')}
@@ -427,6 +432,16 @@ export function FootballPitch({
                   >
                     <title>{accessibleName}</title>
                   </circle>
+                  {markerNumber(player) ? (
+                    <text
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      className={styles.markerNumber}
+                      aria-hidden="true"
+                    >
+                      {markerNumber(player)}
+                    </text>
+                  ) : null}
                   {labelText ? (
                     <g
                       transform={`translate(0, ${labelDy})`}
@@ -497,7 +512,7 @@ export function FootballPitch({
                   {...markerProps}
                 >
                   <circle
-                    r={11}
+                    r={12}
                     className={[
                       side === 'home'
                         ? styles.playerHome
@@ -508,6 +523,7 @@ export function FootballPitch({
                       selectedPlayerId === player.playerId
                         ? styles.playerSelected
                         : '',
+                      styles.playerMarker,
                     ]
                       .filter(Boolean)
                       .join(' ')}

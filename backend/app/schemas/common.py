@@ -21,6 +21,7 @@ class TeamSchema(BaseModel):
     id: str
     name: str
     shortName: str | None = None
+    coachName: str | None = None
 
 
 class PlayerSchema(BaseModel):
@@ -30,6 +31,8 @@ class PlayerSchema(BaseModel):
     name: str
     teamId: str
     shirtNumber: int | None = None
+    role: str | None = None
+    positionSlot: str | None = None
 
 
 class MatchScoreSchema(BaseModel):

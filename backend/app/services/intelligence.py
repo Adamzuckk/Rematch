@@ -11,6 +11,7 @@ from app.models.event import MatchEvent
 from app.models.frame import MatchFrame
 from app.models.match import Match
 from app.schemas.intelligence import KeyMomentSchema, MatchIntelligenceSchema
+from app.services import live_clock
 from app.services.matches import MatchNotFoundError
 
 LIMITATIONS = [
@@ -19,6 +20,7 @@ LIMITATIONS = [
     "Averages ignore null metric fields; missing metrics stay null.",
     "Key moments are events that have an aligned frame or stored path metrics.",
     "Geometric decision scores are separate and not mixed into these aggregates.",
+    "Live fixtures only include events up to the current simulated minute.",
 ]
 
 
@@ -26,22 +28,29 @@ def _require_match(db: Session, match_id: str) -> Match:
     match = db.get(Match, match_id)
     if match is None:
         raise MatchNotFoundError(match_id)
+    live_clock.sync_match_clock(db, match)
     return match
 
 
 def get_match_intelligence(db: Session, match_id: str) -> MatchIntelligenceSchema:
-    _require_match(db, match_id)
+    match = _require_match(db, match_id)
+    cutoff = live_clock.visible_event_cutoff(match)
+    event_filters = [MatchEvent.match_id == match_id]
+    frame_filters = [MatchFrame.match_id == match_id]
+    if cutoff is not None:
+        event_filters.append(MatchEvent.minute.is_not(None))
+        event_filters.append(MatchEvent.minute <= cutoff)
+        frame_filters.append(MatchFrame.minute.is_not(None))
+        frame_filters.append(MatchFrame.minute <= cutoff)
 
     events = list(
         db.scalars(
             select(MatchEvent)
-            .where(MatchEvent.match_id == match_id)
+            .where(*event_filters)
             .order_by(MatchEvent.minute.asc().nulls_last(), MatchEvent.id)
         ).all()
     )
-    frames = list(
-        db.scalars(select(MatchFrame).where(MatchFrame.match_id == match_id)).all()
-    )
+    frames = list(db.scalars(select(MatchFrame).where(*frame_filters)).all())
     frame_event_ids = {f.event_id for f in frames if f.event_id}
 
     counts: dict[str, int] = {}

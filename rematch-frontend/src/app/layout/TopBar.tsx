@@ -1,5 +1,6 @@
 import { Menu } from 'lucide-react'
 import rematchMark from '../../assets/brand/rematch-mark.svg'
+import microsoftFoundryMark from '../../assets/brand/microsoft-foundry.svg'
 import { useLocale } from '../../i18n/locale'
 import { usePersona } from '../../context/PersonaContext'
 import { Button } from '../../components/ui/Button'
@@ -69,9 +70,27 @@ export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
             {t('modeAnalyst')}
           </button>
         </div>
-        <span className={styles.badge}>
-          {apiMode ? t('apiMode') : t('demoData')}
-        </span>
+        {apiMode ? (
+          <span
+            className={styles.foundryBadge}
+            title={t('apiMode')}
+            data-testid="data-source-foundry"
+          >
+            <img
+              src={microsoftFoundryMark}
+              alt=""
+              className={styles.foundryMark}
+              width={16}
+              height={16}
+              decoding="async"
+            />
+            <span className={styles.foundryLabel}>{t('microsoftFoundry')}</span>
+          </span>
+        ) : (
+          <span className={styles.badge} data-testid="data-source-demo">
+            {t('demoData')}
+          </span>
+        )}
       </div>
     </header>
   )

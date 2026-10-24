@@ -18,7 +18,9 @@ export interface EventGeometry {
 export function getEventGeometry(event: MatchEvent): EventGeometry {
   switch (event.type) {
     case 'pass':
-    case 'carry': {
+    case 'carry':
+    case 'counterattack':
+    case 'reverse_attack': {
       const start = event.start
       const end = event.end
       if (start && end) {
@@ -31,6 +33,12 @@ export function getEventGeometry(event: MatchEvent): EventGeometry {
     case 'shot':
     case 'tackle':
     case 'pressure':
+    case 'foul':
+    case 'yellow_card':
+    case 'red_card':
+    case 'substitution':
+    case 'offside':
+    case 'counter_press':
       return event.location ? { location: event.location } : {}
     case 'possession_change':
       return {}

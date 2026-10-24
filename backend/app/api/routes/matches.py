@@ -6,6 +6,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db_dep, get_settings_dep
 from app.core.config import Settings
 from app.schemas.common import ErrorResponse, PlayerSchema
+from app.schemas.enrichment import (
+    MatchContextSchema,
+    PlayerMatchStatsSchema,
+    StartMatchResponseSchema,
+    TeamDetailSchema,
+    TeamFormResultSchema,
+)
 from app.schemas.event import MatchEventListResponse
 from app.schemas.frame import MatchFrameListResponse
 from app.schemas.match import (
@@ -122,6 +129,48 @@ def get_overview(
 
 
 @router.get(
+    "/teams/{team_id}",
+    response_model=TeamDetailSchema,
+    responses={404: {"model": ErrorResponse}},
+)
+def get_team_detail(
+    team_id: Annotated[str, Path(min_length=1, max_length=128)],
+    db: Annotated[Session, Depends(get_db_dep)],
+) -> TeamDetailSchema:
+    try:
+        return match_service.get_team_detail(db, team_id)
+    except match_service.TeamNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "team_not_found",
+                "message": f"Team not found: {exc.team_id}",
+            },
+        ) from None
+
+
+@router.get(
+    "/teams/{team_id}/form",
+    response_model=list[TeamFormResultSchema],
+    responses={404: {"model": ErrorResponse}},
+)
+def get_team_form(
+    team_id: Annotated[str, Path(min_length=1, max_length=128)],
+    db: Annotated[Session, Depends(get_db_dep)],
+) -> list[TeamFormResultSchema]:
+    try:
+        return match_service.list_team_form(db, team_id)
+    except match_service.TeamNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "team_not_found",
+                "message": f"Team not found: {exc.team_id}",
+            },
+        ) from None
+
+
+@router.get(
     "/{match_id}",
     response_model=MatchSummarySchema,
     responses={404: {"model": ErrorResponse}},
@@ -234,6 +283,81 @@ def get_match_intelligence(
             detail={
                 "code": "match_not_found",
                 "message": f"Match not found: {exc.match_id}",
+            },
+        ) from None
+
+
+@router.get(
+    "/{match_id}/context",
+    response_model=MatchContextSchema,
+    responses={404: {"model": ErrorResponse}},
+)
+def get_match_context(
+    match_id: MatchIdPath,
+    db: Annotated[Session, Depends(get_db_dep)],
+) -> MatchContextSchema:
+    """Coaches, 5-match form, squads, and player stats for one fixture."""
+    try:
+        return match_service.get_match_context(db, match_id)
+    except match_service.MatchNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "match_not_found",
+                "message": f"Match not found: {exc.match_id}",
+            },
+        ) from None
+
+
+@router.get(
+    "/{match_id}/player-stats",
+    response_model=list[PlayerMatchStatsSchema],
+    responses={404: {"model": ErrorResponse}},
+)
+def get_match_player_stats(
+    match_id: MatchIdPath,
+    db: Annotated[Session, Depends(get_db_dep)],
+) -> list[PlayerMatchStatsSchema]:
+    try:
+        return match_service.list_player_stats(db, match_id)
+    except match_service.MatchNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "match_not_found",
+                "message": f"Match not found: {exc.match_id}",
+            },
+        ) from None
+
+
+@router.post(
+    "/{match_id}/start",
+    response_model=StartMatchResponseSchema,
+    responses={404: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+)
+def start_match(
+    match_id: MatchIdPath,
+    db: Annotated[Session, Depends(get_db_dep)],
+) -> StartMatchResponseSchema:
+    """Start the upcoming Lakeside–Ironford (or any upcoming) match on request."""
+    try:
+        result = match_service.start_match(db, match_id)
+        db.commit()
+        return result
+    except match_service.MatchNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "match_not_found",
+                "message": f"Match not found: {exc.match_id}",
+            },
+        ) from None
+    except match_service.MatchNotStartableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "match_not_startable",
+                "message": exc.reason,
             },
         ) from None
 

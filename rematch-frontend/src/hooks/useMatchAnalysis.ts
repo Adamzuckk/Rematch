@@ -47,8 +47,9 @@ export function useMatchAnalysis(matchId: string | undefined): {
     if (!matchId) return
 
     let cancelled = false
+    let pollTimer: ReturnType<typeof setInterval> | undefined
 
-    void (async () => {
+    const load = async (options?: { soft?: boolean }) => {
       try {
         const match = await matchService.getMatchById(matchId)
         if (cancelled) return
@@ -70,8 +71,19 @@ export function useMatchAnalysis(matchId: string | undefined): {
           matchId,
           result: { kind: 'ready', match, events, players, frames },
         })
+
+        if (match.status === 'live' && pollTimer == null) {
+          pollTimer = setInterval(() => {
+            void load({ soft: true })
+          }, 5_000)
+        }
+        if (match.status !== 'live' && pollTimer != null) {
+          clearInterval(pollTimer)
+          pollTimer = undefined
+        }
       } catch (cause: unknown) {
         if (cancelled) return
+        if (options?.soft) return
         if (cause instanceof MatchNotFoundError) {
           setFetched({ matchId, result: { kind: 'not-found' } })
           return
@@ -80,10 +92,13 @@ export function useMatchAnalysis(matchId: string | undefined): {
           cause instanceof Error ? cause.message : 'Failed to load match analysis'
         setFetched({ matchId, result: { kind: 'error', message } })
       }
-    })()
+    }
+
+    void load()
 
     return () => {
       cancelled = true
+      if (pollTimer != null) clearInterval(pollTimer)
     }
   }, [matchId, reloadToken])
 

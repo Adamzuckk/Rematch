@@ -81,6 +81,11 @@ class Match(Base):
     away_score: Mapped[int | None] = mapped_column(Integer)
     minute: Mapped[int | None] = mapped_column(Integer)
     venue: Mapped[str | None] = mapped_column(String(128))
+    live_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    home_formation: Mapped[str | None] = mapped_column(String(16))
+    away_formation: Mapped[str | None] = mapped_column(String(16))
+    planned_home_score: Mapped[int | None] = mapped_column(Integer)
+    planned_away_score: Mapped[int | None] = mapped_column(Integer)
     provenance: Mapped[str] = mapped_column(String(32), nullable=False, default="synthetic")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

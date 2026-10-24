@@ -17,7 +17,20 @@ function highlightKind(event: MatchEvent): MatchHighlightKind | null {
   if (event.type === 'shot' && event.outcome === 'goal') return 'goal'
   if (event.type === 'shot') return 'shot'
   if (isDecisionCandidate(event)) return 'decision'
-  if (event.type === 'tackle' || event.type === 'pressure') return 'significant'
+  if (
+    event.type === 'tackle' ||
+    event.type === 'pressure' ||
+    event.type === 'foul' ||
+    event.type === 'yellow_card' ||
+    event.type === 'red_card' ||
+    event.type === 'substitution' ||
+    event.type === 'offside' ||
+    event.type === 'counterattack' ||
+    event.type === 'reverse_attack' ||
+    event.type === 'counter_press'
+  ) {
+    return 'significant'
+  }
   return null
 }
 

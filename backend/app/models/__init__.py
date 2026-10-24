@@ -6,11 +6,12 @@ from app.models.match import Match
 from app.models.operational_metric import OperationalMetricEvent
 from app.models.player import Player
 from app.models.scenario import Scenario
-from app.models.team import Team
+from app.models.team import Team, TeamFormResult
 
 __all__ = [
     "Scenario",
     "Team",
+    "TeamFormResult",
     "Player",
     "Match",
     "OperationalMetricEvent",

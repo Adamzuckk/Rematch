@@ -1,7 +1,8 @@
-import { useId, useMemo, useState, type KeyboardEvent } from 'react'
+import { useEffect, useId, useMemo, useState, type KeyboardEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { KeyMetricsStrip } from '../components/match/KeyMetricsStrip'
 import { MatchCentre } from '../components/match/MatchCentre'
+import { MatchContextPanel } from '../components/match/MatchContextPanel'
 import { MatchHeader } from '../components/match/MatchHeader'
 import { MatchHighlightsStrip } from '../components/match/MatchHighlightsStrip'
 import { MatchMomentumChart } from '../components/match/MatchMomentumChart'
@@ -38,7 +39,13 @@ import {
   resolveFrameForEvent,
   sortMatchEvents,
 } from '../lib/pitch'
-import type { DecisionNarrativeResponse, MatchEvent } from '../types'
+import { matchService, MatchApiError } from '../services/matches'
+import type {
+  DecisionNarrativeResponse,
+  MatchContext,
+  MatchEvent,
+  MatchSummary,
+} from '../types'
 import styles from './MatchAnalysisPage.module.css'
 
 type FanSection = 'overview' | 'events' | 'team' | 'players'
@@ -85,8 +92,41 @@ export function MatchAnalysisPage() {
   const [fanSection, setFanSection] = useState<FanSection>('overview')
   const [analysisRegion, setAnalysisRegion] =
     useState<AnalysisRegion>('decisions')
+  const [startedMatch, setStartedMatch] = useState<{
+    id: string
+    match: MatchSummary
+  } | null>(null)
+  const [matchContextState, setMatchContextState] = useState<{
+    matchId: string
+    context: MatchContext | null
+  } | null>(null)
+  const [starting, setStarting] = useState(false)
+  const [startErrorState, setStartErrorState] = useState<{
+    matchId: string
+    message: string
+  } | null>(null)
   const fanTabsId = useId()
   const analysisTabsId = useId()
+
+  useEffect(() => {
+    if (state.status !== 'ready' || !matchId) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const context = await matchService.getMatchContext(matchId)
+        if (!cancelled) {
+          setMatchContextState({ matchId, context })
+        }
+      } catch {
+        if (!cancelled) {
+          setMatchContextState({ matchId, context: null })
+        }
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [matchId, state.status, startedMatch?.match.status])
 
   const events = state.status === 'ready' ? state.events : null
   const sortedEvents = useMemo(
@@ -240,7 +280,20 @@ export function MatchAnalysisPage() {
     )
   }
 
-  const { match } = state
+  const match =
+    startedMatch != null &&
+    startedMatch.id === matchId &&
+    state.match.status === 'upcoming'
+      ? startedMatch.match
+      : state.match
+  const matchContext =
+    matchContextState != null && matchContextState.matchId === matchId
+      ? matchContextState.context
+      : null
+  const startError =
+    startErrorState != null && startErrorState.matchId === matchId
+      ? startErrorState.message
+      : null
   const frame = resolveFrameForEvent(frames, selectedEvent)
   const hasFrames = frames.length > 0
   const matchLabel = `${match.homeTeam.shortName ?? match.homeTeam.name} vs ${match.awayTeam.shortName ?? match.awayTeam.name}`
@@ -250,6 +303,58 @@ export function MatchAnalysisPage() {
   const scoreHome = match.score?.home ?? 0
   const scoreAway = match.score?.away ?? 0
   const isFan = personaMode === 'fan'
+  const canStartMatch = Boolean(match.canStart && match.status === 'upcoming')
+
+  const handleStartMatch = async () => {
+    if (!matchId || !canStartMatch || starting) return
+    setStarting(true)
+    setStartErrorState(null)
+    try {
+      const result = await matchService.startMatch(matchId)
+      setStartedMatch({ id: matchId, match: result.match })
+      retry()
+    } catch (cause) {
+      const message =
+        cause instanceof MatchApiError
+          ? cause.message
+          : cause instanceof Error
+            ? cause.message
+            : t('startMatchError')
+      setStartErrorState({ matchId, message })
+    } finally {
+      setStarting(false)
+    }
+  }
+
+  const contextPanel =
+    matchContext != null ? (
+      <MatchContextPanel
+        context={{
+          ...matchContext,
+          match: {
+            ...matchContext.match,
+            ...match,
+          },
+        }}
+      />
+    ) : null
+
+  const startControls = canStartMatch ? (
+    <div className={styles.stack} data-testid="match-start-controls">
+      <Button
+        variant="primary"
+        onClick={() => void handleStartMatch()}
+        disabled={starting}
+      >
+        {starting ? t('startingMatch') : t('startMatch')}
+      </Button>
+      {startError ? (
+        <p className={styles.notice} role="alert">
+          {startError}
+        </p>
+      ) : null}
+    </div>
+  ) : null
 
   const overlay: OverlayPayload | null = selectedEvent
     ? {
@@ -491,6 +596,9 @@ export function MatchAnalysisPage() {
           viewBadge={t('matchFanViewBadge')}
         />
 
+        {startControls}
+        {contextPanel}
+
         <MatchHighlightsStrip
           events={sortedEvents}
           selectedEventId={resolvedSelectedId}
@@ -646,6 +754,9 @@ export function MatchAnalysisPage() {
         compact
         viewBadge={t('matchAnalysisViewBadge')}
       />
+
+      {startControls}
+      {contextPanel}
 
       <div className={styles.analysisLayout}>
         <div className={styles.pitchColumn}>

@@ -48,8 +48,9 @@ export function DashboardPage() {
 
   useEffect(() => {
     let cancelled = false
+    let pollTimer: ReturnType<typeof setInterval> | undefined
 
-    void (async () => {
+    const load = async (options?: { soft?: boolean }) => {
       try {
         const [matches, allMatches, overview, dataset] = await Promise.all([
           matchService.getMatches({ query, status: statusFilter }),
@@ -66,16 +67,30 @@ export function DashboardPage() {
           dataset,
         })
         setError(null)
+
+        const hasLive = allMatches.some((match) => match.status === 'live')
+        if (hasLive && pollTimer == null) {
+          pollTimer = setInterval(() => {
+            void load({ soft: true })
+          }, 5_000)
+        }
+        if (!hasLive && pollTimer != null) {
+          clearInterval(pollTimer)
+          pollTimer = undefined
+        }
       } catch (cause: unknown) {
-        if (cancelled) return
+        if (cancelled || options?.soft) return
         const message =
           cause instanceof Error ? cause.message : 'Unknown match service error'
         setError({ requestKey, message })
       }
-    })()
+    }
+
+    void load()
 
     return () => {
       cancelled = true
+      if (pollTimer != null) clearInterval(pollTimer)
     }
   }, [query, statusFilter, reloadToken, requestKey])
 
@@ -237,7 +252,11 @@ export function DashboardPage() {
         {isReady && ready.matches.length > 0 ? (
           <div className={styles.grid}>
             {ready.matches.map((match) => (
-              <MatchCard key={match.id} match={match} />
+              <MatchCard
+                key={match.id}
+                match={match}
+                onMatchUpdated={() => setReloadToken((value) => value + 1)}
+              />
             ))}
           </div>
         ) : null}

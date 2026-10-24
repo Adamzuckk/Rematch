@@ -31,7 +31,11 @@ class MatchEvent(Base):
     __tablename__ = "match_events"
     __table_args__ = (
         CheckConstraint(
-            "type IN ('pass', 'shot', 'carry', 'tackle', 'pressure', 'possession_change')",
+            "type IN ("
+            "'pass', 'shot', 'carry', 'tackle', 'pressure', 'possession_change', "
+            "'foul', 'yellow_card', 'red_card', 'substitution', 'offside', "
+            "'counterattack', 'reverse_attack', 'counter_press'"
+            ")",
             name="ck_match_events_type",
         ),
         CheckConstraint(
@@ -94,6 +98,16 @@ class MatchEvent(Base):
         String(64),
         ForeignKey("teams.id", ondelete="SET NULL"),
     )
+    assist_player_id: Mapped[str | None] = mapped_column(
+        String(64),
+        ForeignKey("players.id", ondelete="SET NULL"),
+    )
+    related_player_id: Mapped[str | None] = mapped_column(
+        String(64),
+        ForeignKey("players.id", ondelete="SET NULL"),
+    )
+    goal_type: Mapped[str | None] = mapped_column(String(32))
+    detail: Mapped[str | None] = mapped_column(String(64))
     # Phase 8 generator-derived model estimates (nullable; not real measurements).
     distance_m: Mapped[float | None] = mapped_column(Float)
     duration_s: Mapped[float | None] = mapped_column(Float)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -26,8 +27,13 @@ from app.models import (  # noqa: F401 — register metadata
     PlayerFramePosition,
     Scenario,
     Team,
+    TeamFormResult,
 )
+from app.services import live_clock
 from app.services.seed import seed_phase4_scenario
+
+# Fixed clock so live minute/score sync stays deterministic across API tests.
+SEED_NOW = datetime(2026, 10, 24, 12, 0, tzinfo=timezone.utc)
 
 
 def _reset_engine() -> None:
@@ -58,14 +64,16 @@ def db_session(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Session:
 
 
 @pytest.fixture()
-def seeded_db(db_session: Session) -> Session:
-    seed_phase4_scenario(db_session)
+def seeded_db(db_session: Session, monkeypatch: pytest.MonkeyPatch) -> Session:
+    monkeypatch.setattr(live_clock, "utc_now", lambda: SEED_NOW)
+    seed_phase4_scenario(db_session, now=SEED_NOW)
     db_session.commit()
     return db_session
 
 
 @pytest.fixture()
-def client(seeded_db: Session) -> TestClient:
+def client(seeded_db: Session, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    monkeypatch.setattr(live_clock, "utc_now", lambda: SEED_NOW)
     app = create_app()
 
     def _override_db():

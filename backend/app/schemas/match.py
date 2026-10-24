@@ -26,6 +26,10 @@ class MatchSummarySchema(BaseModel):
     venue: str | None = None
     provenance: DataProvenance
     scenarioId: str
+    homeFormation: str | None = None
+    awayFormation: str | None = None
+    liveRealDurationSeconds: int | None = None
+    canStart: bool | None = None
 
 
 class MatchListResponse(BaseModel):
