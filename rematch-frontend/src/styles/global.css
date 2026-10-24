@@ -21,11 +21,11 @@ body {
   overflow-x: hidden;
   font-family: var(--font-sans);
   font-size: 15px;
-  line-height: 1.5;
-  font-weight: 400;
+  line-height: 1.55;
+  font-weight: 450;
   font-stretch: 100%;
   color: var(--ink);
-  background: var(--concrete);
+  background: var(--mist);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -41,10 +41,11 @@ h4 {
   margin: 0;
   font-family: var(--font-display);
   font-weight: 800;
-  font-stretch: 125%;
+  font-stretch: 112%;
+  font-style: italic;
   color: var(--ink);
-  letter-spacing: -0.015em;
-  line-height: 0.95;
+  letter-spacing: -0.02em;
+  line-height: 0.94;
   text-transform: uppercase;
 }
 
@@ -74,8 +75,8 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--flare);
-  outline-offset: 2px;
+  outline: 2px solid var(--lime-hot);
+  outline-offset: 3px;
 }
 
 .sr-only {
@@ -91,33 +92,36 @@ button {
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--lime);
+  color: var(--lime-ink);
 }
 
-/* ReMatch broadcast type utilities */
+/* ReMatch type utilities */
 .xp {
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
   font-weight: 800;
-  font-stretch: 125%;
-  line-height: 0.95;
+  font-stretch: 112%;
+  font-style: italic;
+  line-height: 0.94;
 }
 
 .xpLight {
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   text-transform: uppercase;
   font-weight: 300;
-  font-stretch: 125%;
-  line-height: 0.95;
+  font-stretch: 112%;
+  font-style: italic;
+  line-height: 0.94;
 }
 
 .cond {
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  font-stretch: 70%;
+  font-stretch: 72%;
+  font-style: normal;
 }
 
 .tabNum {
@@ -129,6 +133,7 @@ button {
   background: var(--plate);
   color: var(--ink);
   box-shadow: var(--shadow-plate);
+  border-radius: var(--radius-md);
 }
 
 .cut {
@@ -146,11 +151,57 @@ button {
 @keyframes rematch-enter {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(14px) skewY(0.4deg);
+    filter: blur(2px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+    filter: none;
+  }
+}
+
+@keyframes rematch-slice-in {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+
+@keyframes rematch-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 var(--lime-glow);
+  }
+  70% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes rematch-scan {
+  0% {
+    transform: translateY(-120%);
+  }
+  100% {
+    transform: translateY(220%);
+  }
+}
+
+@keyframes rematch-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(2%, -1.5%, 0);
   }
 }
 

@@ -8,6 +8,84 @@
   background: var(--bg-chrome);
 }
 
+.atmosphere {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.orbit,
+.orbitLate {
+  position: absolute;
+  width: 48vmax;
+  height: 48vmax;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(107, 189, 69, 0.18) 0%,
+    transparent 68%
+  );
+  filter: blur(8px);
+  animation: rematch-drift 18s var(--ease-in-out) infinite;
+}
+
+.orbit {
+  top: -18%;
+  inset-inline-end: -12%;
+}
+
+.orbitLate {
+  bottom: -22%;
+  inset-inline-start: -16%;
+  width: 36vmax;
+  height: 36vmax;
+  opacity: 0.55;
+  animation-duration: 24s;
+  animation-delay: -6s;
+}
+
+.scan {
+  position: absolute;
+  inset-inline: 0;
+  height: 28%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(241, 244, 237, 0.03),
+    transparent
+  );
+  animation: rematch-scan 9s linear infinite;
+}
+
+.sliceA,
+.sliceB,
+.sliceC {
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(107, 189, 69, 0.35),
+    transparent
+  );
+  opacity: 0.45;
+}
+
+.sliceA {
+  top: 18%;
+}
+.sliceB {
+  top: 46%;
+  opacity: 0.25;
+}
+.sliceC {
+  top: 78%;
+  opacity: 0.35;
+}
+
 .pitchPulse,
 .touchline {
   display: none;
@@ -22,19 +100,40 @@
   min-height: 100svh;
   background:
     radial-gradient(
-      120% 80% at 100% 0%,
-      rgba(107, 189, 69, 0.06),
-      transparent 55%
+      90% 70% at 100% -10%,
+      rgba(107, 189, 69, 0.11),
+      transparent 52%
     ),
-    var(--concrete);
+    radial-gradient(
+      70% 50% at 0% 100%,
+      rgba(78, 179, 216, 0.05),
+      transparent 48%
+    ),
+    linear-gradient(180deg, #eef2ea 0%, var(--mist) 42%, #e3e8df 100%);
 }
 
 .content {
+  position: relative;
   flex: 1;
   width: min(100%, calc(var(--content-max) + var(--space-16)));
   margin-inline: auto;
   padding: var(--space-10) var(--space-8) var(--space-14);
-  animation: rematch-enter var(--duration-slow) var(--ease-out) both;
+  animation: rematch-enter var(--duration-cinematic) var(--ease-out) both;
+}
+
+.content::before {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  inset-inline: var(--space-8);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(107, 189, 69, 0.45),
+    transparent
+  );
 }
 
 .backdrop {
@@ -50,6 +149,10 @@
     padding: var(--space-6) var(--space-4) var(--space-10);
   }
 
+  .content::before {
+    inset-inline: var(--space-4);
+  }
+
   .backdrop {
     display: block;
     position: fixed;
@@ -58,7 +161,8 @@
     border: 0;
     padding: 0;
     margin: 0;
-    background: rgba(11, 12, 14, 0.6);
+    background: rgba(5, 7, 6, 0.72);
+    backdrop-filter: blur(4px);
     cursor: pointer;
   }
 }

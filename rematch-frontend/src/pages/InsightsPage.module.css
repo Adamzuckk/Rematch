@@ -3,21 +3,29 @@
   flex-direction: column;
   gap: var(--space-6);
   max-width: 56rem;
+  animation: rematch-enter var(--duration-cinematic) var(--ease-out) both;
 }
 
 .header {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding-block-end: var(--space-2);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(11, 15, 12, 0.07);
+  background:
+    linear-gradient(145deg, rgba(107, 189, 69, 0.08), transparent 45%),
+    var(--plate);
+  box-shadow: var(--shadow-plate);
 }
 
 .header h1 {
   margin: 0;
   font-size: clamp(2.25rem, 5vw, 3.25rem);
   font-weight: 800;
-  font-stretch: 125%;
-  letter-spacing: -0.02em;
+  font-stretch: 112%;
+  font-style: italic;
+  letter-spacing: -0.025em;
   line-height: 0.92;
   text-transform: uppercase;
   color: var(--ink);
@@ -25,12 +33,12 @@
 
 .eyebrow {
   margin: 0;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 750;
   font-stretch: 70%;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--accent-hover);
+  color: var(--lime-deep);
 }
 
 .mode {
@@ -43,14 +51,25 @@
   padding: var(--space-5);
   background: var(--plate);
   color: var(--ink);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
+  transition:
+    transform var(--duration-normal) var(--ease-out),
+    box-shadow var(--duration-normal) var(--ease-out);
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
 }
 
 .card h2 {
   margin: 0 0 var(--space-3);
   font-size: 1rem;
   font-weight: 800;
-  font-stretch: 110%;
+  font-stretch: 108%;
+  font-style: italic;
   letter-spacing: -0.015em;
   text-transform: uppercase;
   color: var(--ink);
@@ -71,19 +90,26 @@
 .stat {
   padding: var(--space-4) var(--space-5);
   background: var(--plate);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
   color: var(--ink);
   border-block-start: 3px solid var(--accent);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.stat:hover {
+  transform: translateY(-2px);
 }
 
 .stat span {
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 750;
   font-stretch: 70%;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-3);
 }
@@ -91,8 +117,9 @@
 .stat strong {
   font-size: 1.55rem;
   font-weight: 800;
-  font-stretch: 125%;
-  letter-spacing: -0.015em;
+  font-stretch: 112%;
+  font-style: italic;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
 }
@@ -106,6 +133,7 @@
 .list a {
   color: var(--accent-deep);
   font-weight: 650;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .list a:hover {

@@ -1,49 +1,75 @@
 :root {
   /*
-   * ReMatch identity — calm broadcast intelligence.
-   * Logo green (#6bbd45) + cream wordmark (#f1f4ed) on dark ink.
-   * Soft concrete content plates; dark chrome shell. Not MatchMind volt.
+   * ReMatch — Voltage Pitch
+   * Logo identity: night void + lime kinetic silhouette + cream chalk.
+   * Horizontal "slice" energy from the fragmented player mark.
    */
-  --ink: #121513;
-  --ink-2: #3f4742;
-  --ink-3: #6d766f;
-  --ink-4: #9aa49c;
-  --line: rgba(18, 21, 19, 0.1);
-  --plate: #ffffff;
-  --concrete: #e8ebe6;
-  --concrete-2: #dce1db;
+  --void: #050706;
+  --void-2: #0a0e0c;
+  --void-3: #121816;
+  --void-4: #1a211c;
+  --void-5: #24302a;
+
+  --ink: #0b0f0c;
+  --ink-2: #3a433c;
+  --ink-3: #667068;
+  --ink-4: #8f9a91;
   --cream: #f1f4ed;
-  --flare: #e85d3b;
+  --cream-dim: rgba(241, 244, 237, 0.72);
+  --cream-mute: rgba(241, 244, 237, 0.44);
+  --cream-faint: rgba(241, 244, 237, 0.12);
+
+  --lime: #6bbd45;
+  --lime-hot: #82d45c;
+  --lime-deep: #3f8f28;
+  --lime-ink: #071008;
+  --lime-wash: rgba(107, 189, 69, 0.14);
+  --lime-glow: rgba(107, 189, 69, 0.35);
+  --lime-edge: rgba(107, 189, 69, 0.55);
+
+  --flare: #ff5340;
+  --flare-wash: rgba(255, 83, 64, 0.14);
+  --signal: #f0b429;
+  --signal-wash: rgba(240, 180, 41, 0.14);
+  --sky: #4eb3d8;
+  --sky-wash: rgba(78, 179, 216, 0.16);
+
+  --mist: #e8ece4;
+  --mist-2: #dce2d8;
+  --mist-3: #cfd6ca;
+  --plate: #f7f9f4;
+  --line: rgba(11, 15, 12, 0.1);
+  --line-strong: rgba(11, 15, 12, 0.18);
+
+  /* Brand aliases used across the app */
+  --accent: var(--lime);
+  --accent-hover: var(--lime-hot);
+  --accent-deep: var(--lime-deep);
+  --accent-subtle: var(--lime-wash);
+  --accent-glow: var(--lime-glow);
+  --accent-ink: var(--lime-ink);
   --turf: #2f6b2a;
 
-  /* Logo silhouette green */
-  --accent: #6bbd45;
-  --accent-hover: #5aa938;
-  --accent-deep: #458a2c;
-  --accent-subtle: rgba(107, 189, 69, 0.14);
-  --accent-glow: rgba(107, 189, 69, 0.28);
-  --accent-ink: #121513;
-
   /* Dark chrome (shell) */
-  --bg-chrome: var(--ink);
-  --bg-chrome-elevated: #1a1f1c;
-  --bg-chrome-hover: #232a26;
+  --bg-chrome: var(--void);
+  --bg-chrome-elevated: var(--void-3);
+  --bg-chrome-hover: var(--void-4);
   --border-chrome: rgba(241, 244, 237, 0.08);
-  --border-chrome-strong: rgba(241, 244, 237, 0.14);
+  --border-chrome-strong: rgba(241, 244, 237, 0.16);
   --text-on-dark: var(--cream);
-  --text-on-dark-secondary: rgba(241, 244, 237, 0.68);
-  --text-on-dark-muted: rgba(241, 244, 237, 0.42);
+  --text-on-dark-secondary: var(--cream-dim);
+  --text-on-dark-muted: var(--cream-mute);
 
-  /* Content */
-  --bg-primary: var(--concrete);
-  --bg-secondary: var(--concrete-2);
+  /* Content desk */
+  --bg-primary: var(--mist);
+  --bg-secondary: var(--mist-2);
   --bg-elevated: var(--plate);
   --bg-card: var(--plate);
-  --bg-muted: var(--concrete-2);
-  --bg-dark-panel: var(--ink);
-  --bg-dark-elevated: #1a1f1c;
-  --bg-light: var(--concrete);
-  --bg-light-elevated: var(--concrete-2);
+  --bg-muted: var(--mist-2);
+  --bg-dark-panel: var(--void-3);
+  --bg-dark-elevated: var(--void-4);
+  --bg-light: var(--mist);
+  --bg-light-elevated: var(--mist-2);
   --bg-light-card: var(--plate);
 
   --text-primary: var(--ink);
@@ -54,12 +80,14 @@
   --text-on-light-muted: var(--ink-3);
 
   --border: var(--line);
-  --border-strong: rgba(18, 21, 19, 0.16);
+  --border-strong: var(--line-strong);
   --border-light: var(--line);
-  --border-light-strong: rgba(18, 21, 19, 0.16);
+  --border-light-strong: var(--line-strong);
 
   --danger: var(--flare);
-  --success: var(--accent);
+  --success: var(--lime);
+  --concrete: var(--mist);
+  --concrete-2: var(--mist-2);
 
   /* Legacy aliases */
   --color-bg: var(--bg-primary);
@@ -72,32 +100,32 @@
   --color-accent-strong: var(--accent-hover);
   --color-accent-ink: var(--accent-ink);
   --color-accent-muted: var(--accent-subtle);
-  --color-accent-border: rgba(107, 189, 69, 0.4);
+  --color-accent-border: var(--lime-edge);
   --color-chalk: var(--text-primary);
   --color-text: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
   --color-border: var(--border);
   --color-border-strong: var(--border-strong);
-  --color-focus: var(--accent);
+  --color-focus: var(--lime-hot);
   --color-live: var(--flare);
-  --color-live-bg: rgba(232, 93, 59, 0.1);
+  --color-live-bg: var(--flare-wash);
   --color-finished: var(--ink-3);
-  --color-finished-bg: rgba(109, 118, 111, 0.1);
-  --color-upcoming: var(--accent-hover);
-  --color-upcoming-bg: var(--accent-subtle);
+  --color-finished-bg: rgba(102, 112, 104, 0.12);
+  --color-upcoming: var(--lime-deep);
+  --color-upcoming-bg: var(--lime-wash);
   --color-demo: #a16207;
-  --color-demo-bg: rgba(234, 179, 8, 0.12);
-  --color-signal: #d97706;
-  --color-opposition: #3d8fb5;
-  --color-pitch-turf: #3a7a36;
-  --color-pitch-turf-stripe: #458a40;
-  --color-pitch-line: rgba(255, 255, 255, 0.88);
-  --color-pitch-home: var(--accent);
-  --color-pitch-away: #5bb8e0;
+  --color-demo-bg: var(--signal-wash);
+  --color-signal: var(--signal);
+  --color-opposition: var(--sky);
+  --color-pitch-turf: #2d6b36;
+  --color-pitch-turf-stripe: #347a3e;
+  --color-pitch-line: rgba(255, 255, 255, 0.9);
+  --color-pitch-home: var(--lime);
+  --color-pitch-away: var(--sky);
   --color-pitch-ball: var(--cream);
-  --color-pitch-event: #f59e0b;
-  --color-pitch-path: rgba(245, 158, 11, 0.92);
+  --color-pitch-event: var(--signal);
+  --color-pitch-path: rgba(240, 180, 41, 0.92);
 
   --font-sans: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
@@ -117,30 +145,36 @@
   --space-14: 3.5rem;
   --space-16: 4rem;
 
-  /* Sharp plates + ReMatch cut CTAs */
-  --radius-sm: 0;
-  --radius-md: 0;
-  --radius-lg: 0;
-  --radius-xl: 0;
-  --cut: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-  --cut-r: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
-  --cut-l: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+  /* Soft-sharp: tiny radius + diagonal cut CTAs (logo momentum) */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+  --cut: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  --cut-r: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+  --cut-l: polygon(12px 0, 100% 0, 100% 100%, 0 100%);
+  --cut-sharp: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
 
-  --shadow-sm: 0 1px 2px rgba(18, 21, 19, 0.04);
-  --shadow-md: 0 14px 40px rgba(18, 21, 19, 0.07);
-  --shadow-light: 0 14px 40px rgba(18, 21, 19, 0.07);
-  --shadow-chrome: 0 18px 48px rgba(0, 0, 0, 0.45);
-  --shadow-plate: 0 14px 40px rgba(18, 21, 19, 0.07);
+  --shadow-sm: 0 1px 2px rgba(5, 7, 6, 0.06);
+  --shadow-md: 0 18px 48px rgba(5, 7, 6, 0.1);
+  --shadow-light: 0 18px 48px rgba(5, 7, 6, 0.1);
+  --shadow-chrome: 0 24px 64px rgba(0, 0, 0, 0.55);
+  --shadow-plate: 0 16px 44px rgba(5, 7, 6, 0.08);
+  --shadow-lift: 0 22px 56px rgba(5, 7, 6, 0.16);
+  --shadow-lime: 0 0 0 1px var(--lime-edge), 0 12px 40px var(--lime-glow);
 
-  --sidebar-width: 248px;
-  --topbar-height: 52px;
+  --sidebar-width: 268px;
+  --topbar-height: 56px;
   --content-max: 1480px;
   --bp-tablet: 768px;
   --bp-desktop: 1024px;
 
-  --ease-out: cubic-bezier(0.7, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 220ms;
-  --duration-slow: 400ms;
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --duration-fast: 160ms;
+  --duration-normal: 280ms;
+  --duration-slow: 520ms;
+  --duration-cinematic: 780ms;
 }

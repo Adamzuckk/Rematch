@@ -3,15 +3,30 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  min-height: 120px;
+  min-height: 128px;
   padding: var(--space-5);
   overflow: hidden;
-  background: var(--plate);
+  background:
+    linear-gradient(145deg, rgba(107, 189, 69, 0.05), transparent 42%),
+    var(--plate);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
   text-align: start;
   transition:
     transform var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
+    box-shadow var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline: 18% 35%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--lime), transparent);
+  opacity: 0.7;
 }
 
 .card::after {
@@ -19,12 +34,13 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--lime-hot), var(--lime-deep));
 }
 
 .card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 40px rgba(11, 12, 14, 0.12);
+  transform: translateY(-3px);
+  border-color: rgba(107, 189, 69, 0.28);
+  box-shadow: var(--shadow-lift);
 }
 
 .labelRow {
@@ -39,7 +55,7 @@
   font-size: 11px;
   font-weight: 700;
   font-stretch: 70%;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -47,11 +63,12 @@
   position: relative;
   z-index: 1;
   margin-top: auto;
-  font-size: 2.25rem;
+  font-size: 2.35rem;
   font-weight: 800;
-  font-stretch: 125%;
-  letter-spacing: -0.015em;
-  line-height: 0.95;
+  font-stretch: 118%;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  line-height: 0.94;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   color: var(--ink);

@@ -8,6 +8,8 @@
   padding: var(--space-4);
   background: var(--plate);
   color: var(--ink);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
 }
 
@@ -37,9 +39,10 @@
 .tabList {
   display: inline-flex;
   gap: 0;
-  padding: 2px;
+  padding: 3px;
   background: var(--concrete);
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
 }
 
 .tab {
@@ -47,6 +50,7 @@
   border: 0;
   margin: 0;
   padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--ink-3);
   font: inherit;
@@ -56,6 +60,9 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
 .tab:hover {
@@ -68,8 +75,9 @@
 }
 
 .tabActive {
-  background: var(--bg-dark-panel);
-  color: var(--text-on-dark);
+  background: linear-gradient(135deg, var(--lime-hot), var(--lime));
+  color: var(--lime-ink);
+  box-shadow: 0 6px 16px rgba(107, 189, 69, 0.28);
 }
 
 .actions {

@@ -3,18 +3,32 @@
   z-index: 30;
   inset-inline-end: max(1.25rem, env(safe-area-inset-right));
   bottom: max(1.25rem, env(safe-area-inset-bottom));
-  padding: 0.8rem 1.05rem;
-  color: var(--color-field-ink);
-  border: 1px solid var(--color-accent-border);
+  padding: 0.85rem 1.15rem;
+  color: var(--lime-ink);
+  border: 1px solid var(--lime-edge);
   border-radius: 999px;
-  background: var(--color-accent);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+  background: linear-gradient(135deg, var(--lime-hot), var(--lime));
+  box-shadow:
+    0 12px 32px rgba(107, 189, 69, 0.35),
+    0 0 0 4px rgba(107, 189, 69, 0.12);
   cursor: pointer;
   font: inherit;
-  font-size: 0.85rem;
-  font-weight: 750;
+  font-size: 0.82rem;
+  font-weight: 780;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition:
+    transform var(--duration-fast) var(--ease-spring),
+    box-shadow var(--duration-fast) var(--ease-out),
+    filter var(--duration-fast) var(--ease-out);
 }
-.launcher:hover { filter: brightness(1.06); }
+.launcher:hover {
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 40px rgba(107, 189, 69, 0.42),
+    0 0 0 5px rgba(107, 189, 69, 0.16);
+}
 .scrim {
   position: fixed;
   z-index: 1000;
@@ -30,8 +44,10 @@
   width: min(100%, 29rem);
   height: 100%;
   color: var(--color-text);
-  border-inline-start: 1px solid var(--color-border-strong);
-  background: linear-gradient(155deg, var(--color-surface-raised), var(--color-surface) 64%);
+  border-inline-start: 1px solid rgba(107, 189, 69, 0.28);
+  background:
+    linear-gradient(180deg, rgba(107, 189, 69, 0.08), transparent 18%),
+    linear-gradient(155deg, var(--color-surface-raised), var(--color-surface) 64%);
   box-shadow: -18px 0 55px rgba(0, 0, 0, 0.45);
 }
 .header {
@@ -83,7 +99,7 @@
   color: var(--color-text);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
-  background: rgba(182, 244, 71, 0.045);
+  background: rgba(107, 189, 69, 0.06);
   cursor: pointer;
   font: inherit;
   font-size: 0.8rem;
@@ -92,7 +108,7 @@
 }
 .starters button:hover:not(:disabled) {
   border-color: var(--color-accent-border);
-  background: rgba(182, 244, 71, 0.1);
+  background: rgba(107, 189, 69, 0.12);
 }
 .message {
   max-width: 92%;
@@ -112,7 +128,7 @@
   align-self: flex-end;
   border-color: var(--color-accent-border);
   border-end-end-radius: 0.25rem;
-  background: rgba(182, 244, 71, 0.1);
+  background: rgba(107, 189, 69, 0.12);
 }
 .assistantMessage {
   align-self: flex-start;
@@ -156,7 +172,7 @@
 }
 .composer input:focus-visible {
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px rgba(182, 244, 71, 0.16);
+  box-shadow: 0 0 0 2px rgba(107, 189, 69, 0.22);
 }
 .composer button {
   padding-inline: 0.9rem;

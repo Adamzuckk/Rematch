@@ -1,27 +1,48 @@
 .button {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 40px;
-  padding: 10px 20px;
+  min-height: 42px;
+  padding: 10px 22px;
   border: 0;
   border-radius: 0;
-  font-size: 13px;
-  font-weight: 750;
-  font-stretch: 75%;
-  letter-spacing: 0.06em;
+  font-size: 12px;
+  font-weight: 780;
+  font-stretch: 76%;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   cursor: pointer;
   clip-path: var(--cut);
+  overflow: hidden;
   transition:
     background var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out),
-    transform 120ms var(--ease-out);
+    transform 140ms var(--ease-spring),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.22) 48%,
+    transparent 72%
+  );
+  transform: translateX(-120%);
+  transition: transform 420ms var(--ease-out);
+}
+
+.button:hover::after {
+  transform: translateX(120%);
 }
 
 .button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .button:active {
@@ -34,30 +55,38 @@
   transform: none;
 }
 
+.button:disabled::after {
+  display: none;
+}
+
 .primary {
-  color: var(--accent-ink);
-  background: var(--accent);
+  color: var(--lime-ink);
+  background: linear-gradient(135deg, var(--lime-hot), var(--lime));
+  box-shadow: 0 10px 28px rgba(107, 189, 69, 0.28);
 }
 
 .primary:hover {
-  color: var(--accent-ink);
-  background: var(--accent-hover);
+  color: var(--lime-ink);
+  background: linear-gradient(135deg, #95e06f, var(--lime-hot));
+  box-shadow: 0 14px 34px rgba(107, 189, 69, 0.38);
 }
 
 .secondary {
-  color: #fff;
+  color: var(--cream);
   background: var(--ink);
+  box-shadow: 0 10px 24px rgba(5, 7, 6, 0.18);
 }
 
 .secondary:hover {
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--lime);
+  color: var(--lime-ink);
 }
 
 .ghost {
   color: var(--ink-2);
   background: transparent;
   clip-path: none;
+  border-radius: var(--radius-sm);
   text-transform: none;
   letter-spacing: 0.01em;
   font-weight: 600;
@@ -65,14 +94,20 @@
   border: 1px solid transparent;
 }
 
+.ghost::after {
+  display: none;
+}
+
 .ghost:hover {
   color: var(--ink);
-  background: var(--concrete-2);
+  background: rgba(11, 15, 12, 0.06);
+  border-color: var(--line);
 }
 
 .icon {
-  width: 40px;
+  width: 42px;
   padding: 0;
   text-transform: none;
   clip-path: none;
+  border-radius: var(--radius-sm);
 }

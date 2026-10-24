@@ -5,6 +5,8 @@
   min-width: 0;
   padding: var(--space-3) var(--space-4);
   background: var(--plate);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
 }
 

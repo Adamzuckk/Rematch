@@ -8,9 +8,25 @@
   gap: var(--space-3);
   min-height: var(--topbar-height);
   padding: var(--space-2) var(--space-8);
-  background: var(--bg-chrome);
+  background: rgba(5, 7, 6, 0.88);
   border-bottom: 1px solid var(--border-chrome);
   color: var(--text-on-dark);
+  backdrop-filter: blur(14px) saturate(1.2);
+}
+
+.topbar::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 5%,
+    rgba(107, 189, 69, 0.5) 50%,
+    transparent 95%
+  );
+  opacity: 0.7;
 }
 
 .start {
@@ -38,10 +54,11 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 0.8rem;
-  font-weight: 700;
-  font-stretch: 85%;
-  letter-spacing: 0.06em;
+  font-size: 0.78rem;
+  font-weight: 750;
+  font-stretch: 86%;
+  font-style: italic;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-on-dark-secondary);
   white-space: nowrap;
@@ -54,6 +71,7 @@
   height: 22px;
   flex-shrink: 0;
   object-fit: cover;
+  border-radius: 2px;
 }
 
 .end {
@@ -70,12 +88,13 @@
   font-size: 0.62rem;
   font-weight: 700;
   font-stretch: 75%;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #eab308;
-  border: 0;
-  padding: 0.3rem 0.55rem;
-  background: rgba(234, 179, 8, 0.12);
+  color: var(--signal);
+  border: 1px solid rgba(240, 180, 41, 0.28);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.6rem;
+  background: var(--signal-wash);
 }
 
 .badge::before {
@@ -84,13 +103,15 @@
   height: 0.35rem;
   border-radius: 50%;
   background: currentColor;
+  box-shadow: 0 0 0 3px rgba(240, 180, 41, 0.2);
 }
 
 .modeSwitch {
   display: inline-flex;
   gap: 0;
-  padding: 2px;
-  border: 0;
+  padding: 3px;
+  border: 1px solid var(--border-chrome);
+  border-radius: var(--radius-sm);
   background: var(--bg-chrome-elevated);
   margin-inline-end: 0.35rem;
 }
@@ -98,18 +119,20 @@
 .modeBtn,
 .modeActive {
   border: 0;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-on-dark-muted);
-  padding: 0.3rem 0.65rem;
-  font-size: 0.7rem;
-  font-weight: 700;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 750;
   font-stretch: 75%;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
   transition:
     background var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out);
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
 }
 
 .modeBtn:hover {
@@ -117,8 +140,9 @@
 }
 
 .modeActive {
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: var(--lime);
+  color: var(--lime-ink);
+  box-shadow: 0 6px 18px rgba(107, 189, 69, 0.35);
 }
 
 @media (min-width: 640px) {

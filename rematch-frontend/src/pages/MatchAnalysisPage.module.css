@@ -5,6 +5,7 @@
   min-width: 0;
   width: 100%;
   overflow-x: hidden;
+  animation: rematch-enter var(--duration-cinematic) var(--ease-out) both;
 }
 
 .fanPage,
@@ -22,12 +23,14 @@
 
 @keyframes view-in {
   from {
-    opacity: 0.72;
-    transform: translateY(0.35rem);
+    opacity: 0;
+    transform: translateY(0.55rem) skewY(0.3deg);
+    filter: blur(1px);
   }
   to {
     opacity: 1;
     transform: none;
+    filter: none;
   }
 }
 
@@ -45,7 +48,8 @@
 .notice {
   margin: 0;
   padding: var(--space-3) var(--space-4);
-  border-inline-start: 3px solid #eab308;
+  border-inline-start: 3px solid var(--signal);
+  border-radius: var(--radius-sm);
   background: var(--color-demo-bg);
   color: var(--color-demo);
   font-size: 0.83rem;
@@ -72,6 +76,8 @@
   min-width: 0;
   padding: var(--space-3);
   background: var(--plate);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
 }
 
@@ -81,7 +87,8 @@
   gap: var(--space-2) var(--space-4);
   align-items: center;
   padding: var(--space-2) var(--space-3);
-  background: var(--concrete);
+  background: linear-gradient(90deg, rgba(107, 189, 69, 0.08), var(--mist));
+  border-radius: var(--radius-sm);
 }
 
 .hudScore {

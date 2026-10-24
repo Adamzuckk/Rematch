@@ -5,14 +5,38 @@
   gap: var(--space-3);
   min-width: 0;
   padding: var(--space-6) var(--space-4);
-  background: var(--plate);
+  background:
+    linear-gradient(120deg, rgba(107, 189, 69, 0.04), transparent 38%),
+    var(--plate);
   color: var(--ink);
+  border: 1px solid rgba(11, 15, 12, 0.07);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
   text-align: start;
+  overflow: hidden;
   transition:
     background var(--duration-normal) var(--ease-out),
     color var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out);
+    box-shadow var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--lime) 35%,
+    var(--lime-hot) 55%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
 }
 
 @media (min-width: 640px) {
@@ -23,9 +47,17 @@
 }
 
 .card:hover {
-  background: var(--ink);
-  color: #fff;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  background:
+    radial-gradient(80% 120% at 100% 0%, rgba(107, 189, 69, 0.18), transparent 50%),
+    var(--void-2);
+  color: var(--cream);
+  border-color: rgba(107, 189, 69, 0.35);
+  box-shadow: var(--shadow-lime);
+  transform: translateY(-3px);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 .fixture {
@@ -66,9 +98,10 @@
   white-space: nowrap;
   font-size: 18px;
   font-weight: 800;
-  font-stretch: 125%;
-  letter-spacing: -0.015em;
-  line-height: 0.95;
+  font-stretch: 118%;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  line-height: 0.94;
   text-transform: uppercase;
 }
 
@@ -81,17 +114,19 @@
 .kitHome,
 .kitAway {
   flex-shrink: 0;
-  width: 0.75rem;
-  height: 2.25rem;
-  transform: skewX(-14deg);
+  width: 0.7rem;
+  height: 2.35rem;
+  transform: skewX(-16deg);
+  border-radius: 1px;
 }
 
 .kitHome {
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--lime-hot), var(--lime-deep));
+  box-shadow: 0 0 16px var(--lime-glow);
 }
 
 .kitAway {
-  background: var(--color-opposition);
+  background: linear-gradient(180deg, #7ecceb, var(--sky));
 }
 
 .scoreBlock {
@@ -106,9 +141,10 @@
   justify-content: center;
   font-size: 40px;
   font-weight: 800;
-  font-stretch: 125%;
-  letter-spacing: -0.015em;
-  line-height: 0.95;
+  font-stretch: 118%;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  line-height: 0.94;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   font-feature-settings: 'tnum';
@@ -124,11 +160,11 @@
   padding-inline: 0.5rem;
   color: var(--ink-4);
   font-weight: 300;
-  font-stretch: 125%;
+  font-stretch: 118%;
 }
 
 .card:hover .scoreSep {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(241, 244, 237, 0.35);
 }
 
 .vs {
@@ -141,7 +177,7 @@
 }
 
 .card:hover .vs {
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(241, 244, 237, 0.45);
 }
 
 .footer {
@@ -176,7 +212,7 @@
 }
 
 .card:hover .liveMinute {
-  color: #ff7a66;
+  color: #ff8a78;
 }
 
 .description {
@@ -188,7 +224,7 @@
 }
 
 .card:hover .description {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(241, 244, 237, 0.78);
 }
 
 .actions {
@@ -217,7 +253,7 @@
 }
 
 .card:hover .secondaryCta {
-  background: #fff;
+  background: var(--cream);
   color: var(--ink);
 }
 
@@ -227,14 +263,14 @@
 }
 
 .card:hover :global(.finished) {
-  color: rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.08);
+  color: rgba(241, 244, 237, 0.55);
+  background: rgba(241, 244, 237, 0.08);
   border-color: transparent;
 }
 
 .card:hover :global(.live) {
-  color: #ff7a66;
-  background: rgba(255, 77, 46, 0.16);
+  color: #ff8a78;
+  background: rgba(255, 83, 64, 0.16);
   border-color: transparent;
 }
 
@@ -245,8 +281,8 @@
 }
 
 .card:hover :global(.demo) {
-  color: #eab308;
-  background: rgba(234, 179, 8, 0.14);
+  color: var(--signal);
+  background: var(--signal-wash);
   border-color: transparent;
 }
 
@@ -278,5 +314,5 @@
 
 :global([dir='rtl']) .kitHome,
 :global([dir='rtl']) .kitAway {
-  transform: skewX(14deg);
+  transform: skewX(16deg);
 }

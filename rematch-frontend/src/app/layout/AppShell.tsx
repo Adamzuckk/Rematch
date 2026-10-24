@@ -28,6 +28,14 @@ export function AppShell() {
 
   return (
     <div className={styles.shell}>
+      <div className={styles.atmosphere} aria-hidden="true">
+        <span className={styles.orbit} />
+        <span className={styles.orbitLate} />
+        <span className={styles.scan} />
+        <span className={styles.sliceA} />
+        <span className={styles.sliceB} />
+        <span className={styles.sliceC} />
+      </div>
       <div className={styles.pitchPulse} aria-hidden="true" />
       <div className={styles.touchline} aria-hidden="true" />
       <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
@@ -41,7 +49,7 @@ export function AppShell() {
       ) : null}
       <div className={styles.mainColumn}>
         <TopBar onOpenNav={() => setNavOpen(true)} navOpen={navOpen} />
-        <main className={styles.content} id="main">
+        <main className={styles.content} id="main" key={location.pathname}>
           <Outlet />
         </main>
       </div>

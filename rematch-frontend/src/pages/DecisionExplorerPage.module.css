@@ -5,18 +5,27 @@
   min-width: 0;
   width: 100%;
   overflow-x: hidden;
+  animation: rematch-enter var(--duration-cinematic) var(--ease-out) both;
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  padding-bottom: var(--space-1);
+  padding: var(--space-3);
+  background: rgba(247, 249, 244, 0.72);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(8px);
 }
 
 .loading {
   margin: 0;
   padding: var(--space-8) 0;
   color: var(--ink-2);
-  font-size: 0.95rem;
+  font-size: 11px;
+  font-weight: 750;
+  font-stretch: 70%;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }

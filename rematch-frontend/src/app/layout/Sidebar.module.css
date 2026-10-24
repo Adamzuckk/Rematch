@@ -3,10 +3,12 @@
   top: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-7);
   height: 100svh;
   padding: var(--space-5) var(--space-4);
-  background: var(--bg-chrome);
+  background:
+    linear-gradient(180deg, rgba(107, 189, 69, 0.06), transparent 28%),
+    var(--bg-chrome);
   border-inline-end: 1px solid var(--border-chrome);
   z-index: 40;
   color: var(--text-on-dark);
@@ -23,41 +25,59 @@
 }
 
 .brandMark {
+  position: relative;
   display: flex;
   width: 100%;
   min-width: 0;
 }
 
+.brandMark::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: -0.55rem;
+  width: 2.5rem;
+  height: 2px;
+  background: var(--lime);
+  box-shadow: 0 0 16px var(--lime-glow);
+}
+
 .logoMark {
   display: block;
-  width: min(100%, 176px);
+  width: min(100%, 188px);
   height: auto;
   object-fit: contain;
   object-position: left center;
+  filter: drop-shadow(0 8px 24px rgba(107, 189, 69, 0.18));
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.brand:hover .logoMark {
+  transform: translateX(2px) skewX(-2deg);
 }
 
 .brandTag {
   margin: 0;
-  max-width: 14rem;
-  font-size: 0.72rem;
-  line-height: 1.45;
+  max-width: 15rem;
+  font-size: 0.74rem;
+  line-height: 1.5;
   color: var(--text-on-dark-secondary);
-  font-stretch: 90%;
+  font-stretch: 92%;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .navLabel {
   padding: 0 var(--space-3) var(--space-2);
   color: var(--text-on-dark-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   font-stretch: 70%;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -66,32 +86,59 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 var(--space-3);
   color: var(--text-on-dark-secondary);
   border: 0;
-  font-size: 0.875rem;
-  font-weight: 700;
-  font-stretch: 85%;
-  letter-spacing: 0.04em;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 750;
+  font-stretch: 84%;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  overflow: hidden;
   transition:
     background var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out);
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.link::before {
+  content: '';
+  position: absolute;
+  inset-block: 20%;
+  inset-inline-start: 0;
+  width: 2px;
+  background: transparent;
+  transition: background var(--duration-fast) var(--ease-out);
 }
 
 .link:hover {
-  background: var(--bg-chrome-hover);
+  background: rgba(241, 244, 237, 0.05);
   color: var(--text-on-dark);
+  transform: translateX(2px);
+}
+
+:global([dir='rtl']) .link:hover {
+  transform: translateX(-2px);
+}
+
+.link:hover::before {
+  background: var(--lime);
 }
 
 .linkActive {
-  color: var(--accent-ink);
-  background: var(--accent);
+  color: var(--lime-ink);
+  background: linear-gradient(90deg, var(--lime), var(--lime-hot));
+  box-shadow: 0 10px 28px rgba(107, 189, 69, 0.28);
+}
+
+.linkActive::before {
+  background: transparent;
 }
 
 .linkActive svg {
-  color: var(--accent-ink);
+  color: var(--lime-ink);
 }
 
 .footer {
@@ -106,14 +153,16 @@
 .demoNote {
   font-size: 0.68rem;
   line-height: 1.45;
-  color: #eab308;
+  color: var(--signal);
 }
 
 .langRow {
   display: flex;
   gap: 2px;
-  padding: 2px;
+  padding: 3px;
+  border-radius: var(--radius-sm);
   background: var(--bg-chrome-elevated);
+  border: 1px solid var(--border-chrome);
 }
 
 .langButton {
@@ -121,6 +170,7 @@
   clip-path: none;
   min-height: 36px;
   font-size: 11px;
+  border-radius: var(--radius-xs);
 }
 
 .sidebar :global(.ghost),
@@ -133,13 +183,13 @@
 
 .sidebar :global(.ghost:hover),
 .sidebar :global(.secondary:hover) {
-  color: var(--accent-ink);
-  background: var(--accent);
-  border-color: var(--accent);
+  color: var(--lime-ink);
+  background: var(--lime);
+  border-color: var(--lime);
 }
 
 .sidebar :global(.primary) {
-  color: var(--accent-ink);
+  color: var(--lime-ink);
   clip-path: none;
 }
 

@@ -5,10 +5,23 @@
   gap: var(--space-5);
   padding: clamp(1.25rem, 2.5vw, 1.75rem) clamp(1.25rem, 3vw, 2rem);
   overflow: hidden;
-  background: var(--ink);
-  color: #fff;
+  background:
+    radial-gradient(90% 120% at 100% 0%, rgba(107, 189, 69, 0.18), transparent 48%),
+    linear-gradient(145deg, var(--void-3), var(--void));
+  color: var(--cream);
   min-width: 0;
-  box-shadow: var(--shadow-plate);
+  border: 1px solid rgba(241, 244, 237, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-chrome);
+}
+.root::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lime), transparent);
+  z-index: 2;
 }
 
 .compact {

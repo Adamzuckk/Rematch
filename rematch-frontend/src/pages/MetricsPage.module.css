@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  animation: rematch-enter var(--duration-normal) var(--ease-out);
+  animation: rematch-enter var(--duration-cinematic) var(--ease-out) both;
 }
 
 .header {
@@ -13,18 +13,21 @@
 .eyebrow,
 .sourceLabel {
   margin: 0;
-  color: var(--accent-hover);
+  color: var(--lime-deep);
   font-size: 0.68rem;
-  font-weight: 650;
-  letter-spacing: 0.1em;
+  font-weight: 750;
+  font-stretch: 72%;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .header h1 {
   margin: var(--space-2) 0;
-  font-size: clamp(1.85rem, 3.5vw, 2.7rem);
-  font-weight: 700;
-  letter-spacing: -0.035em;
+  font-size: clamp(1.95rem, 3.8vw, 3rem);
+  font-weight: 800;
+  font-stretch: 112%;
+  font-style: italic;
+  letter-spacing: -0.03em;
   color: var(--ink);
 }
 
@@ -40,6 +43,8 @@
   gap: var(--space-3);
   padding: var(--space-4);
   background: var(--plate);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
 }
 
@@ -125,7 +130,14 @@
   min-height: 6.5rem;
   padding: var(--space-4);
   background: var(--plate);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
+  transition: transform var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal) var(--ease-out);
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
 }
 
 .card p {
@@ -163,6 +175,8 @@
 .coverage {
   padding: var(--space-5);
   background: var(--plate);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
 }
 

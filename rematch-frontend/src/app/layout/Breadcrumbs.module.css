@@ -10,7 +10,7 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 .item {
@@ -23,7 +23,7 @@
 
 .separator {
   color: var(--text-on-dark-muted);
-  opacity: 0.7;
+  opacity: 0.55;
 }
 
 :global([dir='rtl']) .separator {
@@ -32,16 +32,17 @@
 
 .link {
   color: var(--text-on-dark-secondary);
-  font-weight: 500;
+  font-weight: 550;
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .link:hover {
-  color: var(--accent);
+  color: var(--lime-hot);
 }
 
 .current {
   color: var(--text-on-dark);
-  font-weight: 500;
+  font-weight: 650;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

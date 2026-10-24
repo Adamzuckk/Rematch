@@ -4,6 +4,7 @@
   gap: var(--space-6);
   padding-top: var(--space-2);
   text-align: start;
+  animation: rematch-enter var(--duration-cinematic) var(--ease-out) both;
 }
 
 .header {
@@ -16,9 +17,20 @@
   overflow: hidden;
   border: 1px solid var(--border-chrome);
   border-radius: var(--radius-lg);
-  background: var(--bg-dark-panel);
+  background:
+    radial-gradient(70% 100% at 100% 0%, rgba(107, 189, 69, 0.18), transparent 50%),
+    var(--bg-dark-panel);
   color: var(--text-on-dark);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-chrome);
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lime), transparent);
 }
 
 .header::after {
@@ -38,7 +50,7 @@
   z-index: 1;
   color: var(--accent);
   font-size: 0.68rem;
-  font-weight: 650;
+  font-weight: 750;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -47,9 +59,11 @@
   position: relative;
   z-index: 1;
   font-size: clamp(1.85rem, 3.5vw, 2.85rem);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.04em;
+  font-weight: 800;
+  font-stretch: 112%;
+  font-style: italic;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
   color: var(--text-on-dark);
 }
 
@@ -59,7 +73,7 @@
   max-width: 36rem;
   color: var(--text-on-dark-secondary);
   font-size: 1rem;
-  line-height: 1.6;
+  line-height: 1.65;
 }
 
 .panel {
@@ -70,12 +84,17 @@
   padding: var(--space-6);
   background: var(--plate);
   color: var(--ink);
+  border: 1px solid rgba(11, 15, 12, 0.06);
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-plate);
 }
 
 .panelTitle {
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 800;
+  font-stretch: 108%;
+  font-style: italic;
+  text-transform: uppercase;
   color: var(--ink);
 }
 
