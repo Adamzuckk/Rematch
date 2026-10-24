@@ -399,6 +399,8 @@ export function MatchAnalysisPage() {
           players: simState.players,
           ball: simState.ball,
           showLabels: !reducedMotion || simState.players.length <= 6,
+          motionMode: simState.motionMode,
+          segmentProgress: simState.segmentProgress,
         }
       : null
 

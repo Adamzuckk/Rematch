@@ -118,14 +118,14 @@
   --color-demo-bg: var(--signal-wash);
   --color-signal: var(--signal);
   --color-opposition: var(--sky);
-  --color-pitch-turf: #2d6b36;
-  --color-pitch-turf-stripe: #347a3e;
-  --color-pitch-line: rgba(255, 255, 255, 0.9);
+  --color-pitch-turf: #2f7538;
+  --color-pitch-turf-stripe: #3a8644;
+  --color-pitch-line: rgba(248, 250, 245, 0.92);
   --color-pitch-home: var(--lime);
   --color-pitch-away: var(--sky);
-  --color-pitch-ball: var(--cream);
+  --color-pitch-ball: #f4f1ea;
   --color-pitch-event: var(--signal);
-  --color-pitch-path: rgba(240, 180, 41, 0.92);
+  --color-pitch-path: rgba(240, 180, 41, 0.95);
 
   --font-sans: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
   --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;

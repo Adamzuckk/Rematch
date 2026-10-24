@@ -74,11 +74,15 @@
   flex-direction: column;
   gap: var(--space-3);
   min-width: 0;
-  padding: var(--space-3);
-  background: var(--plate);
-  border: 1px solid rgba(11, 15, 12, 0.06);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-plate);
+  padding: clamp(0.65rem, 1.5vw, 1rem);
+  background:
+    radial-gradient(120% 80% at 50% -20%, rgba(107, 189, 69, 0.12), transparent 50%),
+    linear-gradient(165deg, #0c1210 0%, #141b17 48%, #0a0e0c 100%);
+  border: 1px solid rgba(241, 244, 237, 0.08);
+  border-radius: calc(var(--radius-md) + 2px);
+  box-shadow:
+    0 22px 50px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(241, 244, 237, 0.05);
 }
 
 .simHud {
@@ -86,71 +90,80 @@
   grid-template-columns: 1fr auto;
   gap: var(--space-2) var(--space-4);
   align-items: center;
-  padding: var(--space-2) var(--space-3);
-  background: linear-gradient(90deg, rgba(107, 189, 69, 0.08), var(--mist));
+  padding: 0.65rem 0.9rem;
+  background:
+    linear-gradient(105deg, rgba(107, 189, 69, 0.16), rgba(15, 20, 17, 0.92) 42%, rgba(15, 20, 17, 0.88)),
+    rgba(10, 14, 12, 0.92);
+  border: 1px solid rgba(241, 244, 237, 0.1);
   border-radius: var(--radius-sm);
+  box-shadow: inset 0 1px 0 rgba(241, 244, 237, 0.06);
+  backdrop-filter: blur(8px);
 }
 
 .hudScore {
   display: inline-flex;
   align-items: baseline;
   gap: var(--space-3);
-  font-weight: 750;
+  font-weight: 780;
+  color: var(--cream);
 }
 
 .hudTeam {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-stretch: 75%;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--ink-2);
+  color: rgba(241, 244, 237, 0.72);
 }
 
 .hudDigits {
-  font-size: 1.35rem;
-  letter-spacing: -0.03em;
-  color: var(--ink);
+  font-size: clamp(1.35rem, 2.4vw, 1.7rem);
+  letter-spacing: -0.04em;
+  color: var(--cream);
+  text-shadow: 0 0 18px rgba(107, 189, 69, 0.25);
 }
 
 .hudMeta {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.15rem;
+  gap: 0.2rem;
 }
 
 .hudMinute {
-  font-size: 1.1rem;
-  font-weight: 750;
-  color: var(--accent-hover);
+  font-size: 1.15rem;
+  font-weight: 780;
+  color: var(--lime-hot);
+  font-variant-numeric: tabular-nums;
 }
 
 .hudStatus {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 700;
   font-stretch: 75%;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: rgba(241, 244, 237, 0.55);
 }
 
 .hudNote {
   grid-column: 1 / -1;
   margin: 0;
-  font-size: 0.72rem;
-  color: var(--ink-3);
+  font-size: 0.7rem;
+  color: rgba(241, 244, 237, 0.48);
 }
 
 .pitchWrap {
   min-width: 0;
+  border-radius: var(--radius-sm);
 }
 
 .pitchDominant :global(svg) {
-  min-block-size: min(62vh, 44rem);
+  min-block-size: min(66vh, 46rem);
 }
 
 .pitchAnalysis :global(svg) {
-  min-block-size: min(48vh, 34rem);
+  min-block-size: min(52vh, 36rem);
 }
 
 .toolbar {
