@@ -10,6 +10,7 @@ import type {
 import type { MatchFrame, MatchSummary } from '../../types'
 import { useState } from 'react'
 import type { DecisionNarrativeState } from '../../hooks/useDecisionNarrative'
+import { DecisionAnalystChat } from './DecisionAnalystChat'
 import { FootballPitch } from '../pitch/FootballPitch'
 import { Button } from '../ui/Button'
 import { isValidPitchPoint } from '../../types/coordinates'
@@ -830,6 +831,7 @@ export function DecisionExplorerPanel({
           </details>
         </div>
       </div>
+      <DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />
     </article>
   )
 }

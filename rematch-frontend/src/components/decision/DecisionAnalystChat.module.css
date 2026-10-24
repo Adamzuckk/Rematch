@@ -1,0 +1,183 @@
+.launcher {
+  position: fixed;
+  z-index: 30;
+  inset-inline-end: max(1.25rem, env(safe-area-inset-right));
+  bottom: max(1.25rem, env(safe-area-inset-bottom));
+  padding: 0.8rem 1.05rem;
+  color: var(--color-field-ink);
+  border: 1px solid var(--color-accent-border);
+  border-radius: 999px;
+  background: var(--color-accent);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.38);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 750;
+}
+.launcher:hover { filter: brightness(1.06); }
+.scrim {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(3, 6, 4, 0.72);
+  backdrop-filter: blur(3px);
+}
+.drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 29rem);
+  height: 100%;
+  color: var(--color-text);
+  border-inline-start: 1px solid var(--color-border-strong);
+  background: linear-gradient(155deg, var(--color-surface-raised), var(--color-surface) 64%);
+  box-shadow: -18px 0 55px rgba(0, 0, 0, 0.45);
+}
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.header p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.close {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  cursor: pointer;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+.thread {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+.starters {
+  display: grid;
+  gap: var(--space-2);
+  margin-block: auto;
+}
+.starters button {
+  padding: 0.75rem 0.85rem;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(182, 244, 71, 0.045);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  text-align: start;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.starters button:hover:not(:disabled) {
+  border-color: var(--color-accent-border);
+  background: rgba(182, 244, 71, 0.1);
+}
+.message {
+  max-width: 92%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+}
+.message p {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+.userMessage {
+  align-self: flex-end;
+  border-color: var(--color-accent-border);
+  border-end-end-radius: 0.25rem;
+  background: rgba(182, 244, 71, 0.1);
+}
+.assistantMessage {
+  align-self: flex-start;
+  border-end-start-radius: 0.25rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+.citation {
+  display: inline-block;
+  margin-top: var(--space-2);
+  color: var(--color-accent);
+  font-size: 0.72rem;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.loading {
+  align-self: flex-start;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+.composer {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-border);
+  background: rgba(0, 0, 0, 0.12);
+}
+.composer input {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.8rem;
+}
+.composer input:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(182, 244, 71, 0.16);
+}
+.composer button {
+  padding-inline: 0.9rem;
+  color: var(--color-field-ink);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.composer button:disabled,
+.starters button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+@media (max-width: 560px) {
+  .launcher {
+    inset-inline-end: 1rem;
+    bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  .drawer { width: 100%; }
+}
