@@ -245,6 +245,12 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
       screen.getByRole('heading', { name: STRINGS.en.decisionPipelineHeading }),
     ).toBeInTheDocument()
     expect(
+      screen.getByRole('heading', {
+        name: STRINGS.en.decisionPipelineSummaryHeading,
+      }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionPipelineSummary)).toBeInTheDocument()
+    expect(
       screen.getByRole('heading', { name: STRINGS.en.decisionPipelineMatchAgent }),
     ).toBeInTheDocument()
     expect(
@@ -255,6 +261,9 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
     ).toBeInTheDocument()
     expect(screen.getByText('not_assessed')).toBeInTheDocument()
     expect(screen.getByText(STRINGS.en.decisionPipelineVerifierNote)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionPipelineFooter)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionPipelineKeyPoints)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionPipelineLimitation)).toBeInTheDocument()
 
     const englishNarrative = within(screen.getByTestId('decision-narrative-content'))
     expect(englishNarrative.getByText(narrativeResponse.narrative.english.headline)).toBeInTheDocument()

@@ -345,6 +345,14 @@ export function DecisionExplorerPanel({
         className={`${styles.panel} ${styles.pipelinePanel}`}
         aria-labelledby="decision-multi-agent-pipeline"
       >
+        <div className={styles.pipelineSummary}>
+          <h2 className={styles.panelTitle}>
+            {t('decisionPipelineSummaryHeading')}
+          </h2>
+          <p className={styles.panelNote}>
+            {t('decisionPipelineSummary')}
+          </p>
+        </div>
         <div>
           <h2
             id="decision-multi-agent-pipeline"
@@ -500,7 +508,7 @@ export function DecisionExplorerPanel({
                 {t('decisionPipelineNarratorAgent')}
               </h3>
               {bilingualNarrative ? (
-                <>
+                <div className={styles.pipelineNarrativeLanguages}>
                   {([
                     ['en', t('decisionPipelineEnglish'), bilingualNarrative.english],
                     ['ar', t('decisionPipelineArabic'), bilingualNarrative.arabic],
@@ -518,24 +526,24 @@ export function DecisionExplorerPanel({
                         {narrative.headline}
                       </h5>
                       <h6 className={styles.pipelineSubheading}>
-                        {t('decisionNarrativeObservations')}
+                        {t('decisionPipelineKeyPoints')}
                       </h6>
                       <ul className={styles.limitList}>
-                        {narrative.keyObservations.map((observation) => (
+                        {narrative.keyObservations.slice(0, 3).map((observation) => (
                           <li key={observation}>{observation}</li>
                         ))}
                       </ul>
                       <h6 className={styles.pipelineSubheading}>
-                        {t('decisionLimitationsHeading')}
+                        {t('decisionPipelineLimitation')}
                       </h6>
                       <ul className={styles.limitList}>
-                        {narrative.limitations.map((limitation) => (
+                        {narrative.limitations.slice(0, 1).map((limitation) => (
                           <li key={limitation}>{limitation}</li>
                         ))}
                       </ul>
                     </div>
                   ))}
-                </>
+                </div>
               ) : (
                 <NarrativeAgentFallback
                   state={narrativeState}

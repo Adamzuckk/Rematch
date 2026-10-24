@@ -178,8 +178,11 @@ export const STRINGS = {
     decisionNarrativeVerificationScope:
       'Evidence-reference and calculation validation does not establish whether natural-language claims are true.',
     decisionPipelineHeading: 'Multi-Agent Pipeline',
+    decisionPipelineSummaryHeading: 'Orchestration Summary',
+    decisionPipelineSummary:
+      'The Orchestrator coordinates three specialists through one shared evidence pack, then assembles the bilingual result.',
     decisionPipelineDescription:
-      'Four coordinated stages pass one shared evidence pack from the request through grounded bilingual delivery.',
+      'Sequential handoffs through one shared evidence pack.',
     decisionPipelineSteps: 'Four-stage agent orchestration pipeline',
     decisionPipelineOrchestratorRole: 'Coordination',
     decisionPipelineOrchestratorAgent: 'Orchestrator Agent',
@@ -220,12 +223,14 @@ export const STRINGS = {
       'Deterministic bilingual narrative from Truth Pack only.',
     decisionPipelineEnglish: 'English',
     decisionPipelineArabic: 'Arabic',
+    decisionPipelineKeyPoints: 'Key points',
+    decisionPipelineLimitation: 'Limitation',
     decisionPipelineNarratorHandoff:
       'Generated a grounded bilingual narrative from checked data only.',
     decisionPipelineNarratorWaiting:
       'Narrator handoff appears when the bilingual response is ready.',
     decisionPipelineFooter:
-      'Four specialized agents coordinated through a shared evidence pack. Code calculated every number. AI only explained. No statistics were invented.',
+      'Code calculated every number. AI only explained. No statistics were invented.',
     decisionUnavailableMetrics:
       'Not computed: xG, xT, pass-completion probability, packing, or full pressure maps.',
     decisionProvenanceSynthetic: 'Synthetic data',
@@ -499,8 +504,11 @@ export const STRINGS = {
     decisionNarrativeVerificationScope:
       'التحقق من مراجع الأدلة والحسابات لا يثبت صحة الادعاءات المكتوبة باللغة الطبيعية.',
     decisionPipelineHeading: 'مسار الوكلاء المتعددين',
+    decisionPipelineSummaryHeading: 'ملخص التنسيق',
+    decisionPipelineSummary:
+      'ينسق وكيل التنسيق ثلاثة وكلاء متخصصين عبر حزمة أدلة مشتركة، ثم يجمع النتيجة باللغتين.',
     decisionPipelineDescription:
-      'أربع مراحل منسقة تمرر حزمة أدلة مشتركة من الطلب حتى تقديم سرد ثنائي اللغة مستند إلى البيانات.',
+      'تسليمات متتابعة عبر حزمة أدلة مشتركة واحدة.',
     decisionPipelineSteps: 'مسار تنسيق من أربع مراحل للوكلاء',
     decisionPipelineOrchestratorRole: 'التنسيق',
     decisionPipelineOrchestratorAgent: 'وكيل التنسيق',
@@ -541,12 +549,14 @@ export const STRINGS = {
       'سرد ثنائي اللغة حتمي مستند إلى حزمة الحقيقة فقط.',
     decisionPipelineEnglish: 'الإنجليزية',
     decisionPipelineArabic: 'العربية',
+    decisionPipelineKeyPoints: 'النقاط الرئيسية',
+    decisionPipelineLimitation: 'ملاحظة',
     decisionPipelineNarratorHandoff:
       'أنشأ سردًا ثنائي اللغة مستندًا إلى البيانات المدققة فقط.',
     decisionPipelineNarratorWaiting:
       'يظهر تسليم الراوي عند جاهزية الاستجابة ثنائية اللغة.',
     decisionPipelineFooter:
-      'نسّق أربعة وكلاء متخصصين عبر حزمة أدلة مشتركة. حسبت الشيفرة كل رقم. اقتصر دور الذكاء الاصطناعي على الشرح. لم تُختلق أي إحصاءات.',
+      'حسبت الشيفرة كل رقم. اقتصر دور الذكاء الاصطناعي على الشرح. لم تُختلق أي إحصاءات.',
     decisionUnavailableMetrics:
       'غير محسوبة: xG، xT، احتمال إكمال التمريرة، التعبئة، أو خرائط الضغط الكاملة.',
     decisionProvenanceSynthetic: 'بيانات اصطناعية',

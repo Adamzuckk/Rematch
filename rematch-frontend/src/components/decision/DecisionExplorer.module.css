@@ -138,6 +138,18 @@
 .pipelinePanel {
   gap: var(--space-4);
 }
+.pipelineSummary {
+  padding: var(--space-3) var(--space-4);
+  border-inline-start: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(100deg, rgba(182, 244, 71, 0.1), rgba(182, 244, 71, 0.025));
+}
+.pipelineSummary .panelTitle {
+  margin-bottom: var(--space-1);
+}
+.pipelineSummary .panelNote {
+  margin: 0;
+}
 .pipelineGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -209,8 +221,16 @@
 }
 .pipelineLanguageBlock {
   width: 100%;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(7, 11, 8, 0.28);
+}
+.pipelineNarrativeLanguages {
+  display: grid;
+  width: 100%;
+  gap: var(--space-2);
 }
 .pipelineLanguageLabel {
   margin: 0 0 var(--space-2);
