@@ -153,6 +153,10 @@ export const STRINGS = {
     decisionRankingEmpty: 'No rankable actions to compare.',
     decisionRankingNote:
       'Ranking follows geometric_progression_v1 only. A higher score is not an objectively correct football decision.',
+    decisionShowAll: 'Show all',
+    decisionShowLess: 'Show less',
+    decisionShowAllClaims: 'Show all claims',
+    decisionNoClaims: 'No claims were returned for this analysis.',
     decisionScoringHeading: 'Scoring method',
     decisionScoringExplainer:
       'geometric_progression_v1 measures how far an action advances toward the opponent goal in pitch-percent geometry. It is not xG, probability, or proof of a better real-world decision.',
@@ -479,6 +483,10 @@ export const STRINGS = {
     decisionRankingEmpty: 'لا توجد إجراءات قابلة للترتيب للمقارنة.',
     decisionRankingNote:
       'الترتيب يتبع geometric_progression_v1 فقط. الدرجة الأعلى ليست قراراً كروياً صحيحاً موضوعياً.',
+    decisionShowAll: 'عرض الكل',
+    decisionShowLess: 'عرض أقل',
+    decisionShowAllClaims: 'عرض كل الادعاءات',
+    decisionNoClaims: 'لم تُرجع هذه التحليلات ادعاءات.',
     decisionScoringHeading: 'طريقة التسجيل',
     decisionScoringExplainer:
       'تقيس geometric_progression_v1 مدى تقدّم الإجراء نحو مرمى الخصم بهندسة نسبة الملعب. ليست xG أو احتمالاً أو دليلاً على قرار أفضل في الواقع.',

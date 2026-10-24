@@ -125,9 +125,11 @@ function ClaimCard({ claim }: { claim: DecisionClaim }) {
       {claim.evidence.length > 0 ? (
         <ul className={styles.evidenceList}>
           {claim.evidence.map((ref) => (
-            <li key={`${ref.kind}:${ref.id}`}>
+            <li
+              key={`${ref.kind}:${ref.id}`}
+              title={`${ref.kind}:${ref.id}${ref.detail ? ` — ${ref.detail}` : ''}`}
+            >
               {ref.kind}:{ref.id}
-              {ref.detail ? ` — ${ref.detail}` : ''}
             </li>
           ))}
         </ul>
@@ -203,6 +205,8 @@ export function DecisionExplorerPanel({
     analysisKey: string
     actionId: string
   } | null>(null)
+  const [showAllRanking, setShowAllRanking] = useState(false)
+  const [showAllClaims, setShowAllClaims] = useState(false)
   const analysisKey = `${analysis.matchId}:${analysis.eventId}`
   const selectedActionId = selection?.analysisKey === analysisKey ? selection.actionId : null
   const selectAction = (actionId: string | null) =>
@@ -223,6 +227,7 @@ export function DecisionExplorerPanel({
   const observedRank = analysis.ranking.find((entry) => entry.actionId === analysis.observed.actionId)?.rank
   const selectedClaim = selected ? analysis.claims.find((claim) => claim.id === `claim-alt-score:${selected.actionId}`) : null
   const ranking = sortRanking(analysis.ranking)
+  const visibleRanking = showAllRanking ? ranking : ranking.slice(0, 5)
   const isSynthetic = analysis.provenance === 'synthetic'
   const contextOutcome =
     typeof analysis.context.outcome === 'string'
@@ -508,7 +513,15 @@ export function DecisionExplorerPanel({
                 {t('decisionPipelineNarratorAgent')}
               </h3>
               {bilingualNarrative ? (
-                <div className={styles.pipelineNarrativeLanguages}>
+              <div
+                className={styles.pipelineNarrativeLanguages}
+                data-testid="decision-narrative-content"
+              >
+                  <p className={styles.panelNote}>
+                    {t('decisionNarrativeProvenance')}: {narrativeProvenance === 'synthetic'
+                      ? t('decisionProvenanceSynthetic')
+                      : t('decisionProvenanceApi')}
+                  </p>
                   {([
                     ['en', t('decisionPipelineEnglish'), bilingualNarrative.english],
                     ['ar', t('decisionPipelineArabic'), bilingualNarrative.arabic],
@@ -571,105 +584,73 @@ export function DecisionExplorerPanel({
         </p>
       </section>
 
-      <div className={styles.grid}>
-        <div className={styles.stack}>
-          <section className={styles.panel} aria-labelledby="decision-context">
+      <div className={styles.decisionLayout}>
+        <div className={styles.summaryRow}>
+          <section
+            className={`${styles.panel} ${styles.compactPanel}`}
+            aria-labelledby="decision-context"
+          >
             <h2 id="decision-context" className={styles.panelTitle}>
               {t('decisionContextHeading')}
             </h2>
-            <dl className={styles.dl}>
-              <div className={styles.row}>
-                <dt>{t('decisionFieldMatch')}</dt>
-                <dd className={styles.mono}>
-                  {matchLabel ?? analysis.matchId}
-                </dd>
-              </div>
-              <div className={styles.row}>
-                <dt>{t('decisionFieldEvent')}</dt>
-                <dd className={styles.mono}>{analysis.eventId}</dd>
-              </div>
-              <div className={styles.row}>
-                <dt>{t('decisionFieldType')}</dt>
-                <dd className={styles.mono}>{analysis.eventType}</dd>
-              </div>
-              {contextMinute != null ? (
-                <div className={styles.row}>
-                  <dt>{t('decisionFieldMinute')}</dt>
-                  <dd className={styles.mono}>{contextMinute}&apos;</dd>
-                </div>
-              ) : null}
-              {contextPlayer ? (
-                <div className={styles.row}>
-                  <dt>{t('decisionFieldPlayer')}</dt>
-                  <dd>{contextPlayer}</dd>
-                </div>
-              ) : null}
-              {contextOutcome ? (
-                <div className={styles.row}>
-                  <dt>{t('decisionConceptOutcome')}</dt>
-                  <dd className={styles.mono}>{contextOutcome}</dd>
-                </div>
-              ) : null}
+            <dl className={styles.compactFacts}>
+              <div><dt>{t('decisionFieldMatch')}</dt><dd title={matchLabel ?? analysis.matchId}>{matchLabel ?? analysis.matchId}</dd></div>
+              <div><dt>{t('decisionFieldEvent')}</dt><dd title={analysis.eventId}>{analysis.eventId}</dd></div>
+              <div><dt>{t('decisionFieldType')}</dt><dd>{analysis.eventType}</dd></div>
+              {contextMinute != null ? <div><dt>{t('decisionFieldMinute')}</dt><dd>{contextMinute}&apos;</dd></div> : null}
+              {contextPlayer ? <div><dt>{t('decisionFieldPlayer')}</dt><dd>{contextPlayer}</dd></div> : null}
+              {contextOutcome ? <div><dt>{t('decisionConceptOutcome')}</dt><dd>{contextOutcome}</dd></div> : null}
             </dl>
           </section>
 
-          <section className={styles.panel} aria-labelledby="decision-observed">
+          <section
+            className={`${styles.panel} ${styles.compactPanel}`}
+            aria-labelledby="decision-observed"
+          >
             <h2 id="decision-observed" className={styles.panelTitle}>
               {t('decisionObservedHeading')}
             </h2>
-            <p className={styles.panelNote}>{analysis.observed.label}</p>
-            <p className={styles.panelNote}>
-              {t('decisionCompositeLabel')}:{' '}
-              {observedScore != null ? (
-                <span className={styles.score}>
-                  {observedScore} {t('decisionUnitPitchPercent')}
-                </span>
-              ) : (
-                <span className={styles.scoreMuted}>
-                  {t('decisionMetricUnavailable')}
-                </span>
-              )}
-            </p>
-            {analysis.observed.start && analysis.observed.end ? (
-              <dl className={styles.dl}>
-                <div className={styles.row}>
-                  <dt>{t('decisionFieldStart')}</dt>
-                  <dd className={styles.mono}>
-                    x {analysis.observed.start.x.toFixed(1)}, y{' '}
-                    {analysis.observed.start.y.toFixed(1)}
-                  </dd>
-                </div>
-                <div className={styles.row}>
-                  <dt>{t('decisionFieldEnd')}</dt>
-                  <dd className={styles.mono}>
-                    x {analysis.observed.end.x.toFixed(1)}, y{' '}
-                    {analysis.observed.end.y.toFixed(1)}
-                  </dd>
-                </div>
-              </dl>
-            ) : null}
-            <h3 className={styles.panelTitle}>{t('decisionMetricsHeading')}</h3>
-            <ActionMetrics action={analysis.observed} />
-          </section>
-
-          <section className={styles.panel} aria-labelledby="decision-scoring">
-            <h2 id="decision-scoring" className={styles.panelTitle}>
-              {t('decisionScoringHeading')}
-            </h2>
-            <p className={styles.panelNote}>{t('decisionScoringExplainer')}</p>
-            <ul className={styles.assumptions}>
-              {analysis.scoringAssumptions.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className={styles.panelNote}>{t('decisionUnavailableMetrics')}</p>
+            <p className={styles.observedLabel}>{analysis.observed.label}</p>
+            <div className={styles.summaryMetrics}>
+              <div className={styles.summaryMetric}>
+                <span>{t('decisionCompositeLabel')}</span>
+                <strong className={styles.mono}>
+                  {observedScore == null ? t('decisionMetricUnavailable') : `${observedScore} ${t('decisionUnitPitchPercent')}`}
+                </strong>
+              </div>
+              <div className={styles.summaryMetric}>
+                <span>{t('decisionRankLabel')}</span>
+                <strong className={styles.mono}>{observedRank == null ? t('decisionMetricUnavailable') : `#${observedRank}`}</strong>
+              </div>
+            </div>
+            <details className={styles.inlineDisclosure}>
+              <summary>{t('decisionMetricsHeading')}</summary>
+              <ActionMetrics action={analysis.observed} />
+              {analysis.observed.start && analysis.observed.end ? (
+                <dl className={styles.dl}>
+                  <div className={styles.row}>
+                    <dt>{t('decisionFieldStart')}</dt>
+                    <dd className={styles.mono}>x {analysis.observed.start.x.toFixed(1)}, y {analysis.observed.start.y.toFixed(1)}</dd>
+                  </div>
+                  <div className={styles.row}>
+                    <dt>{t('decisionFieldEnd')}</dt>
+                    <dd className={styles.mono}>x {analysis.observed.end.x.toFixed(1)}, y {analysis.observed.end.y.toFixed(1)}</dd>
+                  </div>
+                </dl>
+              ) : null}
+            </details>
           </section>
         </div>
 
-        <div className={styles.stack}>
-          <section className={styles.panel} aria-labelledby="pick-your-pass">
-            <h2 id="pick-your-pass" className={styles.panelTitle}>{t('pickPassHeading')}</h2>
-            <p className={styles.panelNote}>{t('pickPassNote')}</p>
+        <div className={styles.analysisRow}>
+          <section
+            className={`${styles.panel} ${styles.pickPanel}`}
+            aria-labelledby="pick-your-pass"
+          >
+            <div>
+              <h2 id="pick-your-pass" className={styles.panelTitle}>{t('pickPassHeading')}</h2>
+              <p className={styles.panelNote}>{t('pickPassNote')}</p>
+            </div>
             {isMockFixture ? <p className={styles.banner} role="note">{t('pickPassSynthetic')}</p> : null}
             {eligibleAlternatives.length === 0 ? (
               <p className={styles.panelNote} role="status">
@@ -678,9 +659,15 @@ export function DecisionExplorerPanel({
             ) : (
               <>
                 <label className={styles.panelNote} htmlFor="pick-pass-select">{t('pickPassSelect')}</label>
-                <select id="pick-pass-select" value={selected?.actionId ?? ''} onChange={(event) => selectAction(event.target.value || null)}>
+                <select
+                  id="pick-pass-select"
+                  value={selected?.actionId ?? ''}
+                  onChange={(event) => selectAction(event.target.value || null)}
+                >
                   <option value="">{t('pickPassChoose')}</option>
-                  {eligibleAlternatives.map((alt) => <option key={alt.actionId} value={alt.actionId}>{alt.label}</option>)}
+                  {eligibleAlternatives.map((alt) => (
+                    <option key={alt.actionId} value={alt.actionId}>{alt.label}</option>
+                  ))}
                 </select>
                 {match && frame ? (
                   <FootballPitch
@@ -698,382 +685,149 @@ export function DecisionExplorerPanel({
                       selectAction(target?.actionId ?? null)
                     }}
                   />
-                ) : <p className={styles.panelNote} role="status">{t('pickPassPitchUnavailable')}</p>}
+                ) : (
+                  <p className={styles.panelNote} role="status">{t('pickPassPitchUnavailable')}</p>
+                )}
               </>
             )}
             {selected ? (
-              <div aria-live="polite" data-testid="pick-pass-result">
+              <div className={styles.selectionResult} aria-live="polite" data-testid="pick-pass-result">
                 <p className={styles.panelNote}>{t('pickPassHypothetical')}</p>
-                <p className={styles.panelNote}>{t('decisionCompositeLabel')}: {formatScore(selected.compositeScore) ?? t('decisionMetricUnavailable')} {selected.compositeScore == null ? '' : t('decisionUnitPitchPercent')}</p>
-                <p className={styles.panelNote}>{t('decisionRankLabel')}: {selectedRank == null ? t('decisionMetricUnavailable') : `#${selectedRank}`}</p>
-                <p className={styles.panelNote}>{t('pickPassObservedRank')}: {observedRank == null ? t('decisionMetricUnavailable') : `#${observedRank}`}</p>
-                <p className={styles.panelNote}>{t('pickPassObservedCompare')}: {observedScore ?? t('decisionMetricUnavailable')} {observedScore == null ? '' : t('decisionUnitPitchPercent')}</p>
-                {selectedClaim ? <ul className={styles.claims}><ClaimCard claim={selectedClaim} /></ul> : <p className={styles.panelNote}>{t('pickPassNoClaim')}</p>}
+                <div className={styles.summaryMetrics}>
+                  <div className={styles.summaryMetric}>
+                    <span>{t('decisionCompositeLabel')}</span>
+                    <strong className={styles.mono}>{formatScore(selected.compositeScore) ?? t('decisionMetricUnavailable')} {selected.compositeScore == null ? '' : t('decisionUnitPitchPercent')}</strong>
+                  </div>
+                  <div className={styles.summaryMetric}>
+                    <span>{t('decisionRankLabel')}</span>
+                    <strong className={styles.mono}>{selectedRank == null ? t('decisionMetricUnavailable') : `#${selectedRank}`}</strong>
+                  </div>
+                </div>
+                <p className={styles.panelNote}>{t('pickPassObservedCompare')}: {observedScore ?? t('decisionMetricUnavailable')} {observedScore == null ? '' : t('decisionUnitPitchPercent')} · {t('pickPassObservedRank')}: {observedRank == null ? t('decisionMetricUnavailable') : `#${observedRank}`}</p>
+                {selectedClaim ? <p className={styles.selectionClaim}>{selectedClaim.statement}</p> : null}
+                <details className={styles.inlineDisclosure}>
+                  <summary>{t('whatIfTitle')}</summary>
+                  <p className={styles.panelNote}>{t('whatIfIntro')}</p>
+                  <dl className={styles.compactFacts}>
+                    <div><dt>{t('whatIfDeltaRank')}</dt><dd>{observedRank != null && selectedRank != null ? `${observedRank - selectedRank > 0 ? '+' : ''}${observedRank - selectedRank}` : t('decisionMetricUnavailable')}</dd></div>
+                    <div><dt>{t('whatIfDeltaScore')}</dt><dd>{analysis.observed.compositeScore != null && selected.compositeScore != null ? `${selected.compositeScore - analysis.observed.compositeScore > 0 ? '+' : ''}${formatScore(selected.compositeScore - analysis.observed.compositeScore)}` : t('decisionMetricUnavailable')}</dd></div>
+                  </dl>
+                  <p className={styles.whatIfVerdict}>
+                    {observedRank != null && selectedRank != null
+                      ? selectedRank < observedRank
+                        ? t('whatIfHigher')
+                        : selectedRank > observedRank
+                          ? t('whatIfLower')
+                          : t('whatIfSameRank')
+                      : t('whatIfSameRank')}
+                  </p>
+                  <p className={styles.whatIfDisclaimer}>{t('whatIfDisclaimer')}</p>
+                </details>
                 <button type="button" onClick={() => selectAction(null)}>{t('pickPassReset')}</button>
               </div>
             ) : null}
           </section>
-          <section className={styles.panel} aria-labelledby="decision-ranking">
-            <h2 id="decision-ranking" className={styles.panelTitle}>
-              {t('decisionRankingHeading')}
-            </h2>
-            <p className={styles.panelNote}>{t('decisionRankingNote')}</p>
-            {ranking.length === 0 ? (
-              <p className={styles.panelNote} role="status">
-                {t('decisionRankingEmpty')}
-              </p>
-            ) : (
-              <ol className={styles.rankList}>
-                {ranking.map((entry) => {
-                  const score = formatScore(entry.compositeScore)
-                  const observed = isObservedKind(entry.kind)
-                  return (
-                    <li
-                      key={entry.actionId}
-                      className={`${styles.rankItem} ${observed ? styles.rankItemObserved : ''}`}
-                    >
-                      <span className={styles.rankNum}>
-                        {entry.rank != null
-                          ? `#${entry.rank}`
-                          : t('decisionMissing')}
-                      </span>
-                      <div className={styles.rankLabel}>
-                        <span className={styles.rankLabelText}>
-                          {entry.label}
-                        </span>
-                        <span className={styles.rankKind}>
-                          {observed
-                            ? t('decisionKindObserved')
-                            : t('decisionKindHypothetical')}
-                        </span>
-                      </div>
-                      <span className={styles.rankScore}>
-                        {score != null
-                          ? `${score} ${t('decisionUnitPitchPercent')}`
-                          : t('decisionMetricUnavailable')}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ol>
-            )}
-          </section>
 
-          <section
-            className={`${styles.panel} ${styles.whatIfPanel}`}
-            aria-labelledby="decision-what-if"
-          >
-            <p className={styles.whatIfEyebrow}>{t('whatIfEyebrow')}</p>
-            <h2 id="decision-what-if" className={styles.panelTitle}>
-              {t('whatIfTitle')}
-            </h2>
-            <p className={styles.whatIfIntro}>{t('whatIfIntro')}</p>
-            {analysis.alternatives.length === 0 ? (
-              <p className={styles.panelNote}>{t('whatIfNoAlternatives')}</p>
+          <section className={`${styles.panel} ${styles.rankingPanel}`} aria-labelledby="decision-ranking">
+            <div>
+              <h2 id="decision-ranking" className={styles.panelTitle}>{t('decisionRankingHeading')}</h2>
+              <p className={styles.panelNote}>{t('decisionRankingNote')}</p>
+            </div>
+            {ranking.length === 0 ? (
+              <p className={styles.panelNote} role="status">{t('decisionRankingEmpty')}</p>
             ) : (
               <>
-                <label className={styles.panelNote} htmlFor="what-if-select">
-                  {t('whatIfSelectLabel')}
-                </label>
-                <select
-                  id="what-if-select"
-                  value={selected?.actionId ?? ''}
-                  onChange={(event) => selectAction(event.target.value || null)}
-                >
-                  <option value="">{t('whatIfSelectPlaceholder')}</option>
-                  {analysis.alternatives.map((alt) => {
-                    const rank = analysis.ranking.find(
-                      (entry) => entry.actionId === alt.actionId,
-                    )?.rank
-                    const scoreLabel = formatScore(alt.compositeScore)
+                <ol className={styles.rankList}>
+                  {visibleRanking.map((entry) => {
+                    const score = formatScore(entry.compositeScore)
+                    const observed = isObservedKind(entry.kind)
                     return (
-                      <option key={alt.actionId} value={alt.actionId}>
-                        {alt.label}
-                        {rank != null ? ` · #${rank}` : ''}
-                        {scoreLabel != null ? ` · ${scoreLabel}` : ''}
-                      </option>
+                      <li key={entry.actionId} className={`${styles.rankItem} ${observed ? styles.rankItemObserved : ''}`}>
+                        <span className={styles.rankNum}>{entry.rank != null ? `#${entry.rank}` : t('decisionMissing')}</span>
+                        <div className={styles.rankLabel}>
+                          <span className={styles.rankLabelText}>{entry.label}</span>
+                          <span className={styles.rankKind}>{observed ? t('decisionKindObserved') : t('decisionKindHypothetical')}</span>
+                        </div>
+                        <span className={styles.rankScore} title={score ?? t('decisionMetricUnavailable')}>{score != null ? `${score} ${t('decisionUnitPitchPercent')}` : t('decisionMetricUnavailable')}</span>
+                      </li>
                     )
                   })}
-                </select>
-                {!selected ? (
-                  <p className={styles.panelNote}>{t('whatIfNeedSelection')}</p>
-                ) : (
-                  <>
-                    <div className={styles.whatIfGrid}>
-                      <div
-                        className={`${styles.whatIfCard} ${styles.whatIfCardObserved}`}
-                      >
-                        <h3>{t('whatIfObserved')}</h3>
-                        <p className={styles.panelNote}>
-                          {analysis.observed.label}
-                        </p>
-                        <div className={styles.whatIfMetric}>
-                          <span>{t('whatIfRank')}</span>
-                          <span>
-                            {observedRank == null
-                              ? t('decisionMetricUnavailable')
-                              : `#${observedRank}`}
-                          </span>
-                        </div>
-                        <div className={styles.whatIfMetric}>
-                          <span>{t('whatIfScore')}</span>
-                          <span>
-                            {formatScore(analysis.observed.compositeScore) ??
-                              t('decisionMetricUnavailable')}
-                            {analysis.observed.compositeScore == null
-                              ? ''
-                              : ` ${t('decisionUnitPitchPercent')}`}
-                          </span>
-                        </div>
-                      </div>
-                      <div
-                        className={`${styles.whatIfCard} ${styles.whatIfCardAlt}`}
-                      >
-                        <h3>{t('whatIfAlternative')}</h3>
-                        <p className={styles.panelNote}>{selected.label}</p>
-                        <div className={styles.whatIfMetric}>
-                          <span>{t('whatIfRank')}</span>
-                          <span>
-                            {selectedRank == null
-                              ? t('decisionMetricUnavailable')
-                              : `#${selectedRank}`}
-                          </span>
-                        </div>
-                        <div className={styles.whatIfMetric}>
-                          <span>{t('whatIfScore')}</span>
-                          <span>
-                            {formatScore(selected.compositeScore) ??
-                              t('decisionMetricUnavailable')}
-                            {selected.compositeScore == null
-                              ? ''
-                              : ` ${t('decisionUnitPitchPercent')}`}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className={styles.whatIfMetric}>
-                      <span>{t('whatIfDeltaRank')}</span>
-                      <span>
-                        {observedRank != null && selectedRank != null
-                          ? `${observedRank - selectedRank > 0 ? '+' : ''}${observedRank - selectedRank}`
-                          : t('decisionMetricUnavailable')}
-                      </span>
-                    </div>
-                    <div className={styles.whatIfMetric}>
-                      <span>{t('whatIfDeltaScore')}</span>
-                      <span>
-                        {analysis.observed.compositeScore != null &&
-                        selected.compositeScore != null
-                          ? `${selected.compositeScore - analysis.observed.compositeScore > 0 ? '+' : ''}${formatScore(selected.compositeScore - analysis.observed.compositeScore)}`
-                          : t('decisionMetricUnavailable')}
-                      </span>
-                    </div>
-                    <p className={styles.whatIfVerdict}>
-                      {observedRank != null && selectedRank != null
-                        ? selectedRank < observedRank
-                          ? t('whatIfHigher')
-                          : selectedRank > observedRank
-                            ? t('whatIfLower')
-                            : t('whatIfSameRank')
-                        : t('whatIfSameRank')}
-                    </p>
-                    {selectedClaim ? (
-                      <>
-                        <h3 className={styles.panelTitle}>
-                          {t('whatIfClaimsHeading')}
-                        </h3>
-                        <ul className={styles.claims}>
-                          <ClaimCard claim={selectedClaim} />
-                        </ul>
-                      </>
-                    ) : null}
-                  </>
-                )}
-                <div className={styles.whatIfActions}>
-                  <Button
-                    variant="secondary"
-                    to={`/matches/${analysis.matchId}/decisions/${analysis.eventId}/pick-your-pass`}
+                </ol>
+                {ranking.length > 5 ? (
+                  <button
+                    type="button"
+                    className={styles.inlineToggle}
+                    aria-expanded={showAllRanking}
+                    onClick={() => setShowAllRanking((value) => !value)}
                   >
-                    {t('whatIfOpenPickPass')}
-                  </Button>
-                </div>
-                <p className={styles.panelNote}>{t('whatIfNarrativeHint')}</p>
+                    {t(showAllRanking ? 'decisionShowLess' : 'decisionShowAll')}
+                  </button>
+                ) : null}
               </>
             )}
-            <p className={styles.whatIfDisclaimer}>{t('whatIfDisclaimer')}</p>
           </section>
+        </div>
 
-          <section
-            className={styles.panel}
-            aria-labelledby="decision-alternatives"
-          >
-            <h2 id="decision-alternatives" className={styles.panelTitle}>
-              {t('decisionAlternativesHeading')}
-            </h2>
-            {analysis.alternatives.length === 0 ? (
-              <p className={styles.panelNote} role="status">
-                {t('decisionAlternativesEmpty')}
-              </p>
-            ) : (
-              <ul className={styles.rankList}>
-                {analysis.alternatives.map((alt) => {
-                  const score = formatScore(alt.compositeScore)
-                  return (
-                    <li key={alt.actionId} className={styles.rankItem}>
-                      <span className={styles.rankNum}>
-                        {t('decisionAltBadge')}
-                      </span>
-                      <div className={styles.rankLabel}>
-                        <span className={styles.rankLabelText}>{alt.label}</span>
-                        <span className={styles.rankKind}>
-                          {t('decisionKindHypothetical')}
-                          {alt.targetPlayerId
-                            ? ` · ${alt.targetPlayerId}`
-                            : ''}
-                        </span>
-                      </div>
-                      <span className={styles.rankScore}>
-                        {score != null
-                          ? `${score} ${t('decisionUnitPitchPercent')}`
-                          : t('decisionMetricUnavailable')}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </section>
+        <div className={styles.detailsGrid}>
+          <details className={styles.disclosurePanel}>
+            <summary><span className={styles.panelTitle}>{t('decisionScoringHeading')}</span></summary>
+            <p className={styles.panelNote}>{t('decisionScoringExplainer')}</p>
+            <ul className={styles.assumptions}>
+              {analysis.scoringAssumptions.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+            <p className={styles.panelNote}>{t('decisionUnavailableMetrics')}</p>
+          </details>
 
-          <section
-            className={styles.panel}
-            aria-labelledby="decision-completeness"
-          >
-            <h2 id="decision-completeness" className={styles.panelTitle}>
-              {t('decisionCompletenessHeading')}
-            </h2>
+          <details className={styles.disclosurePanel}>
+            <summary><span className={styles.panelTitle}>{t('decisionCompletenessHeading')}</span></summary>
             <dl className={styles.dl}>
-              <div className={styles.row}>
-                <dt>{t('decisionFieldLevel')}</dt>
-                <dd>{t(completenessKey(analysis.completeness.level))}</dd>
-              </div>
-              <div className={styles.row}>
-                <dt>{t('decisionHasCoordinates')}</dt>
-                <dd>
-                  {analysis.completeness.hasCoordinates
-                    ? t('decisionYes')
-                    : t('decisionNo')}
-                </dd>
-              </div>
-              <div className={styles.row}>
-                <dt>{t('decisionHasFrame')}</dt>
-                <dd>
-                  {analysis.completeness.hasAlignedFrame
-                    ? t('decisionYes')
-                    : t('decisionNo')}
-                </dd>
-              </div>
-              <div className={styles.row}>
-                <dt>{t('decisionAltCount')}</dt>
-                <dd className={styles.mono}>
-                  {analysis.completeness.alternativeCount}
-                </dd>
-              </div>
+              <div className={styles.row}><dt>{t('decisionFieldLevel')}</dt><dd>{t(completenessKey(analysis.completeness.level))}</dd></div>
+              <div className={styles.row}><dt>{t('decisionHasCoordinates')}</dt><dd>{analysis.completeness.hasCoordinates ? t('decisionYes') : t('decisionNo')}</dd></div>
+              <div className={styles.row}><dt>{t('decisionHasFrame')}</dt><dd>{analysis.completeness.hasAlignedFrame ? t('decisionYes') : t('decisionNo')}</dd></div>
+              <div className={styles.row}><dt>{t('decisionAltCount')}</dt><dd className={styles.mono}>{analysis.completeness.alternativeCount}</dd></div>
             </dl>
             {analysis.completeness.missing.length > 0 ? (
               <ul className={styles.limitList}>
-                {analysis.completeness.missing.map((item) => (
-                  <li key={item}>
-                    {t('decisionMissing')}: {item}
-                  </li>
-                ))}
+                {analysis.completeness.missing.map((item) => <li key={item}>{t('decisionMissing')}: {item}</li>)}
               </ul>
             ) : null}
-            {analysis.completeness.notes.map((note) => (
-              <p key={note} className={styles.panelNote}>
-                {note}
-              </p>
-            ))}
-          </section>
+            {analysis.completeness.notes.map((note) => <p key={note} className={styles.panelNote}>{note}</p>)}
+          </details>
 
-          <section className={styles.panel} aria-labelledby="decision-claims">
-            <h2 id="decision-claims" className={styles.panelTitle}>
-              {t('decisionClaimsHeading')}
-            </h2>
-            <ul className={styles.claims}>
-              {analysis.claims.map((claim) => (
-                <ClaimCard key={claim.id} claim={claim} />
-              ))}
-            </ul>
-          </section>
+          <details className={styles.disclosurePanel}>
+            <summary>
+              <span className={styles.panelTitle}>{t('decisionClaimsHeading')}</span>
+              <span className={styles.disclosureCount}>{analysis.claims.length}</span>
+            </summary>
+            {analysis.claims.length > 0 ? (
+              <>
+                <ul className={styles.claims}>
+                  {analysis.claims.slice(0, showAllClaims ? analysis.claims.length : 3).map((claim) => (
+                    <ClaimCard key={claim.id} claim={claim} />
+                  ))}
+                </ul>
+                {analysis.claims.length > 3 ? (
+                  <button
+                    type="button"
+                    className={styles.inlineToggle}
+                    aria-expanded={showAllClaims}
+                    onClick={() => setShowAllClaims((value) => !value)}
+                  >
+                    {t(showAllClaims ? 'decisionShowLess' : 'decisionShowAllClaims')}
+                  </button>
+                ) : null}
+              </>
+            ) : (
+              <p className={styles.panelNote} role="status">{t('decisionNoClaims')}</p>
+            )}
+          </details>
 
-          {narrativeState ? (
-            <section className={styles.panel} aria-labelledby="decision-narrative">
-              <h2 id="decision-narrative" className={styles.panelTitle}>
-                {t('decisionNarrativeHeading')}
-              </h2>
-              {narrativeState.status === 'loading' ? (
-                <p className={styles.panelNote} role="status">
-                  {t('decisionNarrativeLoading')}
-                </p>
-              ) : null}
-              {narrativeState.status === 'unavailable' ? (
-                <p className={styles.panelNote} role="status">
-                  {t('decisionNarrativeUnavailable')} {narrativeState.message}
-                </p>
-              ) : null}
-              {narrativeState.status === 'error' ? (
-                <div>
-                  <p className={styles.panelNote} role="alert">
-                    {t('decisionNarrativeError')} {narrativeState.message}
-                  </p>
-                  {onNarrativeRetry ? (
-                    <Button variant="secondary" onClick={onNarrativeRetry}>
-                      {t('decisionNarrativeRetry')}
-                    </Button>
-                  ) : null}
-                </div>
-              ) : null}
-              {localizedNarrative ? (
-                <div data-testid="decision-narrative-content">
-                  <p className={styles.panelNote}>
-                    {t('decisionNarrativeProvenance')}: {narrativeProvenance === 'synthetic'
-                      ? t('decisionProvenanceSynthetic')
-                      : t('decisionProvenanceApi')}
-                  </p>
-                  <h3 className={styles.panelTitle}>{localizedNarrative.headline}</h3>
-                  <h4 className={styles.panelTitle}>{t('decisionNarrativeObservations')}</h4>
-                  <ul className={styles.limitList}>
-                    {localizedNarrative.keyObservations.map((observation) => (
-                      <li key={observation}>{observation}</li>
-                    ))}
-                  </ul>
-                  <h4 className={styles.panelTitle}>{t('decisionLimitationsHeading')}</h4>
-                  <ul className={styles.limitList}>
-                    {localizedNarrative.limitations.map((limitation) => (
-                      <li key={limitation}>{limitation}</li>
-                    ))}
-                  </ul>
-                  <p className={styles.panelNote}>
-                    {t('decisionNarrativeVerificationScope')}
-                  </p>
-                </div>
-              ) : null}
-            </section>
-          ) : null}
-
-          <section
-            className={styles.panel}
-            aria-labelledby="decision-limitations"
-          >
-            <h2 id="decision-limitations" className={styles.panelTitle}>
-              {t('decisionLimitationsHeading')}
-            </h2>
+          <details className={styles.disclosurePanel}>
+            <summary><span className={styles.panelTitle}>{t('decisionLimitationsHeading')}</span></summary>
             <ul className={styles.limitList}>
-              {analysis.limitations.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
+              {analysis.limitations.map((item) => <li key={item}>{item}</li>)}
             </ul>
-          </section>
+          </details>
         </div>
       </div>
     </article>

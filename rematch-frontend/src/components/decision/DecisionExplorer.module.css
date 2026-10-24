@@ -3,7 +3,8 @@
   flex-direction: column;
   gap: var(--space-5);
   min-width: 0;
-  width: 100%;
+  width: min(100%, 1440px);
+  margin-inline: auto;
 }
 .panel select {
   width: 100%;
@@ -57,6 +58,8 @@
   gap: var(--space-2);
 }
 .badge {
+  min-width: 0;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
@@ -67,6 +70,9 @@
   background: rgba(7, 11, 8, 0.35);
   font-family: var(--font-mono);
   font-size: 0.66rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .badgeSynthetic {
   color: var(--color-demo);
@@ -123,6 +129,158 @@
   flex-direction: column;
   gap: var(--space-4);
   min-width: 0;
+}
+.decisionLayout {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.summaryRow,
+.analysisRow,
+.detailsGrid {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+  align-items: start;
+}
+.summaryRow {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+}
+.analysisRow {
+  grid-template-columns: minmax(0, 1.55fr) minmax(20rem, 0.85fr);
+}
+.detailsGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.compactPanel {
+  padding: var(--space-4);
+  gap: var(--space-2);
+}
+.compactFacts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+}
+.compactFacts > div {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: var(--space-2);
+  min-width: 0;
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.76rem;
+}
+.compactFacts dt {
+  color: var(--color-text-muted);
+}
+.compactFacts dd {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.observedLabel {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.86rem;
+}
+.summaryMetrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.summaryMetric {
+  display: flex;
+  flex: 1 1 9rem;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(7, 11, 8, 0.25);
+  color: var(--color-text-secondary);
+  font-size: 0.72rem;
+}
+.summaryMetric strong {
+  min-width: 0;
+  color: var(--color-text);
+  font-size: 0.88rem;
+}
+.pickPanel,
+.rankingPanel {
+  min-width: 0;
+}
+.selectionResult {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+.selectionResult > .panelNote {
+  margin: 0;
+}
+.selectionClaim {
+  margin: 0;
+  padding-inline-start: var(--space-3);
+  border-inline-start: 2px solid var(--color-opposition);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+.inlineDisclosure {
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(7, 11, 8, 0.2);
+}
+.inlineDisclosure > summary,
+.disclosurePanel > summary {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+.inlineDisclosure[open] > summary,
+.disclosurePanel[open] > summary {
+  margin-bottom: var(--space-3);
+}
+.inlineToggle {
+  align-self: flex-start;
+  padding: 0.4rem 0.65rem;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-muted);
+  cursor: pointer;
+  font-size: 0.76rem;
+}
+.disclosurePanel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, var(--color-surface-raised), var(--color-surface));
+}
+.disclosurePanel > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style-position: inside;
+}
+.disclosureCount {
+  display: inline-grid;
+  min-width: 1.5rem;
+  min-height: 1.5rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
 }
 .panel {
   display: flex;
@@ -182,8 +340,10 @@
   align-items: flex-start;
   gap: var(--space-2);
   flex: 1;
-  min-height: 100%;
+  min-height: 0;
+  max-height: 34rem;
   min-width: 0;
+  overflow: auto;
   padding: var(--space-4);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -202,6 +362,12 @@
   overflow-wrap: normal;
   white-space: nowrap;
   word-break: normal;
+}
+.pipelineCard .status {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .pipelineHandoff {
   width: 100%;
@@ -249,6 +415,10 @@
   display: grid;
   width: 100%;
   gap: var(--space-2);
+}
+.pipelineNarrativeLanguages > .panelNote {
+  margin: 0;
+  grid-column: 1 / -1;
 }
 .pipelineLanguageLabel {
   margin: 0 0 var(--space-2);
@@ -399,10 +569,14 @@
   text-transform: uppercase;
 }
 .rankScore {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   color: var(--color-text-secondary);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .metricRow {
   display: grid;
@@ -439,8 +613,10 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  min-width: 0;
 }
 .claimStatement {
+  min-width: 0;
   margin: 0;
   font-size: 0.84rem;
   line-height: 1.45;
@@ -452,6 +628,8 @@
 }
 .status {
   display: inline-flex;
+  flex-shrink: 0;
+  max-width: 100%;
   align-items: center;
   gap: var(--space-1);
   padding: 0.15rem 0.4rem;
@@ -486,6 +664,12 @@
   font-family: var(--font-mono);
   font-size: 0.7rem;
 }
+.evidenceList li {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .loading,
 .errorBlock {
   padding: var(--space-6) 0;
@@ -493,6 +677,9 @@
 @media (max-width: 1023px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+  .analysisRow {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
   }
   .rankItem {
     grid-template-columns: 2rem 1fr;
@@ -510,6 +697,11 @@
   }
 }
 @media (max-width: 760px) {
+  .summaryRow,
+  .analysisRow,
+  .detailsGrid {
+    grid-template-columns: 1fr;
+  }
   .pipelineGrid {
     grid-template-columns: 1fr;
   }
@@ -524,6 +716,9 @@
   }
   .rankItem {
     gap: var(--space-2);
+  }
+  .compactFacts {
+    grid-template-columns: 1fr;
   }
 }
 

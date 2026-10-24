@@ -262,14 +262,13 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
     expect(screen.getByText('not_assessed')).toBeInTheDocument()
     expect(screen.getByText(STRINGS.en.decisionPipelineVerifierNote)).toBeInTheDocument()
     expect(screen.getByText(STRINGS.en.decisionPipelineFooter)).toBeInTheDocument()
-    expect(screen.getByText(STRINGS.en.decisionPipelineKeyPoints)).toBeInTheDocument()
-    expect(screen.getByText(STRINGS.en.decisionPipelineLimitation)).toBeInTheDocument()
+    expect(screen.getAllByText(STRINGS.en.decisionPipelineKeyPoints)).toHaveLength(2)
+    expect(screen.getAllByText(STRINGS.en.decisionPipelineLimitation)).toHaveLength(2)
 
     const englishNarrative = within(screen.getByTestId('decision-narrative-content'))
     expect(englishNarrative.getByText(narrativeResponse.narrative.english.headline)).toBeInTheDocument()
     expect(englishNarrative.getByText('The backend returned a geometric score.')).toBeInTheDocument()
     expect(englishNarrative.getByText('Synthetic match data only.')).toBeInTheDocument()
-    expect(screen.getByText(STRINGS.en.decisionNarrativeVerificationScope)).toBeInTheDocument()
     expect(screen.getByText(/Narrative provenance: Synthetic data/)).toBeInTheDocument()
 
     window.localStorage.setItem('rematch.locale', 'ar')
@@ -291,7 +290,7 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
           narrativeResponse.narrative.arabic.headline,
         ),
       ).toBeInTheDocument()
-      expect(screen.getByText(STRINGS.ar.decisionNarrativeVerificationScope)).toBeInTheDocument()
+      expect(screen.getByText(STRINGS.ar.decisionPipelineVerifierNote)).toBeInTheDocument()
     })
   })
 
