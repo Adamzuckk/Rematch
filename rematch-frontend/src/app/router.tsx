@@ -7,6 +7,7 @@ import { JudgeModePage } from '../pages/JudgeModePage'
 import { MatchAnalysisPage } from '../pages/MatchAnalysisPage'
 import { MetricsPage } from '../pages/MetricsPage'
 import { PickYourPassPage } from '../pages/PickYourPassPage'
+import { TableStatsPage } from '../pages/TableStatsPage'
 
 export function AppRouter() {
   return (
@@ -14,6 +15,7 @@ export function AppRouter() {
       <Route element={<AppShell />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="table-stats" element={<TableStatsPage />} />
         <Route path="judge" element={<JudgeModePage />} />
         <Route path="matches/:matchId" element={<MatchAnalysisPage />} />
         <Route
