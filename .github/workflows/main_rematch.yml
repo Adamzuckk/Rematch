@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'functions/orchestrator' # Azure Functions project root
   NODE_VERSION: '22.x' # set this to the node version to use (supports 8.x, 10.x, 12.x)
 
 jobs:
@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: .
+          path: functions/orchestrator
 
   deploy:
     runs-on: windows-latest
@@ -69,5 +69,4 @@ jobs:
         with:
           app-name: 'rematch'
           slot-name: 'Production'
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          
+          package: '.'
