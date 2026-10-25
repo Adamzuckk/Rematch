@@ -34,6 +34,13 @@ function useCrumbs(): Crumb[] {
     ]
   }
 
+  if (path.startsWith('/table-stats')) {
+    return [
+      { label: t('navDashboard'), to: '/dashboard' },
+      { label: t('navTableStats') },
+    ]
+  }
+
   if (path.includes('/pick-your-pass')) {
     return [
       { label: t('navDashboard'), to: '/dashboard' },

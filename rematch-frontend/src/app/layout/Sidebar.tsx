@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Activity, Gavel, LayoutDashboard, X } from 'lucide-react'
+import { Activity, Gavel, LayoutDashboard, Table2, X } from 'lucide-react'
 import rematchLogo from '../../assets/brand/rematch_logo_transparent.png'
 import { useLocale } from '../../i18n/locale'
 import { Button } from '../../components/ui/Button'
@@ -12,6 +12,7 @@ interface SidebarProps {
 
 const NAV_ITEMS = [
   { to: '/dashboard', icon: LayoutDashboard, labelKey: 'navDashboard' as const },
+  { to: '/table-stats', icon: Table2, labelKey: 'navTableStats' as const },
   { to: '/judge', icon: Gavel, labelKey: 'navJudge' as const },
   { to: '/metrics', icon: Activity, labelKey: 'navMetrics' as const },
 ]
