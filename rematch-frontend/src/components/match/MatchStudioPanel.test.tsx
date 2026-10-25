@@ -7,7 +7,7 @@ import { SYNTHETIC_EVENTS } from '../../mocks/events'
 import { SYNTHETIC_PLAYERS } from '../../mocks/players'
 import { SYNTHETIC_TEAMS } from '../../mocks/teams'
 import { sortMatchEvents } from '../../lib/pitch'
-import type { AskResponse, DecisionNarrativeResponse, MatchEvent } from '../../types'
+import type { DecisionNarrativeResponse, MatchEvent } from '../../types'
 import { renderWithProviders } from '../../test/render'
 import { MatchStudioPanel } from './MatchStudioPanel'
 
@@ -117,34 +117,7 @@ const narrativeResponse: DecisionNarrativeResponse = {
   },
 }
 
-const askGreetingResponse: AskResponse = {
-  matchId: 'm-northgate-riverside-2401',
-  eventId: selected.id,
-  status: 'answered',
-  intent: 'greeting',
-  provenance: 'synthetic',
-  answer: {
-    english: {
-      headline: 'Ask the crew — grounded match analysis',
-      keyObservations: [
-        'I can explain a selected pass, shot, or carry.',
-        'I do not invent players or xG.',
-      ],
-      limitations: ['This is not unrestricted AI chat.'],
-    },
-    arabic: {
-      headline: 'اسأل الطاقم',
-      keyObservations: ['شرح القرار'],
-      limitations: ['ليست محادثة مطلقة'],
-    },
-  },
-  evidence: [],
-  relatedEventIds: [selected.id],
-  factClasses: ['capability'],
-  reason: 'Capability explanation — not unrestricted chat.',
-  verificationResults: [],
-  clientRequestId: 'req-1',
-}
+const askGreetingReply = 'Ask the crew — grounded match analysis. I do not invent players or xG.'
 
 function renderStudio(
   overrides: Partial<ComponentProps<typeof MatchStudioPanel>> = {},
@@ -278,9 +251,8 @@ describe('MatchStudioPanel', () => {
             id: 't1',
             question: 'hi',
             eventId: null,
-            response: askGreetingResponse,
+            reply: askGreetingReply,
             error: null,
-            unavailable: false,
             createdAt: 1,
           },
         ],
@@ -358,9 +330,8 @@ describe('MatchStudioPanel', () => {
             id: 't1',
             question: 'hi',
             eventId: null,
-            response: askGreetingResponse,
+            reply: askGreetingReply,
             error: null,
-            unavailable: false,
             createdAt: 1,
           },
         ],

@@ -1,18 +1,14 @@
 import { useCallback, useRef, useState } from 'react'
-import type { AskLanguage, AskResponse } from '../types'
-import {
-  AskUnavailableError,
-  MatchApiError,
-  matchService,
-} from '../services/matches'
+import { askOrchestrator } from '../services/orchestrator/orchestratorClient'
+
+type AskLanguage = 'en' | 'ar'
 
 export type AskCrewTurn = {
   id: string
   question: string
   eventId: string | null
-  response: AskResponse | null
+  reply: string | null
   error: string | null
-  unavailable: boolean
   createdAt: number
 }
 
@@ -32,9 +28,8 @@ function newId(): string {
 }
 
 /**
- * Submits grounded Ask-the-Crew questions to the backend ask endpoint.
- * Prevents duplicate in-flight submits; supports clear, retry, and timeouts
- * handled by the API client.
+ * Sends Ask-the-Crew questions to the Foundry Orchestrator Function.
+ * Prevents duplicate in-flight submits and supports clear/retry.
  */
 export function useAskCrew(matchId: string | undefined) {
   const [turns, setTurns] = useState<AskCrewTurn[]>([])
@@ -63,11 +58,10 @@ export function useAskCrew(matchId: string | undefined) {
       setError(null)
 
       try {
-        const response = await matchService.askMatch(matchId, {
-          question,
-          eventId: input.eventId ?? null,
-          language: input.language ?? 'en',
-          clientRequestId: newId(),
+        const reply = await askOrchestrator({
+          message: question,
+          matchId,
+          ...(input.eventId ? { eventId: input.eventId } : {}),
         })
         if (seq !== requestSeqRef.current) return
         setTurns((current) => [
@@ -76,37 +70,15 @@ export function useAskCrew(matchId: string | undefined) {
             id: newId(),
             question,
             eventId: input.eventId ?? null,
-            response,
+            reply,
             error: null,
-            unavailable: false,
             createdAt: Date.now(),
           },
         ])
         setError(null)
       } catch (cause) {
         if (seq !== requestSeqRef.current) return
-        if (cause instanceof AskUnavailableError) {
-          setTurns((current) => [
-            ...current,
-            {
-              id: newId(),
-              question,
-              eventId: input.eventId ?? null,
-              response: null,
-              error: cause.message,
-              unavailable: true,
-              createdAt: Date.now(),
-            },
-          ])
-          setError(null)
-          return
-        }
-        const message =
-          cause instanceof MatchApiError
-            ? cause.message
-            : cause instanceof Error
-              ? cause.message
-              : 'Ask the crew failed'
+        const message = cause instanceof Error ? cause.message : 'Ask the crew failed'
         setError({ message, lastQuestion: question })
       } finally {
         if (seq === requestSeqRef.current) {

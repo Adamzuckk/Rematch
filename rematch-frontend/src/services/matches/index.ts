@@ -17,7 +17,6 @@ export {
   DecisionInsufficientEvidenceError,
   DecisionNarrativeUnavailableError,
   EventIntelligenceUnavailableError,
-  AskUnavailableError,
 } from './types'
 export { mockMatchService, filterSyntheticMatches } from './mockMatchService'
 export { createApiMatchService } from './apiMatchService'

@@ -77,13 +77,3 @@ export type {
   EvidenceStatement,
   EventIntelligence,
 } from './eventIntelligence'
-export type {
-  AskStatus,
-  AskIntent,
-  AskFactClass,
-  AskLanguage,
-  AskRequest,
-  AskAnswerBody,
-  AskEvidenceRef,
-  AskResponse,
-} from './ask'

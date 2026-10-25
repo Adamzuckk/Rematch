@@ -48,7 +48,7 @@ export interface MatchStudioPanelProps {
   onNarrativeRetry: () => void
   /** Clears the page-owned narrative enablement (ASK answer). */
   onClearAsk?: () => void
-  /** Grounded free-form ask conversation (POST …/ask). */
+  /** Grounded free-form ask conversation via the Orchestrator Function. */
   askCrewState?: AskCrewState
   onAskQuestion?: (question: string) => void
   onAskRetry?: () => void
@@ -588,12 +588,6 @@ export function MatchStudioPanel({
                 ) : null}
 
                 {askCrewState.turns.map((turn) => {
-                  const localized =
-                    turn.response == null
-                      ? null
-                      : locale === 'ar'
-                        ? turn.response.answer.arabic
-                        : turn.response.answer.english
                   return (
                     <div
                       key={turn.id}
@@ -612,92 +606,17 @@ export function MatchStudioPanel({
                       <div
                         className={styles.narrativeBlock}
                         data-testid="ask-crew-answer"
-                        data-status={
-                          turn.unavailable
-                            ? 'unavailable'
-                            : turn.response?.status
-                        }
+                        data-status={turn.error ? 'error' : 'answered'}
                       >
                         <p className={styles.askBubbleLabel}>
                           {t('askCrewCrewLabel')}
                         </p>
-                        {turn.unavailable || turn.error ? (
+                        {turn.error ? (
                           <p className={styles.status} role="status">
-                            {turn.error ?? t('askCrewUnavailableNeedsAskApi')}
+                            {turn.error}
                           </p>
                         ) : null}
-                        {localized ? (
-                          <>
-                            {turn.response?.status === 'unsupported' ||
-                            turn.response?.status === 'unavailable' ? (
-                              <p className={styles.partial} role="status">
-                                {turn.response.status === 'unsupported'
-                                  ? t('askCrewStatusUnsupported')
-                                  : t('askCrewStatusUnavailable')}
-                              </p>
-                            ) : null}
-                            {turn.response?.status === 'partial' ? (
-                              <p className={styles.partial} role="status">
-                                {t('askAgentsPartial')}
-                              </p>
-                            ) : null}
-                            <div className={styles.evidenceTags}>
-                              {turn.response?.factClasses.includes(
-                                'match_data',
-                              ) ? (
-                                <span className={styles.evidenceTag}>
-                                  {t('askCrewAnswerFacts')}
-                                </span>
-                              ) : null}
-                              {turn.response?.factClasses.includes(
-                                'calculated',
-                              ) ? (
-                                <span className={styles.evidenceTag}>
-                                  {t('askCrewAnswerCalculated')}
-                                </span>
-                              ) : null}
-                              {turn.response?.factClasses.includes(
-                                'capability',
-                              ) ? (
-                                <span className={styles.evidenceTag}>
-                                  {t('askCrewAnswerCapability')}
-                                </span>
-                              ) : null}
-                              {turn.response?.factClasses.includes(
-                                'unknown',
-                              ) ? (
-                                <span className={styles.evidenceTag}>
-                                  {t('askCrewAnswerUnknown')}
-                                </span>
-                              ) : null}
-                            </div>
-                            <h3 className={styles.narrativeHeadline}>
-                              {localized.headline}
-                            </h3>
-                            <ul className={styles.list}>
-                              {localized.keyObservations.map((item) => (
-                                <li key={item}>{item}</li>
-                              ))}
-                            </ul>
-                            {localized.limitations.length > 0 ? (
-                              <>
-                                <h4 className={styles.detailNote}>
-                                  {t('decisionLimitationsHeading')}
-                                </h4>
-                                <ul className={styles.list}>
-                                  {localized.limitations.map((item) => (
-                                    <li key={item}>{item}</li>
-                                  ))}
-                                </ul>
-                              </>
-                            ) : null}
-                            {turn.response?.reason ? (
-                              <p className={styles.detailNote}>
-                                {turn.response.reason}
-                              </p>
-                            ) : null}
-                          </>
-                        ) : null}
+                        {turn.reply ? <p className={styles.narrativeHeadline}>{turn.reply}</p> : null}
                       </div>
                     </div>
                   )

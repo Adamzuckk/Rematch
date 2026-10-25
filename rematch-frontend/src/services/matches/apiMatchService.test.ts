@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApiMatchService } from './apiMatchService'
 import {
-  AskUnavailableError,
   DecisionInsufficientEvidenceError,
   DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
@@ -257,74 +256,6 @@ describe('createApiMatchService decision analysis', () => {
     await expect(
       service.getEventIntelligence('m-1', 'evt-1'),
     ).rejects.toBeInstanceOf(EventIntelligenceUnavailableError)
-  })
-
-  it('POSTs grounded ask questions with selected event context', async () => {
-    const askBody = {
-      matchId: 'm-1',
-      eventId: 'evt-1',
-      status: 'answered',
-      intent: 'greeting',
-      provenance: 'synthetic',
-      answer: {
-        english: {
-          headline: 'Ask the crew',
-          keyObservations: ['Capabilities'],
-          limitations: [],
-        },
-        arabic: {
-          headline: 'اسأل الطاقم',
-          keyObservations: [],
-          limitations: [],
-        },
-      },
-      evidence: [],
-      relatedEventIds: ['evt-1'],
-      factClasses: ['capability'],
-      reason: 'Capability explanation',
-      verificationResults: [],
-      clientRequestId: 'req-1',
-    }
-    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(askBody))
-    vi.stubGlobal('fetch', fetchMock)
-
-    const service = createApiMatchService('http://localhost:8000')
-    const result = await service.askMatch('m-1', {
-      question: 'hi',
-      eventId: 'evt-1',
-      language: 'en',
-      clientRequestId: 'req-1',
-    })
-
-    expect(result).toEqual(askBody)
-    expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8000/api/v1/matches/m-1/ask',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({
-          question: 'hi',
-          language: 'en',
-          eventId: 'evt-1',
-          clientRequestId: 'req-1',
-        }),
-      }),
-    )
-  })
-
-  it('maps ask match-not-found to AskUnavailableError', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(
-        jsonResponse(
-          { error: { code: 'match_not_found', message: 'Missing match' } },
-          404,
-        ),
-      ),
-    )
-    const service = createApiMatchService('http://localhost:8000')
-    await expect(
-      service.askMatch('missing', { question: 'hi' }),
-    ).rejects.toBeInstanceOf(AskUnavailableError)
   })
 
   it('unwraps paginated match list items from /api/v1', async () => {

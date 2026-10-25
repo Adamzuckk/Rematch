@@ -133,12 +133,6 @@ export function AgentAskChat({
         ) : null}
 
         {askCrewState.turns.map((turn) => {
-          const localized =
-            turn.response == null
-              ? null
-              : locale === 'ar'
-                ? turn.response.answer.arabic
-                : turn.response.answer.english
           return (
             <div key={turn.id} className={styles.turn} data-testid="ask-turn">
               <div className={`${styles.message} ${styles.userMessage}`}>
@@ -154,43 +148,12 @@ export function AgentAskChat({
                 <p className={styles.meta}>
                   <span>{t('askCrewCrewLabel')}</span>
                 </p>
-                {turn.unavailable || turn.error ? (
+                {turn.error ? (
                   <p className={styles.status} role="status">
-                    {turn.error ?? t('askCrewUnavailableNeedsAskApi')}
+                    {turn.error}
                   </p>
                 ) : null}
-                {localized ? (
-                  <>
-                    {turn.response?.status === 'unsupported' ||
-                    turn.response?.status === 'unavailable' ? (
-                      <p className={styles.status} role="status">
-                        {turn.response.status === 'unsupported'
-                          ? t('askCrewStatusUnsupported')
-                          : t('askCrewStatusUnavailable')}
-                      </p>
-                    ) : null}
-                    {turn.response?.status === 'partial' ? (
-                      <p className={styles.status} role="status">
-                        {t('askAgentsPartial')}
-                      </p>
-                    ) : null}
-                    <p className={styles.headline}>{localized.headline}</p>
-                    <ul className={styles.list}>
-                      {localized.keyObservations.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                    {localized.limitations.length > 0 ? (
-                      <ul className={styles.list}>
-                        {localized.limitations.map((item) => (
-                          <li key={item}>
-                            {t('analystLimitation')}: {item}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </>
-                ) : null}
+                {turn.reply ? <p className={styles.headline}>{turn.reply}</p> : null}
               </div>
             </div>
           )

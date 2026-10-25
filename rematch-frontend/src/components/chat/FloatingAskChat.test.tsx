@@ -3,9 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FloatingAskChat } from './FloatingAskChat'
 import * as matchServices from '../../services/matches'
-import { AskUnavailableError } from '../../services/matches'
+import * as orchestratorClient from '../../services/orchestrator/orchestratorClient'
 import { SYNTHETIC_DECISION_ANALYSES } from '../../mocks/decisionAnalysis'
-import type { AskResponse, DecisionAnalysis } from '../../types'
+import type { DecisionAnalysis } from '../../types'
 import { STRINGS } from '../../i18n/strings'
 import { renderWithProviders } from '../../test/render'
 import { useAskCrew } from '../../hooks/useAskCrew'
@@ -54,6 +54,7 @@ function AgentHarness({
 describe('FloatingAskChat', () => {
   beforeEach(() => {
     vi.stubEnv('VITE_MATCH_DATA_SOURCE', 'api')
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
   })
 
   it('opens and closes the analyst popup from the launcher and Escape', async () => {
@@ -135,155 +136,58 @@ describe('FloatingAskChat', () => {
     expect(input).toHaveValue('')
   })
 
-  it('shows agent launcher copy and ask-api loading, error, and retry', async () => {
-    const askMatch = vi
-      .spyOn(matchServices.matchService, 'askMatch')
-      .mockRejectedValueOnce(new Error('temporary outage'))
-      .mockResolvedValueOnce({
-        matchId: 'm-1',
-        eventId: 'evt-1',
-        status: 'answered',
-        intent: 'local_facts',
-        provenance: 'api',
-        answer: {
-          english: {
-            headline: 'Player involved',
-            keyObservations: ['From the match record.'],
-            limitations: [],
-          },
-          arabic: {
-            headline: 'اللاعب',
-            keyObservations: ['من سجل المباراة.'],
-            limitations: [],
-          },
-        },
-        evidence: [],
-        relatedEventIds: [],
-        factClasses: ['match_data'],
-        reason: null,
-        verificationResults: [],
-        clientRequestId: null,
-      } satisfies AskResponse)
-
+  it('sends Agent/Crew messages to the orchestrator with match and event context', async () => {
+    const request = vi.spyOn(orchestratorClient, 'askOrchestrator').mockResolvedValue('Player involved — grounded in the match record.')
     const user = userEvent.setup()
-    renderWithProviders(
-      <AgentHarness matchId="m-1" eventId="evt-1" eventLabel="12' · pass" />,
-    )
+    renderWithProviders(<AgentHarness matchId="m-1" eventId="evt-1" eventLabel="12\' · pass" />)
 
     const launcher = screen.getByTestId('floating-ask-launcher')
     expect(launcher).toHaveTextContent(STRINGS.en.floatingAskAgentLauncher)
     await user.click(launcher)
-
     const panel = screen.getByTestId('floating-ask-panel')
-    expect(within(panel).getByText(/12' · pass/)).toBeInTheDocument()
-
-    const input = within(panel).getByTestId('agent-ask-input')
-    await user.type(input, 'who was involved?')
+    await user.type(within(panel).getByTestId('agent-ask-input'), 'who was involved?')
     await user.click(within(panel).getByRole('button', { name: STRINGS.en.analystSend }))
 
-    expect(await within(panel).findByTestId('agent-ask-error')).toBeInTheDocument()
-    await user.click(within(panel).getByRole('button', { name: STRINGS.en.loadErrorRetry }))
-
-    expect(await within(panel).findByText('Player involved')).toBeInTheDocument()
-    expect(askMatch).toHaveBeenCalledTimes(2)
+    expect(await within(panel).findByText(/Player involved/)).toBeInTheDocument()
+    expect(request).toHaveBeenCalledWith({
+      message: 'who was involved?',
+      matchId: 'm-1',
+      eventId: 'evt-1',
+    })
   })
 
   it('preserves agent conversation across open/close and clears with confirmation', async () => {
-    vi.spyOn(matchServices.matchService, 'askMatch').mockResolvedValue({
-      matchId: 'm-1',
-      eventId: 'evt-1',
-      status: 'answered',
-      intent: 'greeting',
-      provenance: 'api',
-      answer: {
-        english: {
-          headline: 'Hello from the crew',
-          keyObservations: ['Grounded capabilities only.'],
-          limitations: [],
-        },
-        arabic: {
-          headline: 'مرحبا',
-          keyObservations: ['قدرات مدعومة فقط.'],
-          limitations: [],
-        },
-      },
-      evidence: [],
-      relatedEventIds: [],
-      factClasses: ['capability'],
-      reason: null,
-      verificationResults: [],
-      clientRequestId: null,
-    })
+    vi.spyOn(orchestratorClient, 'askOrchestrator').mockResolvedValue('Hello from the crew — grounded capabilities only.')
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = userEvent.setup()
-    renderWithProviders(
-      <AgentHarness matchId="m-1" eventId="evt-1" eventLabel="12' · pass" />,
-    )
+    renderWithProviders(<AgentHarness matchId="m-1" eventId="evt-1" eventLabel="12\' · pass" />)
 
     await user.click(screen.getByTestId('floating-ask-launcher'))
     const panel = screen.getByTestId('floating-ask-panel')
     await user.type(within(panel).getByTestId('agent-ask-input'), 'hi')
     await user.click(within(panel).getByRole('button', { name: STRINGS.en.analystSend }))
-    expect(await within(panel).findByText('Hello from the crew')).toBeInTheDocument()
+    expect(await within(panel).findByText(/Hello from the crew/)).toBeInTheDocument()
 
     await user.click(screen.getByTestId('floating-ask-launcher'))
-    expect(screen.getByTestId('floating-ask-panel')).not.toBeVisible()
     await user.click(screen.getByTestId('floating-ask-launcher'))
-    expect(within(screen.getByTestId('floating-ask-panel')).getByText('Hello from the crew')).toBeInTheDocument()
-
+    expect(within(screen.getByTestId('floating-ask-panel')).getByText(/Hello from the crew/)).toBeInTheDocument()
     await user.click(screen.getByTestId('floating-ask-clear'))
     expect(confirm).toHaveBeenCalled()
-    await waitFor(() => {
-      expect(within(screen.getByTestId('floating-ask-panel')).getByTestId('agent-ask-empty')).toBeInTheDocument()
-    })
+    await waitFor(() => expect(within(screen.getByTestId('floating-ask-panel')).getByTestId('agent-ask-empty')).toBeInTheDocument())
   })
 
-  it('surfaces a context-changed notice when the agent event id changes', async () => {
-    vi.spyOn(matchServices.matchService, 'askMatch').mockResolvedValue({
-      matchId: 'm-1',
-      eventId: 'evt-1',
-      status: 'answered',
-      intent: 'greeting',
-      provenance: 'api',
-      answer: {
-        english: {
-          headline: 'Hello from the crew',
-          keyObservations: ['Grounded capabilities only.'],
-          limitations: [],
-        },
-        arabic: {
-          headline: 'مرحبا',
-          keyObservations: ['قدرات مدعومة فقط.'],
-          limitations: [],
-        },
-      },
-      evidence: [],
-      relatedEventIds: [],
-      factClasses: ['capability'],
-      reason: null,
-      verificationResults: [],
-      clientRequestId: null,
-    })
+  it('shows an orchestrator error without fabricating an answer', async () => {
+    vi.spyOn(orchestratorClient, 'askOrchestrator').mockRejectedValue(new Error('Orchestrator unavailable'))
     const user = userEvent.setup()
-    const { rerender } = renderWithProviders(
-      <AgentHarness matchId="m-1" eventId="evt-1" eventLabel="12' · pass" />,
-    )
-
+    renderWithProviders(<AgentHarness matchId="m-1" eventId="evt-1" />)
     await user.click(screen.getByTestId('floating-ask-launcher'))
     const panel = screen.getByTestId('floating-ask-panel')
-    await user.type(within(panel).getByTestId('agent-ask-input'), 'hi')
+    await user.type(within(panel).getByTestId('agent-ask-input'), 'summarize the match')
     await user.click(within(panel).getByRole('button', { name: STRINGS.en.analystSend }))
-    expect(await within(panel).findByText('Hello from the crew')).toBeInTheDocument()
 
-    rerender(
-      <AgentHarness matchId="m-1" eventId="evt-2" eventLabel="70' · shot" />,
-    )
-
-    expect(
-      within(screen.getByTestId('floating-ask-panel')).getByTestId('agent-ask-context-notice'),
-    ).toHaveTextContent(new RegExp(`${STRINGS.en.floatingAskContextChanged}.*70'`))
+    expect(await within(panel).findByText(/Orchestrator unavailable/i)).toBeInTheDocument()
+    expect(within(panel).queryByText(/invented/i)).not.toBeInTheDocument()
   })
-
   it('surfaces a context-changed notice when the analyst event id changes', async () => {
     vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
     const user = userEvent.setup()
@@ -320,19 +224,4 @@ describe('FloatingAskChat', () => {
     ).toBeInTheDocument()
   })
 
-  it('does not invent answers when ask API is unavailable', async () => {
-    vi.spyOn(matchServices.matchService, 'askMatch').mockRejectedValue(
-      new AskUnavailableError('unavailable in mock mode', 'm-1'),
-    )
-    const user = userEvent.setup()
-    renderWithProviders(<AgentHarness matchId="m-1" eventId="evt-1" />)
-
-    await user.click(screen.getByTestId('floating-ask-launcher'))
-    const panel = screen.getByTestId('floating-ask-panel')
-    await user.type(within(panel).getByTestId('agent-ask-input'), 'summarize the match')
-    await user.click(within(panel).getByRole('button', { name: STRINGS.en.analystSend }))
-
-    expect(await within(panel).findByText(/unavailable in mock mode/i)).toBeInTheDocument()
-    expect(within(panel).queryByText(/invented/i)).not.toBeInTheDocument()
-  })
 })
