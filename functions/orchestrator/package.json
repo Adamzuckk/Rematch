@@ -1,0 +1,13 @@
+{
+  "name": "rematch-orchestrator",
+  "version": "1.0.0",
+  "description": "Azure Function that calls the Rematch Foundry Orchestrator",
+  "main": "src/functions/orchestrate.js",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/functions": "^4.5.0",
+    "@azure/identity": "^4.4.1"
+  }
+}
