@@ -1,6 +1,32 @@
 const DEFAULT_ORCHESTRATOR_URL =
   'https://rematch-dxd6gbbsfufwh3ce.westus3-01.azurewebsites.net/api/orchestrate'
 const ORCHESTRATOR_TIMEOUT_MS = 75_000
+const GREETING_ONLY_MESSAGES = new Set([
+  'hi',
+  'hello',
+  'hey',
+  'greetings',
+  'good morning',
+  'good afternoon',
+  'good evening',
+  'thanks',
+  'thank you',
+  'thanks a lot',
+  'thank you so much',
+  'thx',
+  'اهلا',
+  'مرحبا',
+  'السلام عليكم',
+  'وعليكم السلام',
+  'صباح الخير',
+  'مساء الخير',
+  'شكرا',
+  'شكرا جزيلا',
+  'متشكر',
+  'متشكرة',
+  'تسلم',
+  'تسلمي',
+])
 
 export type OrchestratorRequest = {
   message: string
@@ -35,6 +61,24 @@ function outputTextFrom(value: unknown): string[] {
   )
 }
 
+function greetingOnlyMessage(message: string): boolean {
+  const normalized = message
+    .trim()
+    .normalize('NFKC')
+    .toLocaleLowerCase()
+    .replace(/[\u064B-\u065F\u0670]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/[!?.،؟,]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return GREETING_ONLY_MESSAGES.has(normalized)
+}
+
+function messageForOrchestrator(message: string): string {
+  if (!greetingOnlyMessage(message)) return message
+  return `The user only sent a greeting or thanks: «${message.trim()}». Respond with 1–2 short friendly sentences in the user's language. Do NOT call analysis tools or mention scores, rankings, or geometric methods. Invite them to ask for a summary, alternatives, or verification of this moment.`
+}
+
 /** Extract plain assistant text from a Responses payload or the Function's slim reply body. */
 export function extractOrchestratorReply(payload: unknown): string {
   if (!isRecord(payload)) return ''
@@ -67,7 +111,7 @@ export async function askOrchestrator(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: request.message,
+          message: messageForOrchestrator(request.message),
           ...(request.matchId ? { matchId: request.matchId } : {}),
           ...(request.eventId ? { eventId: request.eventId } : {}),
         }),

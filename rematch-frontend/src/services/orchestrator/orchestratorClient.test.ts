@@ -36,6 +36,30 @@ describe('extractOrchestratorReply', () => {
 })
 
 describe('askOrchestrator', () => {
+  it.each(['اهلا', 'أهلا', 'اهلاً', 'مرحبا', 'مرحباً', 'السلام عليكم', 'hi', 'HELLO', 'Thanks!', 'thank you'])(
+    'wraps greeting-only message %s to avoid unnecessary analysis',
+    async (message) => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ reply: 'Friendly greeting.' }), { status: 200 }),
+      )
+      vi.stubGlobal('fetch', fetchMock)
+
+      await askOrchestrator({ message, matchId: 'match-1', eventId: 'event-4' })
+
+      const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined
+      const payload = JSON.parse(String(requestInit?.body)) as {
+        message: string
+        matchId: string
+        eventId: string
+      }
+      expect(payload.message).toContain(`«${message.trim()}»`)
+      expect(payload.message).toContain('Do NOT call analysis tools')
+      expect(payload.message).toContain("the user's language")
+      expect(payload.matchId).toBe('match-1')
+      expect(payload.eventId).toBe('event-4')
+    },
+  )
+
   it('posts the question and current decision identifiers, then returns plain reply text', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ reply: 'Orchestrator answer.' }), { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
