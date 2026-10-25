@@ -14,7 +14,7 @@ from app.api.router import api_router
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "docs" / "rematch-foundry-openapi.json"
-SERVER_URL = "https://YOUR-RANDOM-SUBDOMAIN.trycloudflare.com"
+SERVER_URL = "https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io"
 SELECTED_PATHS = (
     "/api/v1/matches",
     "/api/v1/matches/{match_id}",
@@ -23,6 +23,7 @@ SELECTED_PATHS = (
     "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative",
     "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/evidence",
     "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/verify",
+    "/api/v1/matches/{match_id}/events/{event_id}/event-intelligence",
 )
 OPERATIONS = {
     ("/api/v1/matches", "get"): (
@@ -53,6 +54,10 @@ OPERATIONS = {
         "verify_decision_claims",
         "Validate submitted evidence references and registered calculation values against the selected match/event evidence. The legacy status and evidenceValidationStatus report this validation only; claimSupportStatus is always not_assessed because natural-language truth is not evaluated. Valid references do not prove the statement true. geometric_progression_v1 is not xG or a pass-success probability.",
     ),
+    ("/api/v1/matches/{match_id}/events/{event_id}/event-intelligence", "get"): (
+        "get_event_intelligence",
+        "Return a bilingual evidence-grounded briefing for any stored match event. Distinguishes verified facts, calculated metrics, and hypotheses. Uses deterministic templates with optional server-side LLM enrichment when configured. llmConnected is true only after a successful validated provider call; never invent players, assists, or causal links absent from the record.",
+    ),
 }
 
 
@@ -79,7 +84,8 @@ def build_spec() -> dict[str, Any]:
         description=(
             "ReMatch API — seeded synthetic match catalogue, events, frames, "
             "and deterministic decision analysis with evidence verification. "
-            "Synthetic demo data only; no LLM or Foundry integration."
+            "Optional server-side LLM enrichment for event briefings when configured; "
+            "synthetic demo data only."
         ),
     )
     source_app.include_router(api_router)
@@ -121,7 +127,15 @@ def build_spec() -> dict[str, Any]:
             "version": source["info"]["version"],
             "description": "Tool contract derived from the ReMatch FastAPI application. It exposes read-only match and decision data plus a non-persisting claim evidence/reference validation operation. Match and event data currently shipped with the API is synthetic.",
         },
-        "servers": [{"url": SERVER_URL, "description": "Replace with the current Quick Tunnel HTTPS origin before importing into Foundry."}],
+        "servers": [
+            {
+                "url": SERVER_URL,
+                "description": (
+                    "Live Azure Container Apps backend (East US). "
+                    "Requires Authorization: Bearer <API_BEARER_TOKEN>."
+                ),
+            }
+        ],
         "paths": paths,
         "components": {
             "schemas": {name: schemas[name] for name in sorted(needed)},

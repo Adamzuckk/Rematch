@@ -281,11 +281,45 @@ Claim statuses:
 | `partially_supported` | Evidence validation found a mix of valid and invalid references, or could not fully validate a supplied calculation. |
 | `unsupported` | No valid references, no evidence, or an inconsistent registered calculation. |
 
+### `GET /api/v1/matches/{match_id}/events/{event_id}/event-intelligence`
+
+Evidence-grounded bilingual moment briefing for **any** stored event type (not only decision candidates). Response includes `statements` with tiers `fact` | `metric` | `hypothesis` | `missing`, progressive narrative sections, and `llmConnected`.
+
+- Deterministic templates always run first.
+- When backend `LLM_*` settings are enabled, the API may enrich English/Arabic wording from a **verified evidence pack** only. See [llm-provider.md](./llm-provider.md).
+- `llmConnected` is `true` only after a successful validated provider call; otherwise deterministic text is returned and `llmConnected` stays `false`.
+- Nested `decisionAnalysis` is present when the event is an analyzable decision candidate with sufficient evidence.
+
 ### `GET /api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative`
 
 Runs Match Intelligence once, retains that analysis's in-memory evidence catalog, validates its structured claims, and passes the typed match/event/analysis and adapted verification results to the deterministic Narrator.
 
 The response contains `matchId`, `eventId`, `provenance`, the unchanged `analysis` object, native Agent 3 `verificationResults`, and `narrative` with English and Arabic headline, observations, and limitations. Each verification result keeps `evidenceValidationStatus` separate from `claimSupportStatus`, which is always `not_assessed`. The analysis's legacy claim statuses describe evidence validation; neither they nor valid references prove natural-language truth. The route is read-only and has the same 404 and 422 analysis error behavior.
+
+### `POST /api/v1/matches/{match_id}/ask`
+
+Grounded Ask-the-Crew endpoint for Match Studio. Request body:
+
+```json
+{
+  "question": "string (1–500, trimmed)",
+  "eventId": "string | null",
+  "language": "en | ar",
+  "clientRequestId": "string | null"
+}
+```
+
+Routes intents without inventing match facts:
+
+| Intent | Behavior |
+|--------|----------|
+| Greeting / help | Capability explanation (`status: answered`, `factClasses` includes `capability`) |
+| Local facts | Selected event + roster fields only |
+| Narrative / why | Decision + Verifier + Narrator for pass/shot/carry; otherwise event-intelligence briefing (optional Gemini enrichment only on that established path) |
+| Verification | Decision + Verifier + Narrator evidence checks |
+| What-if / tactics / other free-form | Explicit `unsupported` / `unavailable` with bilingual limitations |
+
+Response includes bilingual `answer`, `status`, `intent`, `evidence`, `factClasses`, optional `verificationResults`, and `reason`. This is **not** unrestricted AI chat.
 
 ---
 

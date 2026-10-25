@@ -57,6 +57,12 @@ export const STRINGS = {
     filterLive: 'Live',
     filterFinished: 'Finished',
     filterUpcoming: 'Upcoming',
+    boardLiveTitle: 'On the whistle',
+    boardLiveHint: 'Live clocks ticking — open analysis while the moment is still warm',
+    boardFinishedTitle: 'Full time',
+    boardFinishedHint: 'Settled scores with evidence ready for rewind',
+    boardUpcomingTitle: 'Next kickoff',
+    boardUpcomingHint: 'Scheduled fixtures you can start into a live simulation',
     emptyTitle: 'No matches found',
     emptyFiltered:
       'Nothing matches your search or status filter. Clear filters to see the full demo catalogue.',
@@ -102,6 +108,9 @@ export const STRINGS = {
     matchAnalysisDecisionCta: 'Open Decision Explorer',
     matchAnalysisDecisionHint:
       'Compare the observed action with geometric alternatives from the decision engine.',
+    matchAnalysisBriefingCta: 'Open moment briefing',
+    matchAnalysisBriefingHint:
+      'Open an evidence-grounded briefing for this recorded event. Decision scoring appears only when the event type supports it.',
     eventFieldType: 'Type',
     eventFieldMinute: 'Minute',
     eventFieldOccurredAt: 'Occurred at',
@@ -215,6 +224,48 @@ export const STRINGS = {
     askAgentsValidationHeading: 'Returned evidence checks',
     askAgentsTruthScope:
       'These checks do not assess whether a natural-language claim is true.',
+    decisionExplorerFanBadge: 'Fan view',
+    decisionExplorerAnalystBadge: 'Analyst view',
+    decisionBriefingHeading: 'Moment briefing',
+    decisionBriefingIntro:
+      'What happened, why it mattered, and what else could have happened — grounded only in recorded evidence and calculated geometry.',
+    decisionWhatHappened: 'What happened',
+    decisionWhyItMattered: 'Why it mattered',
+    decisionWhatCouldHaveHappened: 'What could have happened',
+    decisionEvidenceTiers: 'Evidence tiers',
+    decisionTierFact: 'Verified fact',
+    decisionTierMetric: 'Calculated metric',
+    decisionTierHypothesis: 'Hypothesis',
+    decisionTierMissing: 'Missing evidence',
+    decisionLlmDisconnected:
+      'No external AI provider is connected. This briefing is deterministic and evidence-based.',
+    decisionLlmConnected:
+      'An external AI provider enriched this briefing from verified match evidence only.',
+    decisionIntelLoading: 'Loading event briefing…',
+    decisionIntelUnavailable:
+      'Event briefing is unavailable for this data source. Decision scores below still come only from the analysis API.',
+    decisionIntelError: 'Could not load the event briefing.',
+    decisionIntelRetry: 'Retry briefing',
+    decisionIntelMissing: 'Missing from the event record',
+    decisionIntelNotFound:
+      'No event briefing was found for this match event.',
+    decisionAnalysisUnavailable:
+      'Geometric decision scoring is unavailable for this event. The moment briefing above still uses only recorded evidence.',
+    decisionAnalysisRetry: 'Retry decision analysis',
+    decisionAdvancedTools: 'Advanced analyst tools',
+    decisionAdvancedToolsHint:
+      'Pipeline, rankings, claims, and scoring details for this selected event.',
+    decisionRankingToolsHint:
+      'Full geometric ranking for the observed action and frame-backed alternatives.',
+    decisionAskAgentsHint:
+      'Run the deterministic multi-agent narrative workflow for this selected event.',
+    decisionAnalystChatHint:
+      'Ask grounded questions about scores, ranking, verification, and limitations.',
+    decisionIntelEmptyHint:
+      'No briefing text is available yet. In mock mode, switch to API mode with the seeded backend — briefings are never fabricated from static fixtures.',
+    decisionClaimSupportNotAssessed: 'not_assessed',
+    decisionFanPitchHint:
+      'Explore the moment on the pitch. Switch to Analyst view for rankings, evidence claims, and the multi-agent pipeline.',
     decisionUnavailableMetrics:
       'Not computed: xG, xT, pass-completion probability, packing, or full pressure maps.',
     decisionProvenanceSynthetic: 'Synthetic data',
@@ -441,11 +492,11 @@ export const STRINGS = {
     matchStudioAskNoEvent: 'Select a moment in LIVE to provide match-event context.',
     matchStudioAskQuestionLabel: 'Your question',
     matchStudioAskQuestionPlaceholder:
-      'Choose a suggested question, or ask about this decision moment. Arbitrary free-form match Q&A is not supported yet.',
+      'Ask about the selected moment, say hi, or pick a suggestion. Not unrestricted chat.',
     matchStudioAskSubmitFreeForm: 'Ask',
     matchStudioAskSelectedEvent: 'Ask about this event',
     matchStudioAskUnsupported:
-      'Free-form match questions are not supported. The backend only offers GET /api/v1/matches/{matchId}/events/{eventId}/decision-analysis/narrative for a selected decision event — no question body is accepted.',
+      'That question is outside Ask the crew’s grounded scope. Try a greeting, selected-event facts, a decision explanation, or a suggestion below.',
     matchStudioAskNotDecision:
       'The composed narrative workflow only runs for pass, shot, and carry decision candidates. Select one of those moments, or open Decision Explorer when available.',
     matchStudioAskIdleHint:
@@ -454,7 +505,7 @@ export const STRINGS = {
     askCrewSubtitle:
       'Evidence-grounded match analysis for the live 2D moment — not a generic chatbot.',
     askCrewCapabilities:
-      'Crew can explain a selected pass, shot, or carry via the composed narrative endpoint; list players and teams from seeded event data; and open WHAT IF for scored alternatives. Match-wide summaries, tactical counterfactuals, and arbitrary free-form Q&A need a future ask API.',
+      'Crew answers greetings with supported capabilities; explains selected pass/shot/carry moments via Decision + Verifier + Narrator; lists event facts from the match record; and points to WHAT IF for alternatives. Match-wide summaries and tactical counterfactuals stay unsupported — this is not unrestricted AI chat.',
     askCrewSuggestionsHeading: 'Suggested questions',
     askCrewFilterAll: 'All',
     askCrewFilterGoals: 'Goals',
@@ -473,17 +524,17 @@ export const STRINGS = {
     askCrewCapNarrative: 'Composed decision narrative',
     askCrewCapLocalFacts: 'Selected event facts',
     askCrewCapWhatIf: 'Decision Explorer / WHAT IF',
-    askCrewCapNeedsAskApi: 'Requires future match ask API',
+    askCrewCapNeedsAskApi: 'Outside grounded ask scope',
     askCrewUnavailableNoEvent: 'Select a LIVE moment first.',
     askCrewUnavailableNotDecision:
       'Needs a pass, shot, or carry decision candidate.',
     askCrewUnavailableNotGoal: 'Needs a shot event with outcome goal.',
     askCrewUnavailableNotPassDecision: 'Needs a pass decision candidate.',
     askCrewUnavailableNeedsAskApi:
-      'Unavailable — no grounded ask endpoint exists for this question yet.',
+      'Unavailable — this question needs match-wide or tactical evidence the ask API does not invent.',
     askCrewUnavailableBadge: 'Unavailable',
     askCrewEmptyState:
-      'Pick a suggested question or ask about the selected decision moment. Answers stay tied to match evidence.',
+      'Ask a question or pick a suggestion. Crew answers stay tied to match evidence — greetings explain what is supported.',
     askCrewLocalFactsHeading: 'Match-event facts',
     askCrewLocalFactsNote:
       'These fields come only from the selected seeded event and roster. No distances, speeds, possession, or tactics are invented.',
@@ -495,11 +546,30 @@ export const STRINGS = {
     askCrewAnswerCalculated: 'Calculated / model estimates',
     askCrewAnswerAlternatives: 'Alternatives (Decision Explorer)',
     askCrewAnswerUnknown: 'Unknown / not in evidence',
+    askCrewAnswerCapability: 'Supported capabilities',
+    askCrewYouLabel: 'You',
+    askCrewCrewLabel: 'Crew',
+    askCrewStatusUnsupported: 'Outside grounded scope',
+    askCrewStatusUnavailable: 'Unavailable for this selection',
+    askCrewError: 'Ask the crew failed.',
     askCrewComposerHint:
-      'Enter submits. Suggestions that match your text run their supported action; other free-form text is rejected honestly.',
-    askCrewLoading: 'Composing evidence-grounded narrative…',
+      'Enter submits. Exact suggestion titles run local actions; other questions call the grounded ask API.',
+    askCrewLoading: 'Composing evidence-grounded answer…',
     apiMode: 'API mode',
     microsoftFoundry: 'Microsoft Foundry',
+    floatingAskAgentLauncher: 'Ask the agent',
+    floatingAskAnalystLauncher: 'Ask the analyst',
+    floatingAskAgentTitle: 'Ask the agent',
+    floatingAskAgentSubtitle:
+      'Plain-language answers about the selected football moment — grounded in match evidence, not unrestricted chat.',
+    floatingAskAgentPlaceholder: 'Ask about this moment in plain language…',
+    floatingAskClose: 'Close chat',
+    floatingAskContext: 'Discussing',
+    floatingAskNoEvent: 'Select a live moment to ground the answer in that event.',
+    floatingAskContextChanged: 'Context updated to',
+    floatingAskClearConfirm: 'Clear this conversation for the current page session?',
+    floatingAskSelectDecision:
+      'Select a pass, shot, or carry decision moment to ask the analyst.',
     analystOpen: 'Ask the analyst',
     analystTitle: 'Ask the analyst',
     analystClose: 'Close analyst panel',
@@ -701,6 +771,12 @@ export const STRINGS = {
     filterLive: 'مباشر',
     filterFinished: 'منتهية',
     filterUpcoming: 'قادمة',
+    boardLiveTitle: 'صفارة الحكم',
+    boardLiveHint: 'ساعات مباشرة تدق — افتح التحليل بينما اللحظة لا تزال ساخنة',
+    boardFinishedTitle: 'نهاية المباراة',
+    boardFinishedHint: 'نتائج محسومة مع أدلة جاهزة لإعادة المشاهدة',
+    boardUpcomingTitle: 'الركلة التالية',
+    boardUpcomingHint: 'مباريات مجدولة يمكنك بدء محاكاتها المباشرة',
     emptyTitle: 'لا توجد مباريات',
     emptyFiltered:
       'لا يوجد ما يطابق البحث أو التصفية. امسح عوامل التصفية لعرض الكتالوج التجريبي كاملاً.',
@@ -746,6 +822,9 @@ export const STRINGS = {
     matchAnalysisDecisionCta: 'فتح مستكشف القرار',
     matchAnalysisDecisionHint:
       'قارن الإجراء المرصود بالبدائل الهندسية من محرك القرار.',
+    matchAnalysisBriefingCta: 'فتح إحاطة اللحظة',
+    matchAnalysisBriefingHint:
+      'افتح إحاطة مبنية على الأدلة لهذا الحدث المسجّل. يظهر تسجيل القرار فقط عندما يدعم نوع الحدث ذلك.',
     eventFieldType: 'النوع',
     eventFieldMinute: 'الدقيقة',
     eventFieldOccurredAt: 'وقت الحدوث',
@@ -859,6 +938,47 @@ export const STRINGS = {
     askAgentsValidationHeading: 'فحوص الأدلة المعادة',
     askAgentsTruthScope:
       'لا تقيّم هذه الفحوص ما إذا كان الادعاء المكتوب باللغة الطبيعية صحيحاً.',
+    decisionExplorerFanBadge: 'عرض المشجع',
+    decisionExplorerAnalystBadge: 'عرض المحلل',
+    decisionBriefingHeading: 'إحاطة اللحظة',
+    decisionBriefingIntro:
+      'ماذا حدث، ولماذا أهم، وما الذي كان يمكن أن يحدث — مبني فقط على الأدلة المسجّلة والهندسة المحسوبة.',
+    decisionWhatHappened: 'ماذا حدث',
+    decisionWhyItMattered: 'لماذا أهم',
+    decisionWhatCouldHaveHappened: 'ما الذي كان يمكن أن يحدث',
+    decisionEvidenceTiers: 'طبقات الأدلة',
+    decisionTierFact: 'حقيقة موثّقة',
+    decisionTierMetric: 'مقياس محسوب',
+    decisionTierHypothesis: 'فرضية',
+    decisionTierMissing: 'أدلة مفقودة',
+    decisionLlmDisconnected:
+      'لا يوجد مزوّد ذكاء اصطناعي خارجي متصل. هذه الإحاطة حتمية ومبنية على الأدلة.',
+    decisionLlmConnected:
+      'مزوّد ذكاء اصطناعي خارجي أثْرى هذه الإحاطة من أدلة المباراة الموثّقة فقط.',
+    decisionIntelLoading: 'جارٍ تحميل إحاطة الحدث…',
+    decisionIntelUnavailable:
+      'إحاطة الحدث غير متاحة لمصدر البيانات هذا. درجات القرار أدناه ما زالت تأتي فقط من واجهة تحليل القرار.',
+    decisionIntelError: 'تعذر تحميل إحاطة الحدث.',
+    decisionIntelRetry: 'إعادة محاولة الإحاطة',
+    decisionIntelMissing: 'مفقود من سجل الحدث',
+    decisionIntelNotFound: 'لم يُعثر على إحاطة حدث لهذه المباراة وهذا الحدث.',
+    decisionAnalysisUnavailable:
+      'تسجيل القرار الهندسي غير متاح لهذا الحدث. إحاطة اللحظة أعلاه ما زالت تستخدم الأدلة المسجّلة فقط.',
+    decisionAnalysisRetry: 'إعادة محاولة تحليل القرار',
+    decisionAdvancedTools: 'أدوات المحلل المتقدمة',
+    decisionAdvancedToolsHint:
+      'خط الأنابيب والترتيب والادعاءات وتفاصيل التسجيل لهذا الحدث المحدد.',
+    decisionRankingToolsHint:
+      'الترتيب الهندسي الكامل للإجراء المرصود والبدائل المدعومة بالإطار.',
+    decisionAskAgentsHint:
+      'شغّل سير عمل السرد الحتمي متعدد الوكلاء لهذا الحدث المحدد.',
+    decisionAnalystChatHint:
+      'اطرح أسئلة مبنية على الأدلة حول الدرجات والترتيب والتحقق والقيود.',
+    decisionIntelEmptyHint:
+      'لا يتوفر نص إحاطة بعد. في وضع المحاكاة، انتقل إلى وضع واجهة البرمجة مع الخلفية المزروعة — لا تُختلق الإحاطات من التركيبات الثابتة.',
+    decisionClaimSupportNotAssessed: 'not_assessed',
+    decisionFanPitchHint:
+      'استكشف اللحظة على الملعب. انتقل إلى عرض المحلل للترتيب وادعاءات الأدلة وخط أنابيب الوكلاء المتعددين.',
     decisionUnavailableMetrics:
       'غير محسوبة: xG، xT، احتمال إكمال التمريرة، التعبئة، أو خرائط الضغط الكاملة.',
     decisionProvenanceSynthetic: 'بيانات اصطناعية',
@@ -1085,11 +1205,11 @@ export const STRINGS = {
     matchStudioAskNoEvent: 'اختر لحظة في مباشر لتوفير سياق حدث المباراة.',
     matchStudioAskQuestionLabel: 'سؤالك',
     matchStudioAskQuestionPlaceholder:
-      'اختر سؤالاً مقترحاً، أو اسأل عن لحظة القرار هذه. أسئلة المباراة الحرة غير مدعومة بعد.',
+      'اسأل عن اللحظة المحددة أو قل مرحباً أو اختر اقتراحاً. ليست محادثة مطلقة.',
     matchStudioAskSubmitFreeForm: 'اسأل',
     matchStudioAskSelectedEvent: 'اسأل عن هذا الحدث',
     matchStudioAskUnsupported:
-      'أسئلة المباراة الحرة غير مدعومة. الخادم يوفّر فقط GET /api/v1/matches/{matchId}/events/{eventId}/decision-analysis/narrative لحدث قرار محدد — دون جسم سؤال.',
+      'هذا السؤال خارج نطاق الطاقم المبني على الأدلة. جرّب تحية أو حقائق الحدث أو شرح قرار أو اقتراحاً أدناه.',
     matchStudioAskNotDecision:
       'سير عمل السرد المركّب يعمل فقط لتمريرة أو تسديدة أو حمل كرة. اختر إحدى هذه اللحظات، أو افتح مستكشف القرار عند التوفر.',
     matchStudioAskIdleHint:
@@ -1098,7 +1218,7 @@ export const STRINGS = {
     askCrewSubtitle:
       'تحليل مباراة مبني على الأدلة للحظة العرض ثنائية الأبعاد — وليس روبوت محادثة عاماً.',
     askCrewCapabilities:
-      'يمكن للطاقم شرح تمريرة أو تسديدة أو حمل عبر مسار السرد المركّب؛ وذكر اللاعبين والفرق من بيانات الحدث؛ وفتح ماذا لو للبدائل المسجّلة. ملخصات المباراة والسيناريوهات التكتيكية والأسئلة الحرة تحتاج واجهة ask مستقبلية.',
+      'يجيب الطاقم على التحيات بشرح القدرات؛ ويشرح لحظات التمرير/التسديد/الحمل عبر القرار والمدقق والراوي؛ ويعرض حقائق الحدث من السجل؛ ويوجّه إلى ماذا لو للبدائل. ملخصات المباراة والتكتيك الحر غير مدعومة — ليست محادثة ذكاء اصطناعي مطلقة.',
     askCrewSuggestionsHeading: 'أسئلة مقترحة',
     askCrewFilterAll: 'الكل',
     askCrewFilterGoals: 'أهداف',
@@ -1117,17 +1237,17 @@ export const STRINGS = {
     askCrewCapNarrative: 'سرد قرار مركّب',
     askCrewCapLocalFacts: 'حقائق الحدث المحدد',
     askCrewCapWhatIf: 'مستكشف القرار / ماذا لو',
-    askCrewCapNeedsAskApi: 'يتطلب واجهة ask للمباراة مستقبلاً',
+    askCrewCapNeedsAskApi: 'خارج نطاق ask المبني على الأدلة',
     askCrewUnavailableNoEvent: 'اختر لحظة من مباشر أولاً.',
     askCrewUnavailableNotDecision:
       'يتطلب مرشّح قرار: تمريرة أو تسديدة أو حمل.',
     askCrewUnavailableNotGoal: 'يتطلب حدث تسديدة نتيجته هدف.',
     askCrewUnavailableNotPassDecision: 'يتطلب مرشّح قرار من نوع تمريرة.',
     askCrewUnavailableNeedsAskApi:
-      'غير متاح — لا توجد واجهة ask مبنية على الأدلة لهذا السؤال بعد.',
+      'غير متاح — هذا السؤال يحتاج أدلة على مستوى المباراة أو تكتيك لا يخترعه ask.',
     askCrewUnavailableBadge: 'غير متاح',
     askCrewEmptyState:
-      'اختر سؤالاً مقترحاً أو اسأل عن لحظة القرار المحددة. تبقى الإجابات مرتبطة بأدلة المباراة.',
+      'اطرح سؤالاً أو اختر اقتراحاً. تبقى إجابات الطاقم مرتبطة بأدلة المباراة — والتحيات تشرح ما هو مدعوم.',
     askCrewLocalFactsHeading: 'حقائق حدث المباراة',
     askCrewLocalFactsNote:
       'هذه الحقول تأتي فقط من الحدث والبذرة وقائمة اللاعبين. لا تُختلق مسافات أو سرعات أو استحواذ أو تكتيك.',
@@ -1139,11 +1259,30 @@ export const STRINGS = {
     askCrewAnswerCalculated: 'محسوب / تقديرات النموذج',
     askCrewAnswerAlternatives: 'بدائل (مستكشف القرار)',
     askCrewAnswerUnknown: 'مجهول / ليس في الأدلة',
+    askCrewAnswerCapability: 'القدرات المدعومة',
+    askCrewYouLabel: 'أنت',
+    askCrewCrewLabel: 'الطاقم',
+    askCrewStatusUnsupported: 'خارج النطاق المبني على الأدلة',
+    askCrewStatusUnavailable: 'غير متاح لهذا الاختيار',
+    askCrewError: 'فشل سؤال الطاقم.',
     askCrewComposerHint:
-      'Enter يُرسل. الاقتراحات المطابقة لنصك تشغّل إجراءها المدعوم؛ أي نص حر آخر يُرفض بصراحة.',
-    askCrewLoading: 'جارٍ تركيب سرد مبني على الأدلة…',
+      'Enter يُرسل. عناوين الاقتراحات المطابقة تشغّل إجراءات محلية؛ الأسئلة الأخرى تستدعي واجهة ask المبنية على الأدلة.',
+    askCrewLoading: 'جارٍ تركيب إجابة مبنية على الأدلة…',
     apiMode: 'وضع API',
     microsoftFoundry: 'Microsoft Foundry',
+    floatingAskAgentLauncher: 'اسأل الوكيل',
+    floatingAskAnalystLauncher: 'اسأل المحلل',
+    floatingAskAgentTitle: 'اسأل الوكيل',
+    floatingAskAgentSubtitle:
+      'إجابات بلغة سهلة عن اللحظة الكروية المحددة — مبنية على أدلة المباراة وليست دردشة عامة.',
+    floatingAskAgentPlaceholder: 'اسأل عن هذه اللحظة بلغة بسيطة…',
+    floatingAskClose: 'إغلاق المحادثة',
+    floatingAskContext: 'المناقشة حول',
+    floatingAskNoEvent: 'اختر لحظة مباشرة لربط الإجابة بذلك الحدث.',
+    floatingAskContextChanged: 'تم تحديث السياق إلى',
+    floatingAskClearConfirm: 'هل تريد مسح هذه المحادثة لجلسة الصفحة الحالية؟',
+    floatingAskSelectDecision:
+      'اختر لحظة قرار (تمريرة أو تسديدة أو حمل) لسؤال المحلل.',
     analystOpen: 'اسأل المحلل',
     analystTitle: 'اسأل المحلل',
     analystClose: 'إغلاق لوحة المحلل',

@@ -7,7 +7,7 @@ import { SYNTHETIC_EVENTS } from '../../mocks/events'
 import { SYNTHETIC_PLAYERS } from '../../mocks/players'
 import { SYNTHETIC_TEAMS } from '../../mocks/teams'
 import { sortMatchEvents } from '../../lib/pitch'
-import type { DecisionNarrativeResponse, MatchEvent } from '../../types'
+import type { AskResponse, DecisionNarrativeResponse, MatchEvent } from '../../types'
 import { renderWithProviders } from '../../test/render'
 import { MatchStudioPanel } from './MatchStudioPanel'
 
@@ -117,6 +117,35 @@ const narrativeResponse: DecisionNarrativeResponse = {
   },
 }
 
+const askGreetingResponse: AskResponse = {
+  matchId: 'm-northgate-riverside-2401',
+  eventId: selected.id,
+  status: 'answered',
+  intent: 'greeting',
+  provenance: 'synthetic',
+  answer: {
+    english: {
+      headline: 'Ask the crew — grounded match analysis',
+      keyObservations: [
+        'I can explain a selected pass, shot, or carry.',
+        'I do not invent players or xG.',
+      ],
+      limitations: ['This is not unrestricted AI chat.'],
+    },
+    arabic: {
+      headline: 'اسأل الطاقم',
+      keyObservations: ['شرح القرار'],
+      limitations: ['ليست محادثة مطلقة'],
+    },
+  },
+  evidence: [],
+  relatedEventIds: [selected.id],
+  factClasses: ['capability'],
+  reason: 'Capability explanation — not unrestricted chat.',
+  verificationResults: [],
+  clientRequestId: 'req-1',
+}
+
 function renderStudio(
   overrides: Partial<ComponentProps<typeof MatchStudioPanel>> = {},
 ) {
@@ -128,6 +157,8 @@ function renderStudio(
   const onPrevious = vi.fn()
   const onNext = vi.fn()
   const onClearAsk = vi.fn()
+  const onAskQuestion = vi.fn()
+  const onAskRetry = vi.fn()
 
   renderWithProviders(
     <MatchStudioPanel
@@ -149,6 +180,8 @@ function renderStudio(
       onAskSelectedEvent={onAskSelectedEvent}
       onNarrativeRetry={onNarrativeRetry}
       onClearAsk={onClearAsk}
+      onAskQuestion={onAskQuestion}
+      onAskRetry={onAskRetry}
       {...overrides}
     />,
   )
@@ -162,6 +195,8 @@ function renderStudio(
     onPrevious,
     onNext,
     onClearAsk,
+    onAskQuestion,
+    onAskRetry,
   }
 }
 
@@ -207,23 +242,135 @@ describe('MatchStudioPanel', () => {
     expect(onSelectEvent).toHaveBeenCalledWith('evt-ng-shot-23')
   })
 
-  it('shows unsupported state for free-form ASK questions without calling narrative', async () => {
+  it('submits free-form ASK questions via the grounded ask API (button)', async () => {
     const user = userEvent.setup()
-    const { onAskSelectedEvent } = renderStudio()
+    const { onAskSelectedEvent, onAskQuestion } = renderStudio()
     await openAsk(user)
     await user.type(
       screen.getByLabelText(STRINGS.en.matchStudioAskQuestionLabel),
-      'Who had the most xG?',
+      'hi',
     )
     await user.click(
       screen.getByRole('button', {
         name: STRINGS.en.matchStudioAskSubmitFreeForm,
       }),
     )
-    expect(screen.getByTestId('ask-unsupported')).toHaveTextContent(
-      /Free-form match questions are not supported/i,
-    )
+    expect(onAskQuestion).toHaveBeenCalledWith('hi')
     expect(onAskSelectedEvent).not.toHaveBeenCalled()
+  })
+
+  it('submits free-form ASK questions on Enter', async () => {
+    const user = userEvent.setup()
+    const { onAskQuestion } = renderStudio()
+    await openAsk(user)
+    const input = screen.getByLabelText(STRINGS.en.matchStudioAskQuestionLabel)
+    await user.type(input, 'hi{Enter}')
+    expect(onAskQuestion).toHaveBeenCalledWith('hi')
+  })
+
+  it('shows a visible crew answer for a greeting response', async () => {
+    const user = userEvent.setup()
+    renderStudio({
+      askCrewState: {
+        status: 'ready',
+        turns: [
+          {
+            id: 't1',
+            question: 'hi',
+            eventId: null,
+            response: askGreetingResponse,
+            error: null,
+            unavailable: false,
+            createdAt: 1,
+          },
+        ],
+      },
+    })
+    await openAsk(user)
+    expect(screen.getByTestId('ask-user-message')).toHaveTextContent('hi')
+    const answer = screen.getByTestId('ask-crew-answer')
+    expect(answer).toHaveTextContent(/Ask the crew — grounded match analysis/i)
+    expect(answer).toHaveTextContent(/not invent/i)
+    expect(screen.queryByTestId('ask-empty')).not.toBeInTheDocument()
+  })
+
+  it('shows ask loading state while the crew request is in flight', async () => {
+    const user = userEvent.setup()
+    renderStudio({
+      askCrewState: {
+        status: 'loading',
+        turns: [],
+        pendingQuestion: 'hi',
+      },
+    })
+    await openAsk(user)
+    expect(screen.getByTestId('ask-pending-question')).toHaveTextContent('hi')
+    expect(screen.getByTestId('ask-crew-loading')).toHaveTextContent(
+      STRINGS.en.askCrewLoading,
+    )
+  })
+
+  it('shows ask error with retry', async () => {
+    const user = userEvent.setup()
+    const { onAskRetry } = renderStudio({
+      askCrewState: {
+        status: 'error',
+        turns: [],
+        message: 'Ask timed out',
+        lastQuestion: 'hi',
+      },
+    })
+    await openAsk(user)
+    expect(screen.getByTestId('ask-error-question')).toHaveTextContent('hi')
+    expect(screen.getByTestId('ask-crew-error')).toHaveTextContent(/Ask timed out/i)
+    await user.click(
+      screen.getByRole('button', { name: STRINGS.en.decisionNarrativeRetry }),
+    )
+    expect(onAskRetry).toHaveBeenCalled()
+  })
+
+  it('rejects empty input without calling ask or narrative', async () => {
+    const user = userEvent.setup()
+    const nonDecision =
+      events.find((e) => e.type === 'possession_change') ??
+      events.find((e) => e.type === 'pressure')
+    expect(nonDecision).toBeTruthy()
+    const { onAskQuestion, onAskSelectedEvent } = renderStudio({
+      selectedEvent: nonDecision!,
+      selectedEventId: nonDecision!.id,
+    })
+    await openAsk(user)
+    const submit = screen.getByRole('button', {
+      name: STRINGS.en.matchStudioAskSubmitFreeForm,
+    })
+    expect(submit).toBeDisabled()
+    expect(onAskQuestion).not.toHaveBeenCalled()
+    expect(onAskSelectedEvent).not.toHaveBeenCalled()
+  })
+
+  it('clears ask conversation via Clear', async () => {
+    const user = userEvent.setup()
+    const { onClearAsk } = renderStudio({
+      askCrewState: {
+        status: 'ready',
+        turns: [
+          {
+            id: 't1',
+            question: 'hi',
+            eventId: null,
+            response: askGreetingResponse,
+            error: null,
+            unavailable: false,
+            createdAt: 1,
+          },
+        ],
+      },
+    })
+    await openAsk(user)
+    await user.click(
+      screen.getAllByRole('button', { name: STRINGS.en.askCrewClear })[0]!,
+    )
+    expect(onClearAsk).toHaveBeenCalled()
   })
 
   it('asks about the selected decision event via the real narrative workflow', async () => {
@@ -248,7 +395,7 @@ describe('MatchStudioPanel', () => {
 
     await user.click(screen.getByTestId('ask-suggestion-press-higher'))
     expect(screen.getByTestId('ask-suggestion-unavailable')).toHaveTextContent(
-      /no grounded ask endpoint/i,
+      /does not invent/i,
     )
     expect(onAskSelectedEvent).toHaveBeenCalledTimes(1)
   })

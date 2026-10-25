@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
 import { MatchCard } from '../components/MatchCard'
 import { Button } from '../components/ui/Button'
@@ -10,6 +10,7 @@ import { matchService } from '../services/matches'
 import type {
   DashboardOverviewStat,
   MatchDatasetInfo,
+  MatchStatus,
   MatchStatusFilter,
   MatchSummary,
 } from '../types'
@@ -22,12 +23,40 @@ const FILTERS: { id: MatchStatusFilter; labelKey: MessageKey }[] = [
   { id: 'upcoming', labelKey: 'filterUpcoming' },
 ]
 
+const BOARD_ORDER: MatchStatus[] = ['live', 'finished', 'upcoming']
+
+const BOARD_COPY: Record<MatchStatus, { titleKey: MessageKey; hintKey: MessageKey }> = {
+  live: { titleKey: 'boardLiveTitle', hintKey: 'boardLiveHint' },
+  finished: { titleKey: 'boardFinishedTitle', hintKey: 'boardFinishedHint' },
+  upcoming: { titleKey: 'boardUpcomingTitle', hintKey: 'boardUpcomingHint' },
+}
+
+type StatusCounts = Record<MatchStatusFilter, number>
+
 type ReadyPayload = {
   requestKey: string
   matches: MatchSummary[]
   totalCount: number
+  statusCounts: StatusCounts
   overview: DashboardOverviewStat[]
   dataset: MatchDatasetInfo
+}
+
+function countByStatus(matches: MatchSummary[]): StatusCounts {
+  return {
+    all: matches.length,
+    live: matches.filter((match) => match.status === 'live').length,
+    finished: matches.filter((match) => match.status === 'finished').length,
+    upcoming: matches.filter((match) => match.status === 'upcoming').length,
+  }
+}
+
+function groupByStatus(matches: MatchSummary[]): Record<MatchStatus, MatchSummary[]> {
+  return {
+    live: matches.filter((match) => match.status === 'live'),
+    finished: matches.filter((match) => match.status === 'finished'),
+    upcoming: matches.filter((match) => match.status === 'upcoming'),
+  }
 }
 
 export function DashboardPage() {
@@ -63,6 +92,7 @@ export function DashboardPage() {
           requestKey,
           matches,
           totalCount: allMatches.length,
+          statusCounts: countByStatus(allMatches),
           overview,
           dataset,
         })
@@ -99,11 +129,52 @@ export function DashboardPage() {
   const isError = error?.requestKey === requestKey
   const isLoading = !isReady && !isError
 
+  const grouped = useMemo(
+    () => (isReady ? groupByStatus(ready.matches) : null),
+    [isReady, ready],
+  )
+
+  const handleMatchUpdated = useCallback(() => {
+    setReloadToken((value) => value + 1)
+  }, [])
+
+  function renderBoard(status: MatchStatus, matches: MatchSummary[]) {
+    if (matches.length === 0) return null
+    const copy = BOARD_COPY[status]
+    return (
+      <section key={status} className={styles.board} data-board={status}>
+        <div className={styles.boardHeader}>
+          <div className={styles.boardHeading}>
+            <h3 className={styles.boardTitle}>{t(copy.titleKey)}</h3>
+            <p className={styles.boardHint}>{t(copy.hintKey)}</p>
+          </div>
+          <span className={styles.boardCount} aria-hidden="true">
+            {String(matches.length).padStart(2, '0')}
+          </span>
+        </div>
+        <div className={status === 'live' ? styles.liveRail : styles.grid}>
+          {matches.map((match, index) => (
+            <MatchCard
+              key={match.id}
+              match={match}
+              featured={status === 'live' && index === 0}
+              onMatchUpdated={handleMatchUpdated}
+            />
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.hero}>
+        <div className={styles.heroGlow} aria-hidden="true" />
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>{t('dashboardEyebrow')}</p>
+          <p className={styles.eyebrow}>
+            <span className={styles.eyebrowMark} aria-hidden="true" />
+            {t('dashboardEyebrow')}
+          </p>
           <h1 className={styles.title}>
             {t('dashboardTitle')}{' '}
             <span className={styles.titleAccent}>{t('dashboardTitleAccent')}</span>
@@ -115,30 +186,32 @@ export function DashboardPage() {
               {t('dashboardProvenance')}: {ready.dataset.provenance}
             </p>
           ) : null}
+        </div>
+
+        <div className={styles.heroAside}>
           {isReady ? (
             <div className={styles.heroReadout} aria-label={t('dashboardCatalogueReadout')}>
               <span className={styles.readoutValue}>{ready.totalCount}</span>
-              <span className={styles.readoutLabel}>{t('dashboardCatalogueReadout')}</span>
-              <span className={styles.readoutRule} aria-hidden="true" />
-              <span className={styles.readoutLabel}>{t('dashboardEvidenceFirst')}</span>
+              <div className={styles.readoutCopy}>
+                <span className={styles.readoutLabel}>{t('dashboardCatalogueReadout')}</span>
+                <span className={styles.readoutSub}>{t('dashboardEvidenceFirst')}</span>
+              </div>
             </div>
-          ) : null}
-        </div>
-        <div className={styles.tacticalWindow} aria-hidden="true">
-          <span className={styles.tacticalHalfway} />
-          <span className={styles.tacticalCircle} />
-          <span className={styles.tacticalBoxTop} />
-          <span className={styles.tacticalBoxBottom} />
-          <span className={styles.tacticalBall} />
-          <span className={[styles.runner, styles.runnerOne].join(' ')} />
-          <span className={[styles.runner, styles.runnerTwo].join(' ')} />
-          <span className={[styles.runner, styles.runnerThree].join(' ')} />
+          ) : (
+            <div className={styles.heroReadoutGhost} aria-hidden="true" />
+          )}
+          <div className={styles.pitchMark} aria-hidden="true">
+            <span className={styles.pitchArc} />
+            <span className={styles.pitchLine} />
+            <span className={styles.pitchDot} />
+            <span className={styles.pitchRunner} />
+          </div>
         </div>
       </header>
 
       {isReady ? (
-        <section aria-label={t('overviewLabel')}>
-          <div className={styles.stats}>
+        <section className={styles.pulse} aria-label={t('overviewLabel')}>
+          <div className={styles.pulseRail}>
             {ready.overview.map((stat) => (
               <StatCard
                 key={stat.id}
@@ -152,24 +225,23 @@ export function DashboardPage() {
         </section>
       ) : null}
 
-      <section className={styles.toolbar} aria-label={t('matchesHeading')}>
-        <div className={styles.toolbarHeader}>
+      <section className={styles.desk} aria-label={t('matchesHeading')}>
+        <div className={styles.deskHeader}>
           <div>
-          <h2 className={styles.sectionTitle}>
-            {t('matchesHeading')}
-            <span className={styles.sectionTitleAccent}> / {t('dashboardTitleAccent')}</span>
-          </h2>
-          <p className={styles.sectionHint}>{t('matchesHint')}</p>
+            <h2 className={styles.sectionTitle}>
+              {t('matchesHeading')}
+              <span className={styles.sectionTitleAccent}> / {t('dashboardTitleAccent')}</span>
+            </h2>
+            <p className={styles.sectionHint}>{t('matchesHint')}</p>
           </div>
           {isReady ? (
             <p className={styles.resultsMeta} aria-live="polite">
-              {t('showingResults')} {ready.matches.length}{' '}
-              {t('ofResults')} {ready.totalCount}
+              {t('showingResults')} {ready.matches.length} {t('ofResults')} {ready.totalCount}
             </p>
           ) : null}
         </div>
 
-        <div className={styles.controls}>
+        <div className={styles.controlBar}>
           <div className={styles.search}>
             <Search className={styles.searchIcon} size={16} aria-hidden="true" />
             <label className="sr-only" htmlFor="match-search">
@@ -193,15 +265,27 @@ export function DashboardPage() {
           >
             {FILTERS.map((filter) => {
               const active = statusFilter === filter.id
+              const count = isReady ? ready.statusCounts[filter.id] : null
               return (
                 <Button
                   key={filter.id}
                   variant={active ? 'primary' : 'secondary'}
-                  className={styles.filterButton}
+                  className={[
+                    styles.filterButton,
+                    filter.id === 'live' ? styles.filterLive : '',
+                    active ? styles.filterActive : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   onClick={() => setStatusFilter(filter.id)}
                   aria-pressed={active}
                 >
-                  {t(filter.labelKey)}
+                  <span>{t(filter.labelKey)}</span>
+                  {count != null ? (
+                    <span className={styles.filterCount} aria-hidden="true">
+                      {count}
+                    </span>
+                  ) : null}
                 </Button>
               )
             })}
@@ -249,15 +333,11 @@ export function DashboardPage() {
           />
         ) : null}
 
-        {isReady && ready.matches.length > 0 ? (
-          <div className={styles.grid}>
-            {ready.matches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                onMatchUpdated={() => setReloadToken((value) => value + 1)}
-              />
-            ))}
+        {isReady && ready.matches.length > 0 && grouped ? (
+          <div className={styles.boards}>
+            {statusFilter === 'all'
+              ? BOARD_ORDER.map((status) => renderBoard(status, grouped[status]))
+              : renderBoard(statusFilter as MatchStatus, ready.matches)}
           </div>
         ) : null}
       </section>

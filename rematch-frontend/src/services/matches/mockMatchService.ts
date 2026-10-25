@@ -17,9 +17,11 @@ import type {
   TeamFormResult,
 } from '../../types'
 import {
+  AskUnavailableError,
   DecisionInsufficientEvidenceError,
   DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
+  EventIntelligenceUnavailableError,
   MatchApiError,
   MatchNotFoundError,
   type MatchListFilters,
@@ -241,6 +243,22 @@ export const mockMatchService: MatchService = {
       'Narrative is unavailable in mock mode. Use API mode with the seeded backend; no narrative is fabricated from static fixtures.',
       matchId,
       eventId,
+    )
+  },
+
+  async getEventIntelligence(matchId, eventId) {
+    throw new EventIntelligenceUnavailableError(
+      'Event intelligence is unavailable in mock mode. Use API mode with the seeded backend; no briefing is fabricated from static fixtures.',
+      matchId,
+      eventId,
+    )
+  },
+
+  async askMatch(matchId) {
+    requireMatch(matchId)
+    throw new AskUnavailableError(
+      'Ask the crew is unavailable in mock mode. Use API mode with the seeded backend; no free-form answers are fabricated from static fixtures.',
+      matchId,
     )
   },
 

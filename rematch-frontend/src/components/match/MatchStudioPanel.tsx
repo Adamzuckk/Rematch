@@ -10,6 +10,7 @@ import {
 } from 'react'
 import type { DecisionNarrativeResponse, MatchEvent, Player, Team } from '../../types'
 import type { DecisionNarrativeState } from '../../hooks/useDecisionNarrative'
+import type { AskCrewState } from '../../hooks/useAskCrew'
 import {
   buildAskSuggestions,
   buildLocalFactsAnswer,
@@ -47,6 +48,10 @@ export interface MatchStudioPanelProps {
   onNarrativeRetry: () => void
   /** Clears the page-owned narrative enablement (ASK answer). */
   onClearAsk?: () => void
+  /** Grounded free-form ask conversation (POST …/ask). */
+  askCrewState?: AskCrewState
+  onAskQuestion?: (question: string) => void
+  onAskRetry?: () => void
   /** Narratives already returned for events (LIVE shows headlines only when present). */
   narrativeByEventId?: Readonly<Record<string, DecisionNarrativeResponse>>
   /** Compact chrome for Fan View side panel. */
@@ -121,6 +126,9 @@ export function MatchStudioPanel({
   onAskSelectedEvent,
   onNarrativeRetry,
   onClearAsk,
+  askCrewState = { status: 'idle', turns: [] },
+  onAskQuestion,
+  onAskRetry,
   narrativeByEventId = {},
   compact = false,
   defaultTab = 'live',
@@ -138,6 +146,9 @@ export function MatchStudioPanel({
   const questionInputId = `${baseId}-question`
   const selectedRef = useRef<HTMLButtonElement | null>(null)
   const composerRef = useRef<HTMLTextAreaElement | null>(null)
+  const conversationRef = useRef<HTMLDivElement | null>(null)
+  const askCrewLoading = askCrewState.status === 'loading'
+  const askCrewBusy = askCrewLoading || narrativeState.status === 'loading'
 
   useEffect(() => {
     if (tab !== 'live') return
@@ -179,10 +190,35 @@ export function MatchStudioPanel({
     narrativeState.status === 'unavailable' ||
     narrativeState.status === 'error'
 
+  const hasAskConversation =
+    askCrewState.turns.length > 0 ||
+    askCrewState.status === 'loading' ||
+    askCrewState.status === 'error'
+
   const hasAnswerSurface =
     askOutcome.kind !== 'none' ||
     showNarrativeAnswer ||
+    hasAskConversation ||
     (selectedEvent != null && !decisionSelected && askOutcome.kind === 'none')
+
+  useEffect(() => {
+    if (
+      !hasAskConversation &&
+      askOutcome.kind === 'none' &&
+      !showNarrativeAnswer
+    ) {
+      return
+    }
+    // Scroll the answer region (flex order: below suggestions) into view near
+    // the sticky composer so successful replies are not left off-screen.
+    const node = conversationRef.current
+    if (node && typeof node.scrollIntoView === 'function') {
+      node.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth',
+      })
+    }
+  }, [hasAskConversation, askCrewState, askOutcome.kind, showNarrativeAnswer])
 
   const onTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
@@ -251,6 +287,7 @@ export function MatchStudioPanel({
 
   const submitComposer = (event: FormEvent) => {
     event.preventDefault()
+    if (askCrewBusy) return
     const trimmed = draftQuestion.trim()
     if (!trimmed) {
       if (decisionSelected) {
@@ -263,6 +300,13 @@ export function MatchStudioPanel({
     const matched = matchSuggestionByTitle(trimmed, suggestions, (key) => t(key))
     if (matched) {
       runSuggestion(matched)
+      return
+    }
+
+    setAskOutcome({ kind: 'none' })
+    if (onAskQuestion) {
+      onAskQuestion(trimmed)
+      setDraftQuestion('')
       return
     }
 
@@ -467,14 +511,14 @@ export function MatchStudioPanel({
               <p className={styles.detailNote}>
                 {t('matchStudioLiveSelectedHint')}
               </p>
-              {isDecisionCandidate(selectedEvent) ? (
-                <Button
-                  variant="secondary"
-                  to={`/matches/${matchId}/decisions/${selectedEvent.id}`}
-                >
-                  {t('matchAnalysisDecisionCta')}
-                </Button>
-              ) : null}
+              <Button
+                variant="secondary"
+                to={`/matches/${matchId}/decisions/${selectedEvent.id}`}
+              >
+                {isDecisionCandidate(selectedEvent)
+                  ? t('matchAnalysisDecisionCta')
+                  : t('matchAnalysisBriefingCta')}
+              </Button>
             </div>
           ) : null}
         </div>
@@ -525,82 +569,190 @@ export function MatchStudioPanel({
               </p>
             )}
 
-            <div className={styles.askSuggestionsBlock}>
-              <div className={styles.askSuggestionsHeader}>
-                <h4 className={styles.askSectionTitle}>
-                  {t('askCrewSuggestionsHeading')}
-                </h4>
-                <div
-                  className={styles.askFilters}
-                  role="group"
-                  aria-label={t('askCrewSuggestionsHeading')}
-                >
-                  {ASK_FILTERS.map((filter) => (
-                    <button
-                      key={filter}
-                      type="button"
-                      className={[
-                        styles.askFilter,
-                        askFilter === filter ? styles.askFilterActive : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                      aria-pressed={askFilter === filter}
-                      onClick={() => setAskFilter(filter)}
-                    >
-                      {filterLabel(filter)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <ul
-                className={styles.askSuggestionList}
-                data-testid="ask-suggestion-list"
-              >
-                {visibleSuggestions.map((suggestion) => {
-                  const unavailable = suggestion.unavailable
-                  return (
-                    <li key={suggestion.id}>
-                      <button
-                        type="button"
-                        className={[
-                          styles.askSuggestion,
-                          unavailable ? styles.askSuggestionUnavailable : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' ')}
-                        onClick={() => runSuggestion(suggestion)}
-                        aria-disabled={unavailable ? true : undefined}
-                        data-testid={`ask-suggestion-${suggestion.id}`}
-                        data-action={suggestion.action}
-                        data-unavailable={unavailable ? 'true' : 'false'}
-                      >
-                        <span className={styles.askSuggestionTitle}>
-                          {t(suggestion.titleKey)}
-                        </span>
-                        <span className={styles.askSuggestionMeta}>
-                          {unavailable ? (
-                            <span className={styles.askUnavailableBadge}>
-                              {t('askCrewUnavailableBadge')}
-                            </span>
-                          ) : null}
-                          <span className={styles.askCapability}>
-                            {t(suggestion.capabilityKey)}
-                          </span>
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
-
             <div
               className={styles.askAnswerRegion}
               aria-live="polite"
               data-testid="ask-answer-region"
+              ref={conversationRef}
             >
+              <div
+                className={styles.askConversation}
+                data-testid="ask-conversation"
+              >
+                {!hasAnswerSurface &&
+                narrativeState.status === 'idle' &&
+                askCrewState.status === 'idle' ? (
+                  <p className={styles.detailNote} data-testid="ask-empty">
+                    {t('askCrewEmptyState')}
+                  </p>
+                ) : null}
+
+                {askCrewState.turns.map((turn) => {
+                  const localized =
+                    turn.response == null
+                      ? null
+                      : locale === 'ar'
+                        ? turn.response.answer.arabic
+                        : turn.response.answer.english
+                  return (
+                    <div
+                      key={turn.id}
+                      className={styles.askTurn}
+                      data-testid="ask-turn"
+                    >
+                      <div
+                        className={styles.askUserBubble}
+                        data-testid="ask-user-message"
+                      >
+                        <p className={styles.askBubbleLabel}>
+                          {t('askCrewYouLabel')}
+                        </p>
+                        <p>{turn.question}</p>
+                      </div>
+                      <div
+                        className={styles.narrativeBlock}
+                        data-testid="ask-crew-answer"
+                        data-status={
+                          turn.unavailable
+                            ? 'unavailable'
+                            : turn.response?.status
+                        }
+                      >
+                        <p className={styles.askBubbleLabel}>
+                          {t('askCrewCrewLabel')}
+                        </p>
+                        {turn.unavailable || turn.error ? (
+                          <p className={styles.status} role="status">
+                            {turn.error ?? t('askCrewUnavailableNeedsAskApi')}
+                          </p>
+                        ) : null}
+                        {localized ? (
+                          <>
+                            {turn.response?.status === 'unsupported' ||
+                            turn.response?.status === 'unavailable' ? (
+                              <p className={styles.partial} role="status">
+                                {turn.response.status === 'unsupported'
+                                  ? t('askCrewStatusUnsupported')
+                                  : t('askCrewStatusUnavailable')}
+                              </p>
+                            ) : null}
+                            {turn.response?.status === 'partial' ? (
+                              <p className={styles.partial} role="status">
+                                {t('askAgentsPartial')}
+                              </p>
+                            ) : null}
+                            <div className={styles.evidenceTags}>
+                              {turn.response?.factClasses.includes(
+                                'match_data',
+                              ) ? (
+                                <span className={styles.evidenceTag}>
+                                  {t('askCrewAnswerFacts')}
+                                </span>
+                              ) : null}
+                              {turn.response?.factClasses.includes(
+                                'calculated',
+                              ) ? (
+                                <span className={styles.evidenceTag}>
+                                  {t('askCrewAnswerCalculated')}
+                                </span>
+                              ) : null}
+                              {turn.response?.factClasses.includes(
+                                'capability',
+                              ) ? (
+                                <span className={styles.evidenceTag}>
+                                  {t('askCrewAnswerCapability')}
+                                </span>
+                              ) : null}
+                              {turn.response?.factClasses.includes(
+                                'unknown',
+                              ) ? (
+                                <span className={styles.evidenceTag}>
+                                  {t('askCrewAnswerUnknown')}
+                                </span>
+                              ) : null}
+                            </div>
+                            <h3 className={styles.narrativeHeadline}>
+                              {localized.headline}
+                            </h3>
+                            <ul className={styles.list}>
+                              {localized.keyObservations.map((item) => (
+                                <li key={item}>{item}</li>
+                              ))}
+                            </ul>
+                            {localized.limitations.length > 0 ? (
+                              <>
+                                <h4 className={styles.detailNote}>
+                                  {t('decisionLimitationsHeading')}
+                                </h4>
+                                <ul className={styles.list}>
+                                  {localized.limitations.map((item) => (
+                                    <li key={item}>{item}</li>
+                                  ))}
+                                </ul>
+                              </>
+                            ) : null}
+                            {turn.response?.reason ? (
+                              <p className={styles.detailNote}>
+                                {turn.response.reason}
+                              </p>
+                            ) : null}
+                          </>
+                        ) : null}
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {askCrewState.status === 'loading' ? (
+                  <div className={styles.askTurn} data-testid="ask-pending-turn">
+                    <div
+                      className={styles.askUserBubble}
+                      data-testid="ask-pending-question"
+                    >
+                      <p className={styles.askBubbleLabel}>
+                        {t('askCrewYouLabel')}
+                      </p>
+                      <p>{askCrewState.pendingQuestion}</p>
+                    </div>
+                    <p
+                      className={styles.status}
+                      role="status"
+                      data-testid="ask-crew-loading"
+                    >
+                      {t('askCrewLoading')}
+                    </p>
+                  </div>
+                ) : null}
+
+                {askCrewState.status === 'error' ? (
+                  <div className={styles.askTurn} data-testid="ask-crew-error">
+                    <div
+                      className={styles.askUserBubble}
+                      data-testid="ask-error-question"
+                    >
+                      <p className={styles.askBubbleLabel}>
+                        {t('askCrewYouLabel')}
+                      </p>
+                      <p>{askCrewState.lastQuestion}</p>
+                    </div>
+                    <p className={styles.status} role="alert">
+                      {t('askCrewError')} {askCrewState.message}
+                    </p>
+                    <div className={styles.askAnswerActions}>
+                      <Button
+                        variant="secondary"
+                        onClick={() => onAskRetry?.()}
+                      >
+                        {t('decisionNarrativeRetry')}
+                      </Button>
+                      <Button variant="ghost" onClick={clearAskPanel}>
+                        {t('askCrewClear')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
               {askOutcome.kind === 'suggestion_unavailable' ? (
                 <p
                   className={styles.status}
@@ -876,13 +1028,78 @@ export function MatchStudioPanel({
                 </div>
               ) : null}
 
-              {!hasAnswerSurface &&
-              narrativeState.status === 'idle' &&
-              decisionSelected ? (
-                <p className={styles.detailNote} data-testid="ask-empty">
-                  {t('askCrewEmptyState')}
-                </p>
-              ) : null}
+            </div>
+
+            <div className={styles.askSuggestionsBlock}>
+              <div className={styles.askSuggestionsHeader}>
+                <h4 className={styles.askSectionTitle}>
+                  {t('askCrewSuggestionsHeading')}
+                </h4>
+                <div
+                  className={styles.askFilters}
+                  role="group"
+                  aria-label={t('askCrewSuggestionsHeading')}
+                >
+                  {ASK_FILTERS.map((filter) => (
+                    <button
+                      key={filter}
+                      type="button"
+                      className={[
+                        styles.askFilter,
+                        askFilter === filter ? styles.askFilterActive : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      aria-pressed={askFilter === filter}
+                      onClick={() => setAskFilter(filter)}
+                    >
+                      {filterLabel(filter)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <ul
+                className={styles.askSuggestionList}
+                data-testid="ask-suggestion-list"
+              >
+                {visibleSuggestions.map((suggestion) => {
+                  const unavailable = suggestion.unavailable
+                  return (
+                    <li key={suggestion.id}>
+                      <button
+                        type="button"
+                        className={[
+                          styles.askSuggestion,
+                          unavailable ? styles.askSuggestionUnavailable : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                        onClick={() => runSuggestion(suggestion)}
+                        disabled={askCrewBusy}
+                        aria-disabled={unavailable || askCrewBusy ? true : undefined}
+                        data-testid={`ask-suggestion-${suggestion.id}`}
+                        data-action={suggestion.action}
+                        data-unavailable={unavailable ? 'true' : 'false'}
+                      >
+                        <span className={styles.askSuggestionTitle}>
+                          {t(suggestion.titleKey)}
+                        </span>
+                        <span className={styles.askSuggestionMeta}>
+                          {unavailable ? (
+                            <span className={styles.askUnavailableBadge}>
+                              {t('askCrewUnavailableBadge')}
+                            </span>
+                          ) : null}
+                          <span className={styles.askCapability}>
+                            {t(suggestion.capabilityKey)}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
             </div>
           </div>
 
@@ -908,6 +1125,7 @@ export function MatchStudioPanel({
               onKeyDown={onComposerKeyDown}
               placeholder={t('matchStudioAskQuestionPlaceholder')}
               rows={2}
+              disabled={askCrewBusy}
               aria-describedby={`${baseId}-composer-hint`}
             />
             <p id={`${baseId}-composer-hint`} className={styles.askComposerHint}>
@@ -918,12 +1136,12 @@ export function MatchStudioPanel({
                 type="submit"
                 variant="primary"
                 disabled={
-                  narrativeState.status === 'loading' ||
+                  askCrewBusy ||
                   (!draftQuestion.trim() && !decisionSelected)
                 }
-                aria-busy={narrativeState.status === 'loading'}
+                aria-busy={askCrewBusy}
               >
-                {narrativeState.status === 'loading'
+                {askCrewBusy
                   ? t('askCrewLoading')
                   : t('matchStudioAskSubmitFreeForm')}
               </Button>
@@ -935,12 +1153,14 @@ export function MatchStudioPanel({
                   setDraftQuestion('')
                   onAskSelectedEvent()
                 }}
-                disabled={!decisionSelected || narrativeState.status === 'loading'}
+                disabled={!decisionSelected || askCrewBusy}
               >
                 {t('matchStudioAskSelectedEvent')}
               </Button>
-              {(askOutcome.kind !== 'none' || showNarrativeAnswer) &&
-              narrativeState.status !== 'loading' ? (
+              {(askOutcome.kind !== 'none' ||
+                showNarrativeAnswer ||
+                hasAskConversation) &&
+              !askCrewBusy ? (
                 <Button type="button" variant="ghost" onClick={clearAskPanel}>
                   {t('askCrewClear')}
                 </Button>

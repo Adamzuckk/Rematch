@@ -10,9 +10,11 @@ The repository contains three local, deterministic components described as agent
 | Agent 2 — Narrator | `backend/app/services/narrator.py` via `narrate_truth_pack` | Produces deterministic English and Arabic narrative from the supplied truth pack; it does not call a model or fetch data. |
 | Agent 3 — Verifier | `backend/app/services/verifier.py` via `verify_narrative_claims` | Validates evidence references and registered calculations only. Natural-language claim truth is always `not_assessed`. |
 
-`build_match_intelligence_narrative` in `backend/app/services/match_intelligence.py` composes these components for `GET /api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative`. It invokes the decision analysis, passes its real evidence catalog to the verifier, and passes the assembled truth pack to the Narrator. This is a working local composition, but there is no separately named Orchestrator service, background workflow, streaming protocol, LLM call, or generic question-answering endpoint.
+`build_match_intelligence_narrative` in `backend/app/services/match_intelligence.py` composes these components for `GET /api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative`. It invokes the decision analysis, passes its real evidence catalog to the verifier, and passes the assembled truth pack to the Narrator. This is a working local composition, but there is no separately named Orchestrator service, background workflow, streaming protocol, or generic question-answering endpoint.
 
-Microsoft Foundry material is documentation and an OpenAPI export only. No Foundry client, configured external agent, deployment, or remote execution is present or verified in this workspace.
+Optional **server-side** LLM enrichment for `GET .../event-intelligence` lives in `backend/app/services/llm/`. Providers include OpenAI-compatible HTTP APIs and Google Gemini (`LLM_PROVIDER=gemini` with `GEMINI_API_KEY` via the official `google-genai` SDK). It is disabled unless `LLM_ENABLED=true` and provider secrets are configured on the API host. Decision Explorer Fan/Analyst briefings use this path; Ask Agents remains the deterministic decision + Narrator + verifier composition. `llmConnected` is true only after a validated provider response; failures keep the deterministic briefing. Keys must never appear in the frontend. See `docs/llm-provider.md`.
+
+Microsoft Foundry material remains documentation and an OpenAPI export for an **external** agent that calls Rematch tools. That path is separate from in-process enrichment.
 
 ## Website integration
 

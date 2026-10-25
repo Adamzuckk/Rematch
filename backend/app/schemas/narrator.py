@@ -49,6 +49,11 @@ class LocalizedNarrative(BaseModel):
     headline: str
     keyObservations: list[str]
     limitations: list[str]
+    # Progressive-disclosure sections (optional; empty when not composed).
+    whatHappened: list[str] = Field(default_factory=list)
+    whyItMattered: list[str] = Field(default_factory=list)
+    whatCouldHaveHappened: list[str] = Field(default_factory=list)
+    analysisMethod: str = "deterministic_evidence_templates_v2"
 
 
 class NarratorOutput(BaseModel):

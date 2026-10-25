@@ -4,13 +4,18 @@ import type {
   CompletenessLevel,
   DecisionAnalysis,
   DecisionClaim,
+  EvidenceStatement,
+  LocalizedNarrative,
   RankingEntry,
   VerificationStatus,
 } from '../../types'
 import type { MatchFrame, MatchSummary } from '../../types'
 import { useState } from 'react'
+import { usePersona } from '../../context/PersonaContext'
 import type { DecisionNarrativeState } from '../../hooks/useDecisionNarrative'
-import { DecisionAnalystChat } from './DecisionAnalystChat'
+import type { EventIntelligenceState } from '../../hooks/useEventIntelligence'
+import { useAskCrew } from '../../hooks/useAskCrew'
+import { FloatingAskChat } from '../chat/FloatingAskChat'
 import { FootballPitch } from '../pitch/FootballPitch'
 import { Button } from '../ui/Button'
 import { isValidPitchPoint } from '../../types/coordinates'
@@ -184,69 +189,302 @@ function NarrativeAgentFallback({
   )
 }
 
+
+function tierClass(tier: EvidenceStatement['tier']): string {
+  switch (tier) {
+    case 'fact':
+      return styles.tierFact ?? ''
+    case 'metric':
+      return styles.tierMetric ?? ''
+    case 'hypothesis':
+      return styles.tierHypothesis ?? ''
+    default:
+      return styles.tierMissing ?? ''
+  }
+}
+
+function tierLabel(
+  tier: EvidenceStatement['tier'],
+  t: (key: MessageKey) => string,
+): string {
+  switch (tier) {
+    case 'fact':
+      return t('decisionTierFact')
+    case 'metric':
+      return t('decisionTierMetric')
+    case 'hypothesis':
+      return t('decisionTierHypothesis')
+    default:
+      return t('decisionTierMissing')
+  }
+}
+
+function BriefingList({
+  title,
+  items,
+}: {
+  title: string
+  items: string[]
+}) {
+  if (items.length === 0) return null
+  return (
+    <div className={styles.briefingBlock}>
+      <h3 className={styles.briefingBlockTitle}>{title}</h3>
+      <ul className={styles.briefingList}>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function MomentBriefing({
+  narrative,
+  statements,
+  intelligenceState,
+  onIntelRetry,
+  locale,
+}: {
+  narrative: LocalizedNarrative | null
+  statements: EvidenceStatement[]
+  intelligenceState?: EventIntelligenceState
+  onIntelRetry?: () => void
+  locale: 'en' | 'ar'
+}) {
+  const { t } = useLocale()
+
+  return (
+    <section
+      className={`${styles.panel} ${styles.briefingPanel}`}
+      aria-labelledby="decision-moment-briefing"
+      data-testid="decision-moment-briefing"
+    >
+      <div>
+        <h2 id="decision-moment-briefing" className={styles.panelTitle}>
+          {t('decisionBriefingHeading')}
+        </h2>
+        <p className={styles.panelNote}>{t('decisionBriefingIntro')}</p>
+      </div>
+
+      {intelligenceState?.status === 'loading' ? (
+        <p className={styles.panelNote} role="status" aria-live="polite">
+          {t('decisionIntelLoading')}
+        </p>
+      ) : null}
+
+      {intelligenceState?.status === 'unavailable' ? (
+        <div data-testid="decision-briefing-empty">
+          <p className={styles.panelNote} role="status">
+            {t('decisionIntelUnavailable')} {intelligenceState.message}
+          </p>
+          <p className={styles.panelNote} role="note">
+            {t('decisionIntelEmptyHint')}
+          </p>
+        </div>
+      ) : null}
+
+      {intelligenceState?.status === 'error' ? (
+        <div>
+          <p className={styles.panelNote} role="alert">
+            {t('decisionIntelError')} {intelligenceState.message}
+          </p>
+          {intelligenceState.retryable && onIntelRetry ? (
+            <Button variant="secondary" onClick={onIntelRetry}>
+              {t('decisionIntelRetry')}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {intelligenceState?.status === 'not-found' ? (
+        <p className={styles.panelNote} role="status">
+          {t('decisionIntelNotFound')} {intelligenceState.message}
+        </p>
+      ) : null}
+
+      {intelligenceState?.status === 'ready' ? (
+        <p className={styles.llmBadge} role="status">
+          {intelligenceState.intelligence.llmConnected
+            ? t('decisionLlmConnected')
+            : t('decisionLlmDisconnected')}
+        </p>
+      ) : null}
+
+      {narrative ? (
+        <div className={styles.briefingGrid}>
+          <h3 className={styles.briefingHeadline}>{narrative.headline}</h3>
+          <BriefingList
+            title={t('decisionWhatHappened')}
+            items={
+              narrative.whatHappened && narrative.whatHappened.length > 0
+                ? narrative.whatHappened
+                : narrative.keyObservations.slice(0, 3)
+            }
+          />
+          <BriefingList
+            title={t('decisionWhyItMattered')}
+            items={
+              narrative.whyItMattered && narrative.whyItMattered.length > 0
+                ? narrative.whyItMattered
+                : []
+            }
+          />
+          <BriefingList
+            title={t('decisionWhatCouldHaveHappened')}
+            items={
+              narrative.whatCouldHaveHappened &&
+              narrative.whatCouldHaveHappened.length > 0
+                ? narrative.whatCouldHaveHappened
+                : []
+            }
+          />
+        </div>
+      ) : intelligenceState?.status === 'idle' || intelligenceState == null ? (
+        <p className={styles.panelNote} role="status" data-testid="decision-briefing-empty">
+          {t('decisionIntelEmptyHint')}
+        </p>
+      ) : null}
+
+      {statements.length > 0 ? (
+        <div className={styles.statementSection}>
+          <h3 className={styles.briefingBlockTitle}>{t('decisionEvidenceTiers')}</h3>
+          <ul className={styles.statementList} aria-label={t('decisionEvidenceTiers')}>
+            {statements.map((statement) => {
+              const text = locale === 'ar' ? statement.arabic : statement.english
+              return (
+                <li
+                  key={`${statement.tier}:${text}`}
+                  className={`${styles.statementItem} ${tierClass(statement.tier)}`}
+                >
+                  <span className={styles.tierChip}>{tierLabel(statement.tier, t)}</span>
+                  <span>{text}</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      ) : null}
+
+      {intelligenceState?.status === 'ready' &&
+      intelligenceState.intelligence.missingEvidence.length > 0 ? (
+        <div>
+          <h3 className={styles.briefingBlockTitle}>{t('decisionIntelMissing')}</h3>
+          <ul className={styles.limitList}>
+            {intelligenceState.intelligence.missingEvidence.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
 export interface DecisionExplorerPanelProps {
-  analysis: DecisionAnalysis
+  /** Present when geometric decision analysis succeeded for this event. */
+  analysis?: DecisionAnalysis
+  matchId?: string
+  eventId?: string
   matchLabel?: string
   match?: MatchSummary
   frame?: MatchFrame | null
   narrativeState?: DecisionNarrativeState
+  intelligenceState?: EventIntelligenceState
+  decisionUnavailable?: {
+    kind: 'insufficient-evidence' | 'error'
+    message: string
+    retryable: boolean
+  } | null
   onAskAgents?: () => void
   onNarrativeRetry?: () => void
+  onIntelRetry?: () => void
+  onDecisionRetry?: () => void
 }
 
 export function DecisionExplorerPanel({
   analysis,
+  matchId: matchIdProp,
+  eventId: eventIdProp,
   matchLabel,
   match,
   frame,
   narrativeState,
+  intelligenceState,
+  decisionUnavailable = null,
   onAskAgents,
   onNarrativeRetry,
+  onIntelRetry,
+  onDecisionRetry,
 }: DecisionExplorerPanelProps) {
   const { locale, t } = useLocale()
+  const { mode: personaMode } = usePersona()
+  const isFan = personaMode === 'fan'
+  const isAnalyst = !isFan
+  const resolvedMatchId = analysis?.matchId ?? matchIdProp ?? ''
+  const resolvedEventId = analysis?.eventId ?? eventIdProp ?? ''
   const [selection, setSelection] = useState<{
     analysisKey: string
     actionId: string
   } | null>(null)
   const [showAllRanking, setShowAllRanking] = useState(false)
   const [showAllClaims, setShowAllClaims] = useState(false)
-  const analysisKey = `${analysis.matchId}:${analysis.eventId}`
+  const {
+    state: askCrewState,
+    ask: askCrew,
+    retry: retryAskCrew,
+    clear: clearAskCrew,
+  } = useAskCrew(resolvedMatchId || undefined)
+  const analysisKey = `${resolvedMatchId}:${resolvedEventId}`
   const selectedActionId = selection?.analysisKey === analysisKey ? selection.actionId : null
   const selectAction = (actionId: string | null) =>
     setSelection(actionId ? { analysisKey, actionId } : null)
-  const eligibleAlternatives = analysis.alternatives.filter(
+  const eligibleAlternatives = (analysis?.alternatives ?? []).filter(
     (alt) => alt.kind === 'hypothetical_pass' && alt.start && alt.end && isValidPitchPoint(alt.start) && isValidPitchPoint(alt.end),
   )
   const selected =
-    analysis.alternatives.find((alt) => alt.actionId === selectedActionId) ?? null
+    analysis?.alternatives.find((alt) => alt.actionId === selectedActionId) ?? null
   const selectedOnPitch =
     selected &&
     eligibleAlternatives.some((alt) => alt.actionId === selected.actionId)
       ? selected
       : null
   const selectedRank = selected
-    ? analysis.ranking.find((entry) => entry.actionId === selected.actionId)?.rank
+    ? analysis?.ranking.find((entry) => entry.actionId === selected.actionId)?.rank
     : null
-  const observedRank = analysis.ranking.find((entry) => entry.actionId === analysis.observed.actionId)?.rank
-  const selectedClaim = selected ? analysis.claims.find((claim) => claim.id === `claim-alt-score:${selected.actionId}`) : null
-  const ranking = sortRanking(analysis.ranking)
+  const observedRank = analysis
+    ? analysis.ranking.find((entry) => entry.actionId === analysis.observed.actionId)?.rank
+    : null
+  const selectedClaim = selected
+    ? analysis?.claims.find((claim) => claim.id === `claim-alt-score:${selected.actionId}`)
+    : null
+  const ranking = sortRanking(analysis?.ranking ?? [])
   const visibleRanking = showAllRanking ? ranking : ranking.slice(0, 5)
-  const isSynthetic = analysis.provenance === 'synthetic'
+  const isSynthetic = analysis?.provenance === 'synthetic'
   const contextOutcome =
-    typeof analysis.context.outcome === 'string'
+    analysis && typeof analysis.context.outcome === 'string'
       ? analysis.context.outcome
       : null
   const contextPlayer =
-    typeof analysis.context.playerName === 'string'
+    analysis && typeof analysis.context.playerName === 'string'
       ? analysis.context.playerName
       : null
   const contextMinute =
-    typeof analysis.context.minute === 'number'
+    analysis && typeof analysis.context.minute === 'number'
       ? analysis.context.minute
       : null
-  const isMockFixture = analysis.context.mockFixture === true
+  const eventLabelParts = [
+    contextMinute != null ? `${contextMinute}'` : null,
+    analysis?.eventType ?? null,
+    contextPlayer,
+  ].filter(Boolean)
+  const eventLabel =
+    eventLabelParts.length > 0
+      ? eventLabelParts.join(' · ')
+      : resolvedEventId || null
+  const isMockFixture = analysis?.context.mockFixture === true
 
-  const observedScore = formatScore(analysis.observed.compositeScore)
+  const observedScore = formatScore(analysis?.observed.compositeScore)
   const localizedNarrative =
     narrativeState?.status === 'ready'
       ? locale === 'ar'
@@ -293,8 +531,23 @@ export function DecisionExplorerPanel({
         (result) => result.evidenceValidationStatus !== 'verified',
       ))
 
+  const briefingNarrative: LocalizedNarrative | null =
+    intelligenceState?.status === 'ready'
+      ? locale === 'ar'
+        ? intelligenceState.intelligence.arabic
+        : intelligenceState.intelligence.english
+      : localizedNarrative
+  const briefingStatements: EvidenceStatement[] =
+    intelligenceState?.status === 'ready'
+      ? intelligenceState.intelligence.statements
+      : []
+
   return (
-    <article className={styles.root} aria-labelledby="decision-explorer-title">
+    <article
+      className={styles.root}
+      aria-labelledby="decision-explorer-title"
+      data-testid={isFan ? 'decision-view-fan' : 'decision-view-analyst'}
+    >
       <header className={styles.header}>
         <div className={styles.titleBlock}>
           <h1 id="decision-explorer-title" className={styles.title}>
@@ -302,6 +555,11 @@ export function DecisionExplorerPanel({
             <span className={styles.titleAccent}>{t('decisionTitleAccent')}</span>
           </h1>
           <div className={styles.meta}>
+            <span className={styles.badge}>
+              {isFan
+                ? t('decisionExplorerFanBadge')
+                : t('decisionExplorerAnalystBadge')}
+            </span>
             <span
               className={`${styles.badge} ${isSynthetic ? styles.badgeSynthetic : ''}`}
             >
@@ -309,56 +567,105 @@ export function DecisionExplorerPanel({
                 ? t('decisionProvenanceSynthetic')
                 : t('decisionProvenanceApi')}
             </span>
-            <span className={styles.badge}>
-              {analysis.scoringMethodId}@{analysis.scoringMethodVersion}
-            </span>
-            <span className={styles.badge}>
-              {t('decisionConfidenceHeading')}:{' '}
-              {t(confidenceKey(analysis.confidence))}
-            </span>
+            {isAnalyst && analysis ? (
+              <span className={styles.badge}>
+                {analysis.scoringMethodId}@{analysis.scoringMethodVersion}
+              </span>
+            ) : null}
+            {analysis ? (
+              <span className={styles.badge}>
+                {t('decisionConfidenceHeading')}:{' '}
+                {t(confidenceKey(analysis.confidence))}
+              </span>
+            ) : null}
           </div>
         </div>
       </header>
 
-      {isMockFixture || (isSynthetic && analysis.alternatives.length === 0) ? (
+      {isMockFixture ||
+      (isSynthetic && (analysis?.alternatives.length ?? 0) === 0) ? (
         <p className={styles.banner} role="note">
           {t('decisionMockBanner')}
         </p>
       ) : null}
 
-      <ul className={styles.concepts} aria-label={t('decisionConceptLegend')}>
-        <li className={styles.concept}>
-          <span
-            className={`${styles.conceptDot} ${styles.dotMeasured}`}
-            aria-hidden="true"
-          />
-          {t('decisionConceptMeasured')}
-        </li>
-        <li className={styles.concept}>
-          <span
-            className={`${styles.conceptDot} ${styles.dotClaim}`}
-            aria-hidden="true"
-          />
-          {t('decisionConceptClaim')}
-        </li>
-        <li className={styles.concept}>
-          <span
-            className={`${styles.conceptDot} ${styles.dotCompare}`}
-            aria-hidden="true"
-          />
-          {t('decisionConceptComparison')}
-        </li>
-        <li className={styles.concept}>
-          <span
-            className={`${styles.conceptDot} ${styles.dotOutcome}`}
-            aria-hidden="true"
-          />
-          {t('decisionConceptOutcome')}
-        </li>
-      </ul>
+      {isAnalyst ? (
+        <ul className={styles.concepts} aria-label={t('decisionConceptLegend')}>
+          <li className={styles.concept}>
+            <span
+              className={`${styles.conceptDot} ${styles.dotMeasured}`}
+              aria-hidden="true"
+            />
+            {t('decisionConceptMeasured')}
+          </li>
+          <li className={styles.concept}>
+            <span
+              className={`${styles.conceptDot} ${styles.dotClaim}`}
+              aria-hidden="true"
+            />
+            {t('decisionConceptClaim')}
+          </li>
+          <li className={styles.concept}>
+            <span
+              className={`${styles.conceptDot} ${styles.dotCompare}`}
+              aria-hidden="true"
+            />
+            {t('decisionConceptComparison')}
+          </li>
+          <li className={styles.concept}>
+            <span
+              className={`${styles.conceptDot} ${styles.dotOutcome}`}
+              aria-hidden="true"
+            />
+            {t('decisionConceptOutcome')}
+          </li>
+        </ul>
+      ) : null}
 
-      <section
+      <MomentBriefing
+        narrative={briefingNarrative}
+        statements={briefingStatements}
+        intelligenceState={intelligenceState}
+        onIntelRetry={onIntelRetry}
+        locale={locale}
+      />
+
+      {isFan ? (
+        <p className={styles.panelNote} role="note">
+          {t('decisionFanPitchHint')}
+        </p>
+      ) : null}
+
+      {!analysis ? (
+        <section className={styles.panel} aria-labelledby="decision-unavailable">
+          <h2 id="decision-unavailable" className={styles.panelTitle}>
+            {t('decisionInsufficientTitle')}
+          </h2>
+          <p className={styles.panelNote} role="status">
+            {t('decisionAnalysisUnavailable')}
+            {decisionUnavailable ? ` ${decisionUnavailable.message}` : ''}
+          </p>
+          {decisionUnavailable?.retryable && onDecisionRetry ? (
+            <Button variant="secondary" onClick={onDecisionRetry}>
+              {t('decisionAnalysisRetry')}
+            </Button>
+          ) : null}
+        </section>
+      ) : null}
+
+      {analysis && isAnalyst ? (
+      <details
         className={`${styles.panel} ${styles.pipelinePanel}`}
+        data-testid="decision-advanced-tools"
+      >
+        <summary className={styles.advancedSummary}>
+          <span>
+            <span className={styles.panelTitle}>{t('decisionAdvancedTools')}</span>
+            <span className={styles.panelNote}>{t('decisionAdvancedToolsHint')}</span>
+          </span>
+        </summary>
+      <section
+        className={styles.pipelineInner}
         aria-labelledby="decision-multi-agent-pipeline"
       >
         <div className={styles.pipelineSummary}>
@@ -489,7 +796,9 @@ export function DecisionExplorerPanel({
                     </div>
                     <div className={styles.row}>
                       <dt>{t('decisionPipelineClaimSupportStatus')}</dt>
-                      <dd className={styles.mono}>not_assessed</dd>
+                      <dd className={styles.mono}>
+                        {t('decisionClaimSupportNotAssessed')}
+                      </dd>
                     </div>
                   </dl>
                   <p className={styles.panelNote}>
@@ -594,7 +903,10 @@ export function DecisionExplorerPanel({
           {t('decisionPipelineFooter')}
         </p>
       </section>
+      </details>
+      ) : null}
 
+      {analysis ? (
       <div className={styles.decisionLayout}>
         <div className={styles.summaryRow}>
           <section
@@ -739,11 +1051,20 @@ export function DecisionExplorerPanel({
             ) : null}
           </section>
 
-          <section className={`${styles.panel} ${styles.rankingPanel}`} aria-labelledby="decision-ranking">
-            <div>
-              <h2 id="decision-ranking" className={styles.panelTitle}>{t('decisionRankingHeading')}</h2>
-              <p className={styles.panelNote}>{t('decisionRankingNote')}</p>
-            </div>
+          {isAnalyst ? (
+          <details
+            className={`${styles.panel} ${styles.rankingPanel}`}
+            data-testid="decision-ranking-disclosure"
+          >
+            <summary className={styles.advancedSummary}>
+              <span>
+                <h2 id="decision-ranking" className={styles.panelTitle}>
+                  {t('decisionRankingHeading')}
+                </h2>
+                <span className={styles.panelNote}>{t('decisionRankingToolsHint')}</span>
+              </span>
+            </summary>
+            <p className={styles.panelNote}>{t('decisionRankingNote')}</p>
             {ranking.length === 0 ? (
               <p className={styles.panelNote} role="status">{t('decisionRankingEmpty')}</p>
             ) : (
@@ -776,9 +1097,11 @@ export function DecisionExplorerPanel({
                 ) : null}
               </>
             )}
-          </section>
+          </details>
+          ) : null}
         </div>
 
+        {isAnalyst ? (
         <div className={styles.detailsGrid}>
           <details className={styles.disclosurePanel}>
             <summary><span className={styles.panelTitle}>{t('decisionScoringHeading')}</span></summary>
@@ -833,11 +1156,22 @@ export function DecisionExplorerPanel({
             )}
           </details>
 
-          {narrativeState ? (
-            <section className={styles.panel} aria-labelledby="ask-agents-narrative">
-              <h2 id="ask-agents-narrative" className={styles.panelTitle}>
-                {t('askAgentsHeading')}
-              </h2>
+        </div>
+        ) : null}
+
+          {isAnalyst && narrativeState ? (
+            <details
+              className={`${styles.panel} ${styles.askAgentsPanel}`}
+              data-testid="decision-ask-agents-disclosure"
+            >
+              <summary className={styles.advancedSummary}>
+                <span>
+                  <h2 id="ask-agents-narrative" className={styles.panelTitle}>
+                    {t('askAgentsHeading')}
+                  </h2>
+                  <span className={styles.panelNote}>{t('decisionAskAgentsHint')}</span>
+                </span>
+              </summary>
               <p className={styles.panelNote}>{t('askAgentsDescription')}</p>
               {narrativeState.status === 'idle' && onAskAgents ? (
                 <Button variant="secondary" onClick={onAskAgents}>
@@ -911,24 +1245,42 @@ export function DecisionExplorerPanel({
                   </p>
                 </div>
               ) : null}
-            </section>
+            </details>
           ) : null}
 
+          {isAnalyst ? (
           <details className={styles.disclosurePanel}>
             <summary><span className={styles.panelTitle}>{t('decisionLimitationsHeading')}</span></summary>
             <ul className={styles.limitList}>
               {analysis.limitations.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </details>
-        </div>
+          ) : null}
       </div>
-      <DecisionAnalystChat
-        matchId={analysis.matchId}
-        eventId={analysis.eventId}
-        match={match}
-        analysis={analysis}
-        narrativeState={narrativeState}
-      />
+      ) : null}
+      {resolvedMatchId ? (
+        <FloatingAskChat
+          variant={isFan ? 'agent' : 'analyst'}
+          matchId={resolvedMatchId}
+          eventId={resolvedEventId || null}
+          eventLabel={eventLabel}
+          match={match}
+          analysis={analysis}
+          narrativeState={narrativeState}
+          askCrewState={askCrewState}
+          onAskQuestion={(question) => {
+            void askCrew({
+              question,
+              eventId: resolvedEventId || null,
+              language: locale,
+            })
+          }}
+          onAskRetry={() => {
+            void retryAskCrew(resolvedEventId || null, locale)
+          }}
+          onClearAsk={clearAskCrew}
+        />
+      ) : null}
     </article>
   )
 }

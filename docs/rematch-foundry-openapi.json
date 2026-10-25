@@ -54,7 +54,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 120
                 },
                 {
                   "type": "null"
@@ -72,7 +73,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 100
                 },
                 {
                   "type": "null"
@@ -131,7 +133,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           }
         },
         "description": "Discover available matches. Use the returned IDs and provenance as the source of truth; follow pagination when additional matches are relevant."
@@ -155,6 +157,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Match Id"
             }
           }
@@ -212,6 +216,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Match Id"
             }
           },
@@ -273,7 +279,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           }
         },
         "description": "List events for a known match to discover valid event IDs. Follow the returned pagination fields when there are more events than the page contains. Use event IDs from this response for decision analysis."
@@ -298,6 +304,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Match Id"
             }
           },
@@ -307,6 +315,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Event Id"
             }
           }
@@ -340,7 +350,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           }
         }
       }
@@ -364,6 +374,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Match Id"
             }
           },
@@ -373,6 +385,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Event Id"
             }
           }
@@ -406,7 +420,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           }
         }
       }
@@ -430,6 +444,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Match Id"
             }
           },
@@ -439,6 +455,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Event Id"
             }
           }
@@ -472,7 +490,7 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
           }
         }
       }
@@ -496,6 +514,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Match Id"
             }
           },
@@ -505,6 +525,8 @@
             "required": true,
             "schema": {
               "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
               "title": "Event Id"
             }
           }
@@ -552,7 +574,77 @@
                 }
               }
             },
-            "description": "Unprocessable Entity"
+            "description": "Unprocessable Content"
+          }
+        }
+      }
+    },
+    "/api/v1/matches/{match_id}/events/{event_id}/event-intelligence": {
+      "get": {
+        "tags": [
+          "decisions"
+        ],
+        "description": "Return a bilingual evidence-grounded briefing for any stored match event. Distinguishes verified facts, calculated metrics, and hypotheses. Uses deterministic templates with optional server-side LLM enrichment when configured. llmConnected is true only after a successful validated provider call; never invent players, assists, or causal links absent from the record.",
+        "operationId": "get_event_intelligence",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "title": "Match Id"
+            }
+          },
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128,
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventIntelligenceSchema"
+                }
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
           }
         }
       }
@@ -755,10 +847,12 @@
         "properties": {
           "id": {
             "type": "string",
+            "maxLength": 128,
             "title": "Id"
           },
           "statement": {
             "type": "string",
+            "maxLength": 2000,
             "title": "Statement"
           },
           "status": {
@@ -775,10 +869,12 @@
               "$ref": "#/components/schemas/EvidenceReferenceSchema"
             },
             "type": "array",
+            "maxItems": 32,
             "title": "Evidence"
           },
           "reason": {
             "type": "string",
+            "maxLength": 2000,
             "title": "Reason"
           },
           "limitations": {
@@ -786,6 +882,7 @@
               "type": "string"
             },
             "type": "array",
+            "maxItems": 32,
             "title": "Limitations"
           },
           "calculation": {
@@ -818,6 +915,7 @@
               "$ref": "#/components/schemas/ClaimSchema"
             },
             "type": "array",
+            "maxItems": 32,
             "title": "Claims"
           }
         },
@@ -833,10 +931,12 @@
         "properties": {
           "id": {
             "type": "string",
+            "maxLength": 128,
             "title": "Id"
           },
           "statement": {
             "type": "string",
+            "maxLength": 2000,
             "title": "Statement"
           },
           "status": {
@@ -854,10 +954,12 @@
               "$ref": "#/components/schemas/EvidenceReferenceSchema"
             },
             "type": "array",
+            "maxItems": 32,
             "title": "Evidence"
           },
           "reason": {
             "type": "string",
+            "maxLength": 2000,
             "title": "Reason"
           },
           "limitations": {
@@ -865,6 +967,7 @@
               "type": "string"
             },
             "type": "array",
+            "maxItems": 32,
             "title": "Limitations"
           },
           "calculation": {
@@ -922,6 +1025,216 @@
         ],
         "title": "ClaimVerificationResponseSchema",
         "description": "Claim response with evidence-validation scope separated from truth support."
+      },
+      "CounterPressEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "counter_press",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "CounterPressEventSchema"
+      },
+      "CounterattackEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "counterattack",
+            "title": "Type"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "CounterattackEventSchema"
       },
       "DataCompletenessSchema": {
         "properties": {
@@ -1147,6 +1460,95 @@
         ],
         "title": "ErrorResponse"
       },
+      "EventIntelligenceSchema": {
+        "properties": {
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "eventId": {
+            "type": "string",
+            "title": "Eventid"
+          },
+          "eventType": {
+            "type": "string",
+            "title": "Eventtype"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "analysisMethod": {
+            "type": "string",
+            "title": "Analysismethod",
+            "default": "deterministic_event_intelligence_v1"
+          },
+          "llmConnected": {
+            "type": "boolean",
+            "title": "Llmconnected",
+            "default": false
+          },
+          "decisionCandidate": {
+            "type": "boolean",
+            "title": "Decisioncandidate"
+          },
+          "english": {
+            "$ref": "#/components/schemas/LocalizedNarrative"
+          },
+          "arabic": {
+            "$ref": "#/components/schemas/LocalizedNarrative"
+          },
+          "statements": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceStatement"
+            },
+            "type": "array",
+            "title": "Statements"
+          },
+          "missingEvidence": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Missingevidence"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Limitations"
+          },
+          "decisionAnalysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DecisionAnalysisSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "matchId",
+          "eventId",
+          "eventType",
+          "provenance",
+          "decisionCandidate",
+          "english",
+          "arabic"
+        ],
+        "title": "EventIntelligenceSchema",
+        "description": "Event briefing grounded in verified evidence.\n\n``llmConnected`` is true only when an external provider successfully enriched\nthe bilingual narrative from the verified evidence pack. Deterministic\ntemplates remain the reliable baseline and fallback."
+      },
       "EvidenceBundleSchema": {
         "properties": {
           "matchId": {
@@ -1235,16 +1637,19 @@
           },
           "id": {
             "type": "string",
+            "maxLength": 128,
             "title": "Id"
           },
           "matchId": {
             "type": "string",
+            "maxLength": 128,
             "title": "Matchid"
           },
           "detail": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 1000
               },
               {
                 "type": "null"
@@ -1261,6 +1666,163 @@
           "matchId"
         ],
         "title": "EvidenceReferenceSchema"
+      },
+      "EvidenceStatement": {
+        "properties": {
+          "tier": {
+            "type": "string",
+            "enum": [
+              "fact",
+              "metric",
+              "hypothesis",
+              "missing"
+            ],
+            "title": "Tier"
+          },
+          "english": {
+            "type": "string",
+            "title": "English"
+          },
+          "arabic": {
+            "type": "string",
+            "title": "Arabic"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "tier",
+          "english",
+          "arabic"
+        ],
+        "title": "EvidenceStatement"
+      },
+      "FoulEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "foul",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "relatedPlayerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relatedplayerid"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "conceded",
+                  "won",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "FoulEventSchema"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1294,6 +1856,32 @@
             },
             "type": "array",
             "title": "Limitations"
+          },
+          "whatHappened": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Whathappened"
+          },
+          "whyItMattered": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Whyitmattered"
+          },
+          "whatCouldHaveHappened": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Whatcouldhavehappened"
+          },
+          "analysisMethod": {
+            "type": "string",
+            "title": "Analysismethod",
+            "default": "deterministic_evidence_templates_v2"
           }
         },
         "additionalProperties": false,
@@ -1327,17 +1915,49 @@
                 },
                 {
                   "$ref": "#/components/schemas/PossessionChangeEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/FoulEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/YellowCardEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/RedCardEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/SubstitutionEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/OffsideEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/CounterattackEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/ReverseAttackEventSchema"
+                },
+                {
+                  "$ref": "#/components/schemas/CounterPressEventSchema"
                 }
               ],
               "discriminator": {
                 "propertyName": "type",
                 "mapping": {
                   "carry": "#/components/schemas/CarryEventSchema",
+                  "counter_press": "#/components/schemas/CounterPressEventSchema",
+                  "counterattack": "#/components/schemas/CounterattackEventSchema",
+                  "foul": "#/components/schemas/FoulEventSchema",
+                  "offside": "#/components/schemas/OffsideEventSchema",
                   "pass": "#/components/schemas/PassEventSchema",
                   "possession_change": "#/components/schemas/PossessionChangeEventSchema",
                   "pressure": "#/components/schemas/PressureEventSchema",
+                  "red_card": "#/components/schemas/RedCardEventSchema",
+                  "reverse_attack": "#/components/schemas/ReverseAttackEventSchema",
                   "shot": "#/components/schemas/ShotEventSchema",
-                  "tackle": "#/components/schemas/TackleEventSchema"
+                  "substitution": "#/components/schemas/SubstitutionEventSchema",
+                  "tackle": "#/components/schemas/TackleEventSchema",
+                  "yellow_card": "#/components/schemas/YellowCardEventSchema"
                 }
               }
             },
@@ -1538,6 +2158,50 @@
           "scenarioId": {
             "type": "string",
             "title": "Scenarioid"
+          },
+          "homeFormation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Homeformation"
+          },
+          "awayFormation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Awayformation"
+          },
+          "liveRealDurationSeconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Liverealdurationseconds"
+          },
+          "canStart": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canstart"
           }
         },
         "additionalProperties": false,
@@ -1731,6 +2395,110 @@
         ],
         "title": "NarratorOutput"
       },
+      "OffsideEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "offside",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "flagged",
+                  "unknown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcome"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "OffsideEventSchema"
+      },
       "PassEventSchema": {
         "properties": {
           "id": {
@@ -1845,6 +2613,17 @@
               }
             ],
             "title": "Outcome"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
           }
         },
         "additionalProperties": false,
@@ -2048,6 +2827,17 @@
                 "type": "null"
               }
             ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
           }
         },
         "additionalProperties": false,
@@ -2127,6 +2917,216 @@
           "rankable"
         ],
         "title": "RankingEntrySchema"
+      },
+      "RedCardEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "red_card",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "RedCardEventSchema"
+      },
+      "ReverseAttackEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "reverse_attack",
+            "title": "Type"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "ReverseAttackEventSchema"
       },
       "ShotEventSchema": {
         "properties": {
@@ -2223,6 +3223,45 @@
               }
             ],
             "title": "Outcome"
+          },
+          "assistPlayerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assistplayerid"
+          },
+          "goalType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "open_play",
+                  "penalty",
+                  "free_kick",
+                  "own_goal"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Goaltype"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
           }
         },
         "additionalProperties": false,
@@ -2234,6 +3273,117 @@
           "type"
         ],
         "title": "ShotEventSchema"
+      },
+      "SubstitutionEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "substitution",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "relatedPlayerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relatedplayerid"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "SubstitutionEventSchema"
       },
       "TackleEventSchema": {
         "properties": {
@@ -2360,6 +3510,17 @@
               }
             ],
             "title": "Shortname"
+          },
+          "coachName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coachname"
           }
         },
         "additionalProperties": false,
@@ -2409,6 +3570,106 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "YellowCardEventSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "matchId": {
+            "type": "string",
+            "title": "Matchid"
+          },
+          "minute": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minute"
+          },
+          "occurredAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurredat"
+          },
+          "teamId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teamid"
+          },
+          "playerId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playerid"
+          },
+          "provenance": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "api",
+              "unavailable"
+            ],
+            "title": "Provenance"
+          },
+          "type": {
+            "type": "string",
+            "const": "yellow_card",
+            "title": "Type"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PitchPointSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "matchId",
+          "provenance",
+          "type"
+        ],
+        "title": "YellowCardEventSchema"
       }
     },
     "securitySchemes": {

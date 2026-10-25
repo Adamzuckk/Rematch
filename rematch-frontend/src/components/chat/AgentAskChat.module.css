@@ -1,0 +1,215 @@
+.root {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.contextBanner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.55rem;
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(107, 189, 69, 0.06);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.contextLabel {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.thread {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  padding: var(--space-4);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.empty {
+  margin: auto 0;
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.contextNotice {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  background: rgba(107, 189, 69, 0.06);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.turn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.message {
+  max-width: 94%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+}
+
+.message p {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.userMessage {
+  align-self: flex-end;
+  border-color: var(--color-accent-border);
+  border-end-end-radius: 0.25rem;
+  background: rgba(107, 189, 69, 0.12);
+}
+
+.assistantMessage {
+  align-self: flex-start;
+  border-end-start-radius: 0.25rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: 0.35rem !important;
+  color: var(--color-text-secondary);
+  font-size: 0.68rem !important;
+  font-weight: 650;
+}
+
+.headline {
+  margin: 0 0 0.35rem !important;
+  font-weight: 700;
+}
+
+.list {
+  margin: 0.25rem 0 0;
+  padding-inline-start: 1.1rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.status {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.loading {
+  align-self: flex-start;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+}
+
+.errorBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.retry,
+.secondaryAction,
+.composer button[type='submit'] {
+  font: inherit;
+  cursor: pointer;
+}
+
+.retry {
+  padding: 0.4rem 0.75rem;
+  color: var(--color-text);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  background: rgba(107, 189, 69, 0.1);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4)
+    calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-border);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.composer textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  max-height: 7rem;
+  padding: 0.65rem 0.85rem;
+  resize: vertical;
+  color: var(--color-text);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+  background: var(--color-surface);
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.composer textarea:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(107, 189, 69, 0.22);
+}
+
+.composerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.secondaryAction {
+  padding: 0.55rem 0.8rem;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 0.75rem;
+}
+
+.composer button[type='submit'] {
+  padding: 0.55rem 0.9rem;
+  color: var(--color-field-ink);
+  border: 1px solid var(--color-accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.composer button:disabled,
+.retry:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

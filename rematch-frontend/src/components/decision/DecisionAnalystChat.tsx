@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent,
+} from 'react'
 import { matchService } from '../../services/matches'
 import type { DecisionAnalysis, DecisionNarrativeResponse, MatchSummary } from '../../types'
 import type { DecisionNarrativeState } from '../../hooks/useDecisionNarrative'
@@ -19,17 +25,22 @@ type Intent =
   | 'match'
 type ChatMessage = {
   id: number
-  role: 'user' | 'assistant'
+  role: 'user' | 'assistant' | 'system'
   text: string
   source?: 'analysis' | 'narrative' | 'match'
   showChips?: boolean
+  createdAt: number
+  retryPrompt?: string
+  isError?: boolean
 }
 
+/** Per-bubble direction from origin/main bilingual chat polish. */
 function textDirection(text: string, fallback: 'en' | 'ar'): 'rtl' | 'ltr' {
   if (/[\u0600-\u06FF]/.test(text)) return 'rtl'
   if (/[A-Za-z]/.test(text)) return 'ltr'
   return fallback === 'ar' ? 'rtl' : 'ltr'
 }
+
 type SessionCache = {
   key: string
   analysis?: DecisionAnalysis
@@ -39,6 +50,7 @@ type SessionCache = {
 type Translator = ReturnType<typeof useLocale>['t']
 
 function detectIntent(query: string): Intent {
+  // NFKC + Arabic diacritic strip from origin/main improves Arabic intent matching.
   const text = query.trim().toLocaleLowerCase().normalize('NFKC').replace(/[\u064B-\u065F\u0670]/g, '')
   if (/^(hi|hello|hey|good morning|good afternoon|السلام عليكم|مرحبا|أهلا|اهلا|صباح الخير|مساء الخير)[!?.،\s]*$/.test(text)) return 'greeting'
   if (/alternat|other options|list options|top\s*\d+|البدائل|بدائل|خيارات أخرى|خيارات اخرى/.test(text)) return 'alternatives'
@@ -184,58 +196,99 @@ function matchAnswer(match: MatchSummary | null, t: Translator): string {
   return lines.join('\n')
 }
 
+function formatTime(date: Date, locale: string): string {
+  try {
+    return new Intl.DateTimeFormat(locale === 'ar' ? 'ar' : 'en', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(date)
+  } catch {
+    return ''
+  }
+}
+
 export function DecisionAnalystChat({
   matchId,
   eventId,
   match,
   analysis: initialAnalysis,
   narrativeState,
+  layout = 'embedded',
+  eventLabel,
+  clearSignal = 0,
+  focusComposer = false,
 }: {
   matchId: string
   eventId: string
   match?: MatchSummary
   analysis?: DecisionAnalysis
   narrativeState?: DecisionNarrativeState
+  /** `bare` omits the local header — used inside FloatingAskChat. */
+  layout?: 'embedded' | 'bare'
+  eventLabel?: string | null
+  /** Increment to clear the conversation from a parent chrome control. */
+  clearSignal?: number
+  focusComposer?: boolean
 }) {
   const { locale, t } = useLocale()
-  const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [messageId, setMessageId] = useState(0)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [lastFailedPrompt, setLastFailedPrompt] = useState<string | null>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const threadRef = useRef<HTMLDivElement>(null)
+  const contextKeyRef = useRef(`${matchId}::${eventId}`)
+  const clearSeenRef = useRef(clearSignal)
   const route = `/matches/${encodeURIComponent(matchId)}/decisions/${encodeURIComponent(eventId)}`
   const matchRoute = `/matches/${encodeURIComponent(matchId)}`
   const initialNarrative = narrativeState?.status === 'ready' ? narrativeState.response : undefined
   const sessionCache = useRef<SessionCache>({ key: `${matchId}::${eventId}`, match, analysis: initialAnalysis, narrative: initialNarrative })
   const cacheKey = `${matchId}::${eventId}`
 
-  function clearConversation() {
-    setMessages([])
-    setInput('')
-    setMessageId(0)
-    inputRef.current?.focus()
-  }
-
-  function useStarter(label: string) {
-    setInput(label)
-    inputRef.current?.focus()
-  }
-
-  useEffect(() => {
-    if (!open) return
-    inputRef.current?.focus()
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
-    }
-    window.addEventListener('keydown', closeOnEscape)
-    return () => window.removeEventListener('keydown', closeOnEscape)
-  }, [open])
-
   useEffect(() => {
     if (threadRef.current) threadRef.current.scrollTop = threadRef.current.scrollHeight
   }, [messages, loading])
+
+  useEffect(() => {
+    if (focusComposer) inputRef.current?.focus()
+  }, [focusComposer])
+
+  useEffect(() => {
+    if (clearSignal === clearSeenRef.current) return
+    clearSeenRef.current = clearSignal
+    setMessages([])
+    setInput('')
+    setLoading(false)
+    setLastFailedPrompt(null)
+  }, [clearSignal])
+
+  useEffect(() => {
+    const nextKey = `${matchId}::${eventId}`
+    if (contextKeyRef.current === nextKey) return
+    contextKeyRef.current = nextKey
+    sessionCache.current = {
+      key: nextKey,
+      match,
+      analysis: initialAnalysis,
+      narrative: initialNarrative,
+    }
+    const label = eventLabel?.trim() || eventId
+    setMessages((current) => {
+      if (current.length === 0) return current
+      const id = Date.now()
+      return [
+        ...current,
+        {
+          id,
+          role: 'system',
+          text: `${t('floatingAskContextChanged')}: ${label}`,
+          createdAt: Date.now(),
+        },
+      ]
+    })
+    setLastFailedPrompt(null)
+  }, [matchId, eventId, eventLabel, match, initialAnalysis, initialNarrative, t])
 
   async function ask(prompt: string, forcedIntent?: Intent) {
     const question = prompt.trim()
@@ -243,18 +296,40 @@ export function DecisionAnalystChat({
     const userId = messageId + 1
     const assistantId = userId + 1
     setMessageId(userId)
-    setMessages((current) => [...current, { id: userId, role: 'user', text: question }])
+    setMessages((current) => [
+      ...current,
+      { id: userId, role: 'user', text: question, createdAt: Date.now() },
+    ])
     setInput('')
+    setLastFailedPrompt(null)
     const intent = forcedIntent ?? detectIntent(question)
     if (intent === 'greeting' || intent === 'help') {
       const response = intent === 'greeting' ? t('analystGreeting') : t('analystHelp')
-      setMessages((current) => [...current, { id: assistantId, role: 'assistant', text: response, showChips: true }])
+      setMessages((current) => [
+        ...current,
+        {
+          id: assistantId,
+          role: 'assistant',
+          text: response,
+          showChips: true,
+          createdAt: Date.now(),
+        },
+      ])
       setMessageId(assistantId)
       return
     }
 
     if (import.meta.env.VITE_MATCH_DATA_SOURCE !== 'api') {
-      setMessages((current) => [...current, { id: assistantId, role: 'assistant', text: t('analystApiModeRequired'), showChips: true }])
+      setMessages((current) => [
+        ...current,
+        {
+          id: assistantId,
+          role: 'assistant',
+          text: t('analystApiModeRequired'),
+          showChips: true,
+          createdAt: Date.now(),
+        },
+      ])
       setMessageId(assistantId)
       return
     }
@@ -321,87 +396,206 @@ export function DecisionAnalystChat({
         disclaimers.push(t('analystGeometricDisclaimer'))
       }
       const finalText = [answer, ...new Set(disclaimers)].join('\n')
-      setMessages((current) => [...current, { id: assistantId, role: 'assistant', text: finalText, source }])
+      setMessages((current) => [
+        ...current,
+        {
+          id: assistantId,
+          role: 'assistant',
+          text: finalText,
+          source,
+          createdAt: Date.now(),
+        },
+      ])
       setMessageId(assistantId)
     } catch {
-      setMessages((current) => [...current, { id: assistantId, role: 'assistant', text: t('analystError'), showChips: true }])
+      setLastFailedPrompt(question)
+      setMessages((current) => [
+        ...current,
+        {
+          id: assistantId,
+          role: 'assistant',
+          text: t('analystError'),
+          showChips: true,
+          createdAt: Date.now(),
+          retryPrompt: question,
+          isError: true,
+        },
+      ])
       setMessageId(assistantId)
     } finally {
       setLoading(false)
     }
   }
 
-  const starters = [
-    t('analystChipSummary'),
-    t('analystChipRanking'),
-    t('analystChipAlternatives'),
-    t('analystChipFrame'),
-    t('analystChipVerification'),
-    t('analystChipLimitations'),
+  function onSubmit(event: FormEvent) {
+    event.preventDefault()
+    void ask(input)
+  }
+
+  function onKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      void ask(input)
+    }
+  }
+
+  function clearConversation() {
+    if (messages.length === 0) return
+    if (!window.confirm(t('floatingAskClearConfirm'))) return
+    setMessages([])
+    setInput('')
+    setLastFailedPrompt(null)
+  }
+
+  const starters: { intent: Intent; label: string }[] = [
+    { intent: 'summary', label: t('analystChipSummary') },
+    { intent: 'ranking', label: t('analystChipRanking') },
+    { intent: 'alternatives', label: t('analystChipAlternatives') },
+    { intent: 'match', label: t('analystChipMatch') },
+    { intent: 'frame', label: t('analystChipFrame') },
+    { intent: 'verification', label: t('analystChipVerification') },
+    { intent: 'limitations', label: t('analystChipLimitations') },
   ]
   const showChips = messages.length === 0 || messages[messages.length - 1]?.showChips
+  const bare = layout === 'bare'
 
   return (
-    <>
-      <button type="button" className={styles.launcher} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
-        {t('analystOpen')}
-      </button>
-      {open ? (
-        <div className={styles.scrim} onMouseDown={(event) => {
-          if (event.target === event.currentTarget) setOpen(false)
-        }}>
-          <aside className={styles.drawer} role="dialog" aria-modal="true" aria-labelledby="decision-analyst-title" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-            <header className={styles.header}>
-              <div>
-                <span className={styles.eyebrow}>{t('analystContextLabel')}</span>
-                <h2 id="decision-analyst-title">{t('analystTitle')}</h2>
-                <p>{t('analystSubtitle')}</p>
-              </div>
-              <div className={styles.headerActions}>
-                {messages.length > 0 ? <button type="button" className={styles.clear} disabled={loading} onClick={clearConversation}>{t('analystClear')}</button> : null}
-                <button type="button" className={styles.close} aria-label={t('analystClose')} onClick={() => setOpen(false)}>×</button>
-              </div>
-            </header>
-            <div className={styles.thread} ref={threadRef} aria-live="polite">
-              {messages.length === 0 ? (
-                <section className={styles.welcome} aria-label={t('analystWelcome')}>
-                  <span className={styles.assistantAvatar} aria-hidden="true">✦</span>
-                  <div>
-                    <h3>{t('analystWelcome')}</h3>
-                    <p>{t('analystWelcomeNote')}</p>
-                  </div>
-                </section>
-              ) : null}
-              {messages.map((message) => (
-                <div key={message.id} className={`${styles.messageRow} ${message.role === 'user' ? styles.userRow : styles.assistantRow}`}>
-                  {message.role === 'assistant' ? <span className={styles.assistantAvatar} aria-hidden="true">✦</span> : null}
-                  <div className={`${styles.message} ${message.role === 'user' ? styles.userMessage : styles.assistantMessage}`}>
-                    <span className={styles.messageLabel}>{message.role === 'user' ? t('analystYou') : t('analystAssistant')}</span>
-                    <p dir={textDirection(message.text, locale)}>{message.text}</p>
-                    {message.source ? <a href={message.source === 'match' ? matchRoute : route} className={styles.citation}>{message.source === 'narrative' ? t('analystNarrativeCitation') : message.source === 'match' ? t('analystMatchCitation') : t('analystCitation')}</a> : null}
-                  </div>
-                </div>
-              ))}
-              {showChips ? (
-                <div className={styles.starters} aria-label={t('analystSuggestions')}>
-                  <span>{t('analystSuggestions')}</span>
-                  {starters.map((label) => (
-                    <button key={label} type="button" disabled={loading} onClick={() => useStarter(label)}>{label}</button>
-                  ))}
-                </div>
-              ) : null}
-              {loading ? <div className={styles.loading} role="status"><span className={styles.assistantAvatar} aria-hidden="true">✦</span><span>{t('analystLoading')}</span><span className={styles.typingDots} aria-hidden="true"><i /><i /><i /></span></div> : null}
-            </div>
-            <form className={styles.composer} onSubmit={(event) => {
-              event.preventDefault()
-              void ask(input)
-            }}>
-              <input ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} placeholder={t('analystPlaceholder')} aria-label={t('analystPlaceholder')} maxLength={500} disabled={loading} dir={textDirection(input, locale)} />
-              <button type="submit" disabled={loading || !input.trim()}>{t('analystSend')}</button>
-            </form>
-          </aside>
-        </div>
+    <section
+      className={bare ? styles.bare : styles.panel}
+      aria-labelledby={bare ? undefined : 'decision-analyst-title'}
+      data-testid="decision-analyst-chat"
+      dir={locale === 'ar' ? 'rtl' : 'ltr'}
+    >
+      {!bare ? (
+        <header className={styles.header}>
+          <div>
+            <h3 id="decision-analyst-title" className={styles.embeddedTitle}>
+              {t('analystTitle')}
+            </h3>
+            <p>{t('analystSubtitle')}</p>
+          </div>
+        </header>
       ) : null}
-    </>
+      <div className={styles.thread} ref={threadRef} aria-live="polite">
+        {messages.length === 0 ? (
+          <section className={styles.welcome} aria-label={t('analystWelcome')}>
+            <h3>{t('analystWelcome')}</h3>
+            <p>{t('analystWelcomeNote')}</p>
+          </section>
+        ) : null}
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`${styles.message} ${
+              message.role === 'user'
+                ? styles.userMessage
+                : message.role === 'system'
+                  ? styles.systemMessage
+                  : styles.assistantMessage
+            }`}
+          >
+            {message.role !== 'system' ? (
+              <p className={styles.meta}>
+                <span>
+                  {message.role === 'user' ? t('askCrewYouLabel') : t('analystTitle')}
+                </span>
+                <time dateTime={new Date(message.createdAt).toISOString()}>
+                  {formatTime(new Date(message.createdAt), locale)}
+                </time>
+              </p>
+            ) : null}
+            <p dir={textDirection(message.text, locale)}>{message.text}</p>
+            {message.source ? (
+              <a
+                href={
+                  message.source === 'match' ? matchRoute : route
+                }
+                className={styles.citation}
+              >
+                {message.source === 'narrative'
+                  ? t('analystNarrativeCitation')
+                  : message.source === 'match'
+                    ? t('analystMatchCitation')
+                    : t('analystCitation')}
+              </a>
+            ) : null}
+            {message.isError && message.retryPrompt ? (
+              <button
+                type="button"
+                className={styles.retry}
+                disabled={loading}
+                onClick={() => void ask(message.retryPrompt!)}
+              >
+                {t('loadErrorRetry')}
+              </button>
+            ) : null}
+          </div>
+        ))}
+        {showChips ? (
+          <div className={styles.starters} aria-label={t('analystSuggestions')}>
+            <span>{t('analystSuggestions')}</span>
+            {starters.map(({ intent, label }) => (
+              <button
+                key={intent}
+                type="button"
+                disabled={loading}
+                onClick={() => void ask(label, intent)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {loading ? (
+          <div className={styles.loading} role="status">
+            <span>{t('analystLoading')}</span>
+            <span className={styles.typingDots} aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+          </div>
+        ) : null}
+      </div>
+      <form className={styles.composer} onSubmit={onSubmit}>
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={t('analystPlaceholder')}
+          aria-label={t('analystPlaceholder')}
+          rows={2}
+          maxLength={500}
+          disabled={loading}
+          dir={textDirection(input, locale)}
+        />
+        <div className={styles.composerActions}>
+          {!bare ? (
+            <button
+              type="button"
+              className={styles.clearButton}
+              disabled={loading || messages.length === 0}
+              onClick={clearConversation}
+            >
+              {t('askCrewClear')}
+            </button>
+          ) : null}
+          {lastFailedPrompt && bare ? (
+            <button
+              type="button"
+              className={styles.clearButton}
+              disabled={loading}
+              onClick={() => void ask(lastFailedPrompt)}
+            >
+              {t('loadErrorRetry')}
+            </button>
+          ) : null}
+          <button type="submit" disabled={loading || !input.trim()}>
+            {t('analystSend')}
+          </button>
+        </div>
+      </form>
+    </section>
   )
 }

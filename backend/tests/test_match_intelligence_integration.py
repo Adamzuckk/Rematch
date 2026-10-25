@@ -48,12 +48,18 @@ def test_composed_endpoint_returns_analysis_verification_and_bilingual_narrative
         for result in body["verificationResults"]
     )
     assert any(
-        "claim truth remains not assessed" in row.lower()
-        for row in body["narrative"]["english"]["keyObservations"]
+        "claim wording truth remains not assessed" in row.lower()
+        for row in [
+            *body["narrative"]["english"]["keyObservations"],
+            *body["narrative"]["english"].get("whyItMattered", []),
+        ]
     )
     assert any(
         "لم يُقيّم صدق الادعاء" in row
-        for row in body["narrative"]["arabic"]["keyObservations"]
+        for row in [
+            *body["narrative"]["arabic"]["keyObservations"],
+            *body["narrative"]["arabic"].get("whyItMattered", []),
+        ]
     )
 
 
@@ -114,6 +120,9 @@ def test_false_probability_claim_with_valid_real_catalog_is_not_semantically_ver
     serialized = narrative.model_dump_json().lower()
     assert verification.submittedStatement.lower() not in serialized
     assert any(
-        "claim truth remains not assessed" in row.lower()
-        for row in narrative.english.keyObservations
+        "claim wording truth remains not assessed" in row.lower()
+        for row in [
+            *narrative.english.keyObservations,
+            *narrative.english.whyItMattered,
+        ]
     )

@@ -1,7 +1,10 @@
 import type {
+  AskRequest,
+  AskResponse,
   DashboardOverviewStat,
   DecisionAnalysis,
   DecisionNarrativeResponse,
+  EventIntelligence,
   MatchContext,
   MatchDatasetInfo,
   MatchEvent,
@@ -88,6 +91,21 @@ export interface MatchService {
     matchId: string,
     eventId: string,
   ): Promise<DecisionNarrativeResponse>
+
+  /**
+   * Evidence-grounded bilingual briefing for any match event type.
+   * Unavailable in static mock mode — never fabricate briefing content.
+   */
+  getEventIntelligence(
+    matchId: string,
+    eventId: string,
+  ): Promise<EventIntelligence>
+
+  /**
+   * Grounded Ask-the-Crew question for a match (optional selected event).
+   * Unavailable in static mock mode — never fabricate crew answers.
+   */
+  askMatch(matchId: string, request: AskRequest): Promise<AskResponse>
 
   /**
    * Coaches, 5-match form, squads, and player stats. Returns null when the
@@ -180,6 +198,30 @@ export class DecisionNarrativeUnavailableError extends Error {
     this.name = 'DecisionNarrativeUnavailableError'
     this.matchId = matchId
     this.eventId = eventId
+  }
+}
+
+/** The current data source cannot supply event intelligence. */
+export class EventIntelligenceUnavailableError extends Error {
+  readonly matchId: string
+  readonly eventId: string
+
+  constructor(message: string, matchId: string, eventId: string) {
+    super(message)
+    this.name = 'EventIntelligenceUnavailableError'
+    this.matchId = matchId
+    this.eventId = eventId
+  }
+}
+
+/** The current data source cannot supply Ask-the-Crew answers. */
+export class AskUnavailableError extends Error {
+  readonly matchId: string
+
+  constructor(message: string, matchId: string) {
+    super(message)
+    this.name = 'AskUnavailableError'
+    this.matchId = matchId
   }
 }
 

@@ -1,7 +1,10 @@
 import type {
+  AskRequest,
+  AskResponse,
   DashboardOverviewStat,
   DecisionAnalysis,
   DecisionNarrativeResponse,
+  EventIntelligence,
   MatchContext,
   MatchDatasetInfo,
   MatchEvent,
@@ -16,15 +19,20 @@ import type {
   TeamFormResult,
 } from '../../types'
 import {
+  AskUnavailableError,
   DecisionInsufficientEvidenceError,
   DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
+  EventIntelligenceUnavailableError,
   MatchApiError,
   MatchNotFoundError,
   type ApiErrorBody,
   type MatchListFilters,
   type MatchService,
 } from './types'
+
+/** Client-side ceiling for Ask-the-Crew requests (backend may finish sooner). */
+const ASK_TIMEOUT_MS = 45_000
 
 const API_PREFIX = '/api/v1'
 
@@ -285,6 +293,84 @@ export function createApiMatchService(baseUrl: string | undefined): MatchService
           )
         }
         throw error
+      }
+    },
+
+    async getEventIntelligence(matchId, eventId) {
+      const path = `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/events/${encodeURIComponent(eventId)}/event-intelligence`
+      try {
+        return await getJson<EventIntelligence>(path)
+      } catch (error) {
+        if (!(error instanceof MatchApiError)) {
+          throw error
+        }
+        if (
+          error.status === 404 &&
+          (error.code === 'match_not_found' || !error.code)
+        ) {
+          throw new DecisionNotFoundError(
+            'match_not_found',
+            error.message,
+            matchId,
+            eventId,
+          )
+        }
+        if (error.status === 404 && error.code === 'event_not_found') {
+          throw new DecisionNotFoundError(
+            'event_not_found',
+            error.message,
+            matchId,
+            eventId,
+          )
+        }
+        if (error.status === 404 || error.status === 422) {
+          throw new EventIntelligenceUnavailableError(
+            error.message,
+            matchId,
+            eventId,
+          )
+        }
+        throw error
+      }
+    },
+
+    async askMatch(matchId, askRequest) {
+      const path = `${API_PREFIX}/matches/${encodeURIComponent(matchId)}/ask`
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), ASK_TIMEOUT_MS)
+      try {
+        const payload: AskRequest = {
+          question: askRequest.question.trim(),
+          language: askRequest.language ?? 'en',
+        }
+        if (askRequest.eventId) payload.eventId = askRequest.eventId
+        if (askRequest.clientRequestId) {
+          payload.clientRequestId = askRequest.clientRequestId
+        }
+        const { body } = await request<AskResponse>(path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        })
+        return body
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          throw new MatchApiError(
+            'Ask the crew timed out. Retry when the API is reachable.',
+            undefined,
+            'ask_timeout',
+          )
+        }
+        if (
+          error instanceof MatchApiError &&
+          (error.status === 404 || error.code === 'match_not_found')
+        ) {
+          throw new AskUnavailableError(error.message, matchId)
+        }
+        throw error
+      } finally {
+        clearTimeout(timer)
       }
     },
 

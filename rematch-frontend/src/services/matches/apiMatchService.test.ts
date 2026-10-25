@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApiMatchService } from './apiMatchService'
 import {
+  AskUnavailableError,
   DecisionInsufficientEvidenceError,
   DecisionNarrativeUnavailableError,
   DecisionNotFoundError,
+  EventIntelligenceUnavailableError,
   MatchApiError,
 } from './types'
 
@@ -192,6 +194,137 @@ describe('createApiMatchService decision analysis', () => {
     await expect(
       service.getDecisionNarrative('m-1', 'evt-1'),
     ).rejects.toBeInstanceOf(DecisionNarrativeUnavailableError)
+  })
+
+  it('GETs event intelligence without fabricating briefing content', async () => {
+    const briefing = {
+      matchId: 'm-1',
+      eventId: 'evt-1',
+      eventType: 'pass',
+      provenance: 'synthetic',
+      analysisMethod: 'deterministic_event_intelligence_v1',
+      llmConnected: false,
+      decisionCandidate: true,
+      english: {
+        headline: 'What happened',
+        keyObservations: [],
+        limitations: [],
+        whatHappened: ['A pass was recorded.'],
+        whyItMattered: [],
+        whatCouldHaveHappened: [],
+      },
+      arabic: {
+        headline: 'ماذا حدث',
+        keyObservations: [],
+        limitations: [],
+        whatHappened: ['سُجّلت تمريرة.'],
+        whyItMattered: [],
+        whatCouldHaveHappened: [],
+      },
+      statements: [
+        { tier: 'fact', english: 'A pass was recorded.', arabic: 'سُجّلت تمريرة.' },
+      ],
+      missingEvidence: [],
+      limitations: ['No external AI provider is connected.'],
+      decisionAnalysis: null,
+    }
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(briefing))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const service = createApiMatchService('http://localhost:8000')
+    const result = await service.getEventIntelligence('m-1', 'evt-1')
+
+    expect(result).toEqual(briefing)
+    expect(result.llmConnected).toBe(false)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/matches/m-1/events/evt-1/event-intelligence',
+      expect.objectContaining({ headers: expect.any(Object) }),
+    )
+  })
+
+  it('marks mock-unavailable event intelligence explicitly for 422 responses', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          { error: { code: 'insufficient_evidence', message: 'No briefing' } },
+          422,
+        ),
+      ),
+    )
+
+    const service = createApiMatchService('http://localhost:8000')
+    await expect(
+      service.getEventIntelligence('m-1', 'evt-1'),
+    ).rejects.toBeInstanceOf(EventIntelligenceUnavailableError)
+  })
+
+  it('POSTs grounded ask questions with selected event context', async () => {
+    const askBody = {
+      matchId: 'm-1',
+      eventId: 'evt-1',
+      status: 'answered',
+      intent: 'greeting',
+      provenance: 'synthetic',
+      answer: {
+        english: {
+          headline: 'Ask the crew',
+          keyObservations: ['Capabilities'],
+          limitations: [],
+        },
+        arabic: {
+          headline: 'اسأل الطاقم',
+          keyObservations: [],
+          limitations: [],
+        },
+      },
+      evidence: [],
+      relatedEventIds: ['evt-1'],
+      factClasses: ['capability'],
+      reason: 'Capability explanation',
+      verificationResults: [],
+      clientRequestId: 'req-1',
+    }
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(askBody))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const service = createApiMatchService('http://localhost:8000')
+    const result = await service.askMatch('m-1', {
+      question: 'hi',
+      eventId: 'evt-1',
+      language: 'en',
+      clientRequestId: 'req-1',
+    })
+
+    expect(result).toEqual(askBody)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/v1/matches/m-1/ask',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          question: 'hi',
+          language: 'en',
+          eventId: 'evt-1',
+          clientRequestId: 'req-1',
+        }),
+      }),
+    )
+  })
+
+  it('maps ask match-not-found to AskUnavailableError', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse(
+          { error: { code: 'match_not_found', message: 'Missing match' } },
+          404,
+        ),
+      ),
+    )
+    const service = createApiMatchService('http://localhost:8000')
+    await expect(
+      service.askMatch('missing', { question: 'hi' }),
+    ).rejects.toBeInstanceOf(AskUnavailableError)
   })
 
   it('unwraps paginated match list items from /api/v1', async () => {

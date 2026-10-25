@@ -14,6 +14,7 @@ EXPECTED_PATHS = {
     "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative",
     "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/evidence",
     "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/verify",
+    "/api/v1/matches/{match_id}/events/{event_id}/event-intelligence",
 }
 VERIFY_PATH = "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/verify"
 NARRATIVE_PATH = "/api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative"

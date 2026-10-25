@@ -704,14 +704,22 @@ def analyze_decision(
     ranked = rank_actions(all_actions)
     calc_ids, calc_payloads = _register_calculations(all_actions)
 
-    # Context: nearest opponent from frame
+    # Context: recorded event fields + nearest opponent from frame.
+    # Only include values present on the row — never invent.
     context: dict[str, Any] = {
         "playerName": _player_name(db, event.player_id),
         "receiverName": _player_name(db, event.receiver_id),
+        "assistPlayerName": _player_name(db, event.assist_player_id),
+        "relatedPlayerName": _player_name(db, event.related_player_id),
         "outcome": event.outcome,
+        "goalType": event.goal_type,
+        "detail": event.detail,
         "minute": event.minute,
         "frameId": frame.id if frame else None,
+        "homeTeamName": match.home_team.name if match.home_team else None,
+        "awayTeamName": match.away_team.name if match.away_team else None,
     }
+    context = {key: value for key, value in context.items() if value is not None}
     context_calc_ids: set[str] = set()
     if frame is not None and event.team_id:
         opponents = [

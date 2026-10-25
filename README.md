@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Rematch/logo/1x/Artboard 1.png" alt="ReMatch" width="132" />
+  <img src="logo/1x/Artboard%201.png" alt="ReMatch" width="320" />
 
   # ReMatch
 
@@ -9,10 +9,11 @@
 
   [![Frontend: React + TypeScript](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB?logo=react&logoColor=white)](rematch-frontend)
   [![Backend: FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](backend)
+  [![SWA API Proxy](https://img.shields.io/badge/SWA%20API-Azure%20Functions-0078D4?logo=azurefunctions&logoColor=white)](api)
   [![Data: Synthetic](https://img.shields.io/badge/Data-Synthetic-7C3AED)](#the-data-behind-the-demo)
   [![Status: In development](https://img.shields.io/badge/Status-In%20development-F59E0B)](#roadmap)
 
-  [Get started](#run-it-locally) · [Explore the API](#api-at-a-glance) · [Understand the scoring](docs/decision-engine.md) · [Read the docs](#documentation)
+  [Get started](#run-it-locally) · [Features](#features) · [API](#api-at-a-glance) · [Docs](#documentation)
 </div>
 
 ---
@@ -30,21 +31,25 @@ flowchart LR
   C --> D["04 · Verify the evidence"]
 ```
 
-## What you can explore
+## Features
+
+### Product surfaces
 
 | Experience | What it gives you |
 |---|---|
-| **Match catalogue** | Searchable synthetic fixtures, filterable by status, with an at-a-glance dataset overview. |
-| **Match analysis** | A pitch view, event timeline, event inspector, score context, players, and aligned frames. |
+| **Dashboard** | Searchable synthetic fixture catalogue, status filters, and dataset overview stats. |
+| **Match Centre** | Pitch replay, event timeline, highlights, score race, team/player analytics, and Match Studio. |
+| **Fan / Analyst views** | Presentation toggle (local preference): pitch-first Fan experience vs denser Analyst workspace—same underlying match state. |
+| **Match Studio** | LIVE chronological event feed (seek on select) and ASK for event-scoped agent narrative—no free-form match Q&A. |
 | **Decision Explorer** | Backend-scored observed actions and frame-backed alternatives, ranked with transparent calculations. |
-| **Pick Your Pass** | An interactive way to inspect alternatives already returned by the engine—without recalculating or inventing scores in the browser. |
-
+| **Ask the agents** | Composed decision analysis + evidence verifier + bilingual Narrator for the selected event. |
+| **Event intelligence** | Evidence-grounded moment briefing for any stored event; optional server-side LLM enrichment (OpenAI-compatible or Gemini). |
+| **Pick Your Pass** | Interactive inspection of alternatives already returned by the engine—no browser-side recalculation. |
 | **Judge Mode** | Guided path for reviewers: open a seeded match, replay events, inspect decisions. |
-| **Fan / Analyst views** | Presentation mode toggle (local preference) for simpler vs denser wording. |
-| **Broadcast-style overlay** | Optional timed strip + downloadable overlay JSON for a moment (synthetic). |
-| **Foundry-ready API tools** | OpenAPI export and agent instructions under `docs/` for Microsoft Foundry; the app does not call Foundry from the browser by default. |
-
-| **Evidence & narration** | Claim references, calculation checks, and deterministic English/Arabic narrative output that states limitations clearly. |
+| **Insights** | Match-level insights routed through the shared data-service boundary (mock/API, error/retry, RTL). |
+| **System Metrics** | Persisted, measured API-operation telemetry (latency, success rates, verification totals)—not derived from fixture fiction. |
+| **Broadcast overlay** | Optional timed strip + downloadable overlay JSON for a moment (synthetic). |
+| **i18n / RTL** | English and Arabic UI strings with RTL layout support. |
 
 ### Built to show its working
 
@@ -53,8 +58,19 @@ Every decision analysis is grounded in one observable frame of synthetic match d
 - The backend, not an AI model or the UI, calculates scores and ranks.
 - Alternatives are created only for teammates positioned in the event’s aligned frame.
 - Claims include references to source events, frames, positions, and registered calculations.
-- The verifier validates evidence/reference membership and calculation consistency; it does not certify a free-form statement as football truth.
+- The verifier validates evidence/reference membership and calculation consistency; it does not certify free-form football truth.
+- Optional LLM enrichment may rewrite briefing wording from a verified evidence pack only; `llmConnected` is true only after a validated provider response.
 - The client keeps mock and API modes separate. An API failure is shown to the user—it never silently swaps in mock data.
+
+### Local “agents” (deterministic composition)
+
+| Agent | Role |
+|---|---|
+| **Decision analysis** | Geometric scoring (`geometric_progression_v1`) and alternative ranking from seeded events/frames. |
+| **Narrator** | Deterministic English/Arabic narrative from a typed truth pack—no model call. |
+| **Verifier** | Evidence-reference and registered-calculation checks; natural-language claim support is always `not_assessed`. |
+
+Microsoft Foundry remains an **external** tooling path (OpenAPI export + agent instructions under `docs/`). The web app does not embed Foundry credentials or call cloud agents by default.
 
 ## How scoring works
 
@@ -72,22 +88,27 @@ Recorded outcomes, xG, pressure estimates, passing-lane clearance, and completio
 
 ```mermaid
 flowchart LR
-  S["Deterministic synthetic generator"] --> A["FastAPI catalogue"]
-  A --> D["Decision engine"]
+  S["Deterministic synthetic generator"] --> B["FastAPI backend"]
+  B --> D["Decision engine"]
   D --> V["Evidence catalogue & verifier"]
   D --> N["Deterministic EN / AR narrator"]
-  A --> R["React + TypeScript experience"]
+  B --> E["Optional LLM enrichment"]
+  B --> R["React + TypeScript experience"]
   D --> R
   V --> R
   N --> R
+  P["Azure SWA Functions proxy"] -.->|"deployed same-origin /api"| B
+  R -.->|"local API mode"| B
+  R -.->|"Azure Static Web App"| P
 ```
 
 | Layer | Stack | Responsibility |
 |---|---|---|
-| Frontend | React 19, TypeScript, Vite | Dark-mode football analysis experience, accessible states, English/Arabic RTL support, mock/API switching. |
-| API | FastAPI, Pydantic, SQLAlchemy | Versioned catalogue, decision analysis, narratives, evidence, and validation endpoints. |
-| Data | Alembic, SQLite locally | Idempotent synthetic seeds, fictional teams, typed events, and aligned player frames. |
-| Delivery | Docker, `uv`, Azure Container Apps template | Reproducible backend image and a reviewable deployment starting point. |
+| **Frontend** (`rematch-frontend/`) | React 19, TypeScript, Vite | Dark-mode football analysis UI, Fan/Analyst modes, EN/AR RTL, mock/API switching. |
+| **Backend / API** (`backend/`) | FastAPI, Pydantic, SQLAlchemy, Alembic | Versioned `/api/v1` catalogue, decision analysis, narratives, evidence, event intelligence, metrics. |
+| **SWA API proxy** (`api/`) | Azure Functions v4 | Same-origin `/api/v1` proxy for Azure Static Web Apps; injects bearer auth server-side. Not required for local Vite → FastAPI. |
+| **Data** | SQLite locally (Postgres-compatible URL) | Idempotent synthetic seeds, fictional teams, typed events, aligned player frames. |
+| **Delivery** | Docker, `uv`, Azure Container Apps template | Reproducible backend image and a reviewable deployment starting point. |
 
 ## Microsoft technologies used
 
@@ -121,17 +142,26 @@ flowchart LR
 
 ## Run it locally
 
-**Prerequisites:** Node.js 22.23.1+, Python 3.11–3.14, and [uv](https://docs.astral.sh/uv/). The production image uses Python 3.12.
+**Prerequisites:** Node.js 22+ (frontend), Python 3.11–3.14, and [uv](https://docs.astral.sh/uv/). The production image uses Python 3.12. Azure Functions Core Tools are only needed if you develop the SWA `api/` proxy itself.
 
-### One command (API + frontend)
+### One command (backend API + frontend)
 
 ```bash
 ./scripts/run-local.sh
 ```
 
-This syncs dependencies, runs migrations, seeds the synthetic catalogue, then starts the API and the frontend in API mode. Press Ctrl+C to stop both.
+This syncs dependencies, runs migrations, seeds the synthetic catalogue, then starts:
 
-If port `8000` is already taken on your machine:
+| Service | Default URL |
+|---|---|
+| Frontend (API mode) | http://127.0.0.1:5173/ |
+| Backend API | http://127.0.0.1:8000/ |
+| Interactive docs | http://127.0.0.1:8000/docs |
+| Health | http://127.0.0.1:8000/api/v1/health |
+
+Press Ctrl+C to stop both.
+
+If port `8000` is already taken:
 
 ```bash
 REMATCH_API_PORT=8001 ./scripts/run-local.sh
@@ -139,7 +169,9 @@ REMATCH_API_PORT=8001 ./scripts/run-local.sh
 
 Optional: `REMATCH_FE_PORT`, `REMATCH_API_HOST`, `REMATCH_FE_HOST`, or `--skip-setup` to skip sync/migrate/seed.
 
-### Start the API only
+### Start each piece manually
+
+#### 1. Backend (FastAPI — this is the local API)
 
 ```bash
 cd backend
@@ -150,11 +182,7 @@ uv run rematch-seed
 uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-The API health check is available at `http://127.0.0.1:8000/api/v1/health`. In development, interactive API documentation is available at `/docs`.
-
-### Start the frontend in API mode
-
-In a second terminal:
+#### 2. Frontend (API mode)
 
 ```bash
 cd rematch-frontend
@@ -162,15 +190,32 @@ npm ci
 npm run dev:api -- --host 127.0.0.1 --port 5173
 ```
 
-`dev:api` uses the checked-in `.env.api` configuration and connects to the local API. The backend’s development CORS defaults allow local Vite hosts on ports 5173 and 5174.
+`dev:api` uses the checked-in `.env.api` configuration and connects to the local backend. CORS defaults allow local Vite hosts on ports 5173 and 5174.
 
-For a full frame-backed decision journey, open:
+Sample Decision Explorer journey:
 
 ```text
-/matches/m-p8-harbor-eastbridge-002/decisions/m-p8-harbor-eastbridge-002-evt-001-pass
+http://127.0.0.1:5173/matches/m-p8-harbor-eastbridge-002/decisions/m-p8-harbor-eastbridge-002-evt-001-pass
 ```
 
-### Or work entirely offline
+#### 3. SWA API proxy (`api/`) — Azure deploy path
+
+The `api/` package is the **Azure Static Web Apps** Functions proxy. Local day-to-day development does **not** need it: point the frontend at the FastAPI backend with `VITE_API_BASE_URL`.
+
+For Static Web App deployment, the proxy:
+
+- Allows a fixed allow-list of `/api/v1` routes
+- Forwards to the configured Container Apps backend over HTTPS
+- Attaches `API_BEARER_TOKEN` on the server (never in the browser)
+
+```bash
+cd api
+npm ci
+# Requires Azure Functions Core Tools + BACKEND_BASE_URL / API_BEARER_TOKEN
+# for the deployed Container Apps host — see docs/AZURE_CONTAINER_APPS.md
+```
+
+### Or work entirely offline (frontend mock mode)
 
 ```bash
 cd rematch-frontend
@@ -178,7 +223,7 @@ npm ci
 npm run dev
 ```
 
-Mock mode is the default. It uses the `rematch-phase2-v1` synthetic fixture set. Those fixtures intentionally have no aligned frames, so the Decision Explorer correctly has no alternatives to compare.
+Mock mode is the default. It uses bundled synthetic fixtures. Those fixtures intentionally have no aligned frames, so the Decision Explorer correctly has no alternatives to compare.
 
 ## Configuration
 
@@ -195,6 +240,12 @@ Copy `backend/.env.example` to `backend/.env` for local overrides. Never commit 
 | `DATABASE_URL` | `sqlite:///./rematch.db` | SQLAlchemy database URL. |
 | `CORS_ORIGINS` | local Vite hosts | Comma-separated browser origins; empty disables CORS middleware. |
 | `DEFAULT_PAGE_LIMIT` / `MAX_PAGE_LIMIT` | `50` / `100` | Pagination defaults and ceiling. |
+| `LLM_ENABLED` | `false` | Optional event-intelligence enrichment. |
+| `LLM_PROVIDER` | `openai` | `openai`, `azure_openai`, `openai_compatible`, or `gemini`. |
+| `LLM_API_KEY` / `LLM_MODEL` / `LLM_BASE_URL` | — | OpenAI / Azure / compatible provider settings. |
+| `GEMINI_API_KEY` / `GEMINI_MODEL` | unset / `gemini-3.5-flash-lite` | Gemini Developer API (when `LLM_PROVIDER=gemini`). |
+
+Full LLM setup: [docs/llm-provider.md](docs/llm-provider.md). Keys stay on the API host only—never under `VITE_*` or the frontend.
 
 ### Frontend
 
@@ -209,41 +260,49 @@ All application endpoints are JSON under `/api/v1`; list endpoints use `{ items,
 
 | Method | Endpoint | Use it for |
 |---|---|---|
-| `GET` | `/health` | A liveness check. |
+| `GET` | `/health` | Liveness check. |
 | `GET` | `/matches` | Paginated, searchable fixture catalogue. |
 | `GET` | `/matches/dataset` | Metadata for the preferred seeded scenario. |
 | `GET` | `/matches/overview` | Dashboard statistics. |
-| `GET` | `/matches/{match_id}` | A match summary. |
-| `GET` | `/matches/{match_id}/events` | The event timeline. |
+| `GET` | `/matches/{match_id}` | Match summary. |
+| `GET` | `/matches/{match_id}/events` | Event timeline. |
 | `GET` | `/matches/{match_id}/frames` | Aligned player frames. |
 | `GET` | `/matches/{match_id}/players` | Players referenced by that match. |
-| `GET` | `/matches/{match_id}/events/{event_id}/decision-analysis` | Observed action, alternatives, scores, rankings, and claims. |
-| `GET` | `…/decision-analysis/narrative` | Deterministic bilingual explanation. |
+| `GET` | `/matches/{match_id}/context` | Coaches, form, squads, player stats. |
+| `GET` | `/matches/{match_id}/player-stats` | Per-player match stats. |
+| `GET` | `/matches/{match_id}/intelligence` | Match-level aggregates from seeded events/frames. |
+| `POST` | `/matches/{match_id}/start` | Start an upcoming synthetic match on request. |
+| `GET` | `/system-metrics` | Measured API-operation telemetry. |
+| `GET` | `…/events/{event_id}/decision-analysis` | Observed action, alternatives, scores, rankings, claims. |
+| `GET` | `…/decision-analysis/narrative` | Deterministic bilingual agent composition. |
 | `GET` | `…/decision-analysis/evidence` | Evidence bundle and validation context. |
-| `POST` | `…/decision-analysis/verify` | Validate supplied evidence references and registered calculations. |
+| `POST` | `…/decision-analysis/verify` | Validate supplied evidence references and calculations. |
+| `GET` | `…/event-intelligence` | Evidence briefing; optional LLM enrichment. |
 
-The exact request and response shapes are in the [API contract](docs/api-contract.md).
+Exact request/response shapes: [API contract](docs/api-contract.md).
 
 ## The data behind the demo
 
 Everything bundled with ReMatch is fictional and labelled as synthetic.
 
-- **`rematch-phase4-v1`** is retained as a sparse compatibility dataset.
-- **`rematch-phase8-v1`** is the preferred dataset: three generated full matches, 22-player frames, deterministic IDs, and eligible decision moments.
+- Compatibility and generated scenarios are seeded together (idempotent). Preferred catalogue metadata is returned by `GET /matches/dataset`.
+- Rich demo fixtures include live clocks, finished matches, upcoming start-on-request, assists, cards, substitutions, coaches, and form history.
+- Phase 8-style generated matches retain full 11v11 rosters and aligned decision frames for Decision Explorer journeys.
 - Alternatives exist only where an event has an aligned frame with eligible teammate positions. Missing options are never inferred.
 - The generator is deterministic: the same seed and parameters produce the same logical dataset.
 
-Read the [data model](docs/data-model.md) and [generator guide](docs/data-generator.md) for the schema, constraints, and reproducibility details.
+Read the [data model](docs/data-model.md) and [generator guide](docs/data-generator.md) for schema, constraints, and reproducibility.
 
 ## Security, deployment, and boundaries
 
-ReMatch is a read-only demo architecture, not a production match platform. Its current safeguards include:
+ReMatch is a read-only demo architecture, not a production match platform. Current safeguards include:
 
 - Pinned direct dependencies, committed lockfiles, and scheduled dependency-audit workflows.
 - A non-root Docker image and reproducible production dependency installation.
 - Documentation endpoints disabled in production mode.
 - Optional fail-closed bearer authentication for a development tunnel or protected demo.
-- No user accounts, write APIs, WebSockets, or live data feeds in this repository. Microsoft Foundry is supported via documented OpenAPI tools and agent instructions (`docs/FOUNDRY_*`); the web app does not embed Foundry credentials or call cloud agents by default. Public deployment is optional—see `docs/AZURE_CONTAINER_APPS.md`, `rematch-frontend/Dockerfile`, and `docs/judge/`.
+- SWA Functions proxy keeps bearer tokens server-side for browser clients on Azure.
+- No user accounts, write APIs (beyond demo `start`), WebSockets, or live data feeds in this repository.
 
 SQLite storage at `/tmp/rematch/rematch.db` inside the container is ephemeral. The supplied [Azure Container Apps template](backend/containerapp.yaml) is a reviewable starting point only; read the [deployment guide](docs/AZURE_CONTAINER_APPS.md) before creating cloud resources.
 
@@ -269,7 +328,7 @@ cd ../rematch-frontend
 npm run smoke:decision
 ```
 
-Tests cover UI behavior, the API contract, synthetic generation and seeding, geometry scoring, evidence verification, deterministic narration, authentication behavior, and production-documentation protection.
+Tests cover UI behavior, the API contract, synthetic generation and seeding, geometry scoring, evidence verification, deterministic narration, event intelligence / LLM boundaries, authentication behavior, and production-documentation protection.
 
 ## Project map
 
@@ -277,10 +336,11 @@ Tests cover UI behavior, the API contract, synthetic generation and seeding, geo
 Rematch/
 ├── rematch-frontend/       # React + TypeScript product experience
 ├── backend/                # FastAPI service, migrations, decision engine, seed generator
-├── docs/                   # API, data, decision, verifier, narrator, deployment guides
-├── .github/workflows/      # Dependency and security automation
-├── PHASE8_REPORT.md        # Synthetic-data generation report
-└── PHASE9_REPORT.md        # Local API-journey validation report
+├── api/                    # Azure Static Web Apps Functions proxy (/api/v1)
+├── docs/                   # API, data, decision, verifier, narrator, LLM, deployment
+├── logo/                   # Brand assets (1x / 2x / SVG)
+├── scripts/run-local.sh    # One-command local API + frontend
+└── .github/workflows/      # Dependency and security automation
 ```
 
 ## Roadmap
@@ -288,12 +348,15 @@ Rematch/
 - [x] Typed football analysis UI, synthetic catalogue, pitch and timeline.
 - [x] Deterministic decision engine with evidence and claim-reference verification.
 - [x] Frame-backed alternatives, bilingual deterministic narration, and API-backed journeys.
+- [x] Match Centre Fan/Analyst modes, Match Studio LIVE/ASK, Judge Mode, Pick Your Pass.
+- [x] Event intelligence briefings with optional server-side LLM enrichment (incl. Gemini).
 - [x] Locked dependencies, audit automation, production docs protection, and containerized API setup.
-- [x] Deliver System Metrics from persisted, measured API telemetry; static mock mode deliberately reports no operational history.
-- [x] Route Insights through the shared data-service boundary with explicit mock/API, error/retry, route-change, and RTL coverage.
+- [x] System Metrics from persisted API telemetry; mock mode reports no operational history.
+- [x] Insights through the shared data-service boundary with mock/API, error/retry, and RTL coverage.
+- [x] Azure SWA API proxy for same-origin authenticated backend access.
 - [ ] Add durable storage and a real data-ingestion pipeline.
 - [ ] Design identity, authorization, and production operations for a real deployment.
-- [ ] Evaluate any optional external AI/Foundry integration under a separate security, data-rights, and product review.
+- [ ] Evaluate broader external AI/Foundry product integration under a separate security and data-rights review.
 
 ## Documentation
 
@@ -303,10 +366,13 @@ Rematch/
 - [Decision engine](docs/decision-engine.md)
 - [Verifier contract](docs/verifier.md)
 - [Narrator contract](docs/narrator.md)
+- [LLM provider](docs/llm-provider.md)
 - [Data model](docs/data-model.md)
 - [Synthetic-data generator](docs/data-generator.md)
-- [Phase 8 report](PHASE8_REPORT.md)
-- [Phase 9 report](PHASE9_REPORT.md)
+- [Azure Container Apps](docs/AZURE_CONTAINER_APPS.md)
+- [Foundry connect](docs/FOUNDRY_CONNECT.md)
+- [Judge guide](docs/judge/JUDGE_GUIDE.md)
+- [Agents integration status](AGENTS_INTEGRATION_STATUS.md)
 
 ---
 

@@ -87,8 +87,10 @@ describe('DecisionAnalystChat', () => {
   beforeEach(() => vi.stubEnv('VITE_MATCH_DATA_SOURCE', 'api'))
 
   async function openChat(user = userEvent.setup()) {
-    renderWithProviders(<DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />)
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystOpen }))
+    renderWithProviders(
+      <DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />,
+    )
+    expect(screen.getByTestId('decision-analyst-chat')).toBeInTheDocument()
     return user
   }
 
@@ -133,8 +135,9 @@ describe('DecisionAnalystChat', () => {
     const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
     const user = await openChat()
     await askTyped(user, 'how many players here?')
-    expect(await screen.findByText(/10/)).toBeInTheDocument()
-    expect(screen.getByText(/9/)).toBeInTheDocument()
+    // Prefer field labels — timestamps like "10:12 PM" also match bare /10/.
+    expect(await screen.findByText(/Teammates in frame: 10/)).toBeInTheDocument()
+    expect(screen.getByText(/Opponents in frame: 9/)).toBeInTheDocument()
     expect(screen.getByText(/Alternative count: 2/)).toBeInTheDocument()
     expect(screen.getByText(/Aligned frame available: Yes/)).toBeInTheDocument()
     await askTyped(user, 'how many teammates in the frame?')
@@ -147,8 +150,6 @@ describe('DecisionAnalystChat', () => {
     const getNarrative = vi.spyOn(matchServices.matchService, 'getDecisionNarrative').mockResolvedValue(narrativeResponse)
     const user = await openChat()
     await user.click(screen.getByRole('button', { name: STRINGS.en.analystChipVerification }))
-    expect(screen.getByRole('textbox')).toHaveValue(STRINGS.en.analystChipVerification)
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystSend }))
     expect(await screen.findByText(/claimSupportStatus is not_assessed/)).toBeInTheDocument()
     expect(screen.getByText(/Verification results: 2/)).toBeInTheDocument()
     await askTyped(user, 'are the evidence claims true?')
@@ -160,11 +161,12 @@ describe('DecisionAnalystChat', () => {
     window.localStorage.setItem('rematch.locale', 'ar')
     const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
     const getNarrative = vi.spyOn(matchServices.matchService, 'getDecisionNarrative').mockResolvedValue(narrativeResponse)
-    renderWithProviders(<DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />)
+    renderWithProviders(
+      <DecisionAnalystChat matchId={analysis.matchId} eventId={analysis.eventId} />,
+    )
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: STRINGS.ar.analystOpen }))
+    expect(screen.getByTestId('decision-analyst-chat')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: STRINGS.ar.analystChipSummary }))
-    await user.click(screen.getByRole('button', { name: STRINGS.ar.analystSend }))
     expect(await screen.findByText(/ملخص القرار من الخادم/)).toBeInTheDocument()
     await askTyped(user, 'نتائج التحقق لهذه اللحظة')
     expect(await screen.findByText(/claimSupportStatus هو not_assessed/)).toBeInTheDocument()
@@ -184,13 +186,13 @@ describe('DecisionAnalystChat', () => {
 
   it('shows a grounded welcome state and can start a fresh conversation', async () => {
     vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = await openChat()
     expect(screen.getByRole('heading', { name: STRINGS.en.analystWelcome })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: STRINGS.en.analystChipRanking }))
-    expect(screen.getByRole('textbox')).toHaveValue(STRINGS.en.analystChipRanking)
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystSend }))
     expect(await screen.findByText(/#1 Alternative One/)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: STRINGS.en.analystClear }))
+    await user.click(screen.getByRole('button', { name: STRINGS.en.askCrewClear }))
+    expect(confirmSpy).toHaveBeenCalled()
     expect(screen.getByRole('heading', { name: STRINGS.en.analystWelcome })).toBeInTheDocument()
     expect(screen.queryByText(/#1 Alternative One/)).not.toBeInTheDocument()
   })

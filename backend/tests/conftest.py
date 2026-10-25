@@ -12,6 +12,8 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 os.environ.setdefault("CORS_ORIGINS", "http://localhost:5173")
 os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("DEBUG", "false")
+# Keep suite deterministic unless a test explicitly enables a mocked provider.
+os.environ["LLM_ENABLED"] = "false"
 
 from app.api.deps import get_db_dep
 from app.core.config import get_settings

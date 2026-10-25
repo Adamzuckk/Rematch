@@ -6,7 +6,9 @@ import { MatchContextPanel } from '../components/match/MatchContextPanel'
 import { MatchHeader } from '../components/match/MatchHeader'
 import { MatchHighlightsStrip } from '../components/match/MatchHighlightsStrip'
 import { MatchMomentumChart } from '../components/match/MatchMomentumChart'
+import { FloatingAskChat } from '../components/chat/FloatingAskChat'
 import { MatchStudioPanel } from '../components/match/MatchStudioPanel'
+import { eventTypeLabel } from '../components/match/eventLabels'
 import { FootballPitch } from '../components/pitch/FootballPitch'
 import { BroadcastOverlay } from '../components/overlay/BroadcastOverlay'
 import {
@@ -21,6 +23,7 @@ import {
 import { Button } from '../components/ui/Button'
 import { EmptyState } from '../components/ui/EmptyState'
 import { usePersona } from '../context/PersonaContext'
+import { useAskCrew } from '../hooks/useAskCrew'
 import { useDecisionNarrative } from '../hooks/useDecisionNarrative'
 import { useMatchAnalysis } from '../hooks/useMatchAnalysis'
 import {
@@ -205,6 +208,13 @@ export function MatchAnalysisPage() {
     narrativeEnabled,
   )
 
+  const {
+    state: askCrewState,
+    ask: askCrew,
+    retry: retryAskCrew,
+    clear: clearAskCrew,
+  } = useAskCrew(matchId)
+
   if (
     narrativeState.status === 'ready' &&
     narrativeByEventId[narrativeState.eventId] !== narrativeState.response
@@ -218,7 +228,7 @@ export function MatchAnalysisPage() {
   const openDecision = (eventId: string) => {
     if (!matchId) return
     const event = sortedEvents.find((item) => item.id === eventId)
-    if (!event || !isDecisionCandidate(event)) return
+    if (!event) return
     setPlaying(false)
     navigate(`/matches/${matchId}/decisions/${eventId}`)
   }
@@ -236,6 +246,15 @@ export function MatchAnalysisPage() {
 
   const clearAsk = () => {
     setAskedDecisionKey(null)
+    clearAskCrew()
+  }
+
+  const submitAskQuestion = (question: string) => {
+    void askCrew({
+      question,
+      eventId: selectedEvent?.id ?? null,
+      language: locale,
+    })
   }
 
   if (state.status === 'idle' || state.status === 'loading') {
@@ -304,6 +323,34 @@ export function MatchAnalysisPage() {
   const scoreAway = match.score?.away ?? 0
   const isFan = personaMode === 'fan'
   const canStartMatch = Boolean(match.canStart && match.status === 'upcoming')
+  const selectedPlayerName = selectedEvent?.playerId
+    ? (players.find((player) => player.id === selectedEvent.playerId)?.name ?? null)
+    : null
+  const askEventLabel = selectedEvent
+    ? [
+        selectedEvent.minute != null ? `${selectedEvent.minute}'` : null,
+        eventTypeLabel(selectedEvent.type, locale),
+        selectedPlayerName,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : null
+  const floatingAsk = (
+    <FloatingAskChat
+      variant={isFan ? 'agent' : 'analyst'}
+      matchId={match.id}
+      eventId={selectedEvent?.id ?? null}
+      eventLabel={askEventLabel}
+      match={match}
+      narrativeState={narrativeState}
+      askCrewState={askCrewState}
+      onAskQuestion={submitAskQuestion}
+      onAskRetry={() => {
+        void retryAskCrew(selectedEvent?.id ?? null, locale)
+      }}
+      onClearAsk={clearAsk}
+    />
+  )
 
   const handleStartMatch = async () => {
     if (!matchId || !canStartMatch || starting) return
@@ -445,6 +492,11 @@ export function MatchAnalysisPage() {
       onAskSelectedEvent={askSelectedEvent}
       onNarrativeRetry={retryNarrative}
       onClearAsk={clearAsk}
+      askCrewState={askCrewState}
+      onAskQuestion={submitAskQuestion}
+      onAskRetry={() => {
+        void retryAskCrew(selectedEvent?.id ?? null, locale)
+      }}
       narrativeByEventId={narrativeByEventId}
       compact={isFan}
       defaultTab="live"
@@ -738,6 +790,7 @@ export function MatchAnalysisPage() {
             ) : null}
           </div>
         </section>
+        {floatingAsk}
       </div>
     )
   }
@@ -834,6 +887,8 @@ export function MatchAnalysisPage() {
               onOpenDecision={openDecision}
               decisionCta={t('matchAnalysisDecisionCta')}
               decisionHint={t('matchAnalysisDecisionHint')}
+              briefingCta={t('matchAnalysisBriefingCta')}
+              briefingHint={t('matchAnalysisBriefingHint')}
               missing={t('matchAnalysisMissing')}
             />
           ) : null}
@@ -914,6 +969,7 @@ export function MatchAnalysisPage() {
           ) : null}
         </div>
       </section>
+      {floatingAsk}
     </div>
   )
 }
@@ -924,6 +980,8 @@ function AnalysisDecisionsRegion({
   onOpenDecision,
   decisionCta,
   decisionHint,
+  briefingCta,
+  briefingHint,
   missing,
 }: {
   hint: string
@@ -931,33 +989,35 @@ function AnalysisDecisionsRegion({
   onOpenDecision: (eventId: string) => void
   decisionCta: string
   decisionHint: string
+  briefingCta: string
+  briefingHint: string
   missing: string
 }) {
-  const candidate =
+  const isCandidate =
     selectedEvent != null && isDecisionCandidate(selectedEvent)
-      ? selectedEvent
-      : null
+  const cta = isCandidate ? decisionCta : briefingCta
+  const detailHint = isCandidate ? decisionHint : briefingHint
 
   return (
     <div className={styles.stack} data-testid="analysis-decisions-region">
       <p className={styles.sectionHint}>{hint}</p>
       <div className={styles.decisionCard}>
         <p className={styles.decisionMeta}>
-          {candidate
-            ? `${candidate.type} · ${candidate.minute ?? missing}'`
+          {selectedEvent
+            ? `${selectedEvent.type} · ${selectedEvent.minute ?? missing}'`
             : missing}
         </p>
-        <p className={styles.sectionHint}>{decisionHint}</p>
-        {candidate ? (
+        <p className={styles.sectionHint}>{detailHint}</p>
+        {selectedEvent ? (
           <Button
             variant="primary"
-            onClick={() => onOpenDecision(candidate.id)}
+            onClick={() => onOpenDecision(selectedEvent.id)}
           >
-            {decisionCta}
+            {cta}
           </Button>
         ) : (
           <p className={styles.unavailable} role="status">
-            {decisionHint}
+            {briefingHint}
           </p>
         )}
       </div>

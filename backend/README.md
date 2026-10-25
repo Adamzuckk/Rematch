@@ -5,7 +5,7 @@ FastAPI match catalogue API with SQLAlchemy models, Alembic migrations, the dete
 **Python:** 3.11–3.14 (developed/tested on 3.12).  
 **Stack:** FastAPI, Pydantic v2, SQLAlchemy 2.x, Alembic, SQLite (local) / PostgreSQL-compatible URL.
 
-The local demo uses synthetic data only. It does **not** include AI explanations, Microsoft Foundry, or streaming. Optional bearer authentication is available for exposing the API through a development tunnel.
+The local demo uses synthetic data only. Decision analysis and the Narrator remain deterministic. Optional **server-side** LLM enrichment can rewrite event-intelligence briefings when `LLM_*` / `GEMINI_*` env vars are set (OpenAI-compatible or Google Gemini via `google-genai`; see [docs/llm-provider.md](../docs/llm-provider.md)). API keys never belong in the frontend. Microsoft Foundry remains an external tooling path documented separately. Optional bearer authentication is available for exposing the API through a development tunnel.
 
 For the reviewed Azure Container Apps container setup, resource/cost prerequisites, and deployment validation steps, see [docs/AZURE_CONTAINER_APPS.md](../docs/AZURE_CONTAINER_APPS.md). The guide does not imply that a cloud deployment or Foundry connection has been performed.
 
@@ -45,6 +45,22 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 | `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated browser origins. Empty disables CORS |
 | `DEFAULT_PAGE_LIMIT` | `50` | Default list page size |
 | `MAX_PAGE_LIMIT` | `100` | Hard cap for `limit` |
+| `LLM_ENABLED` | `false` | Enable optional event-intelligence LLM enrichment |
+| `LLM_PROVIDER` | `openai` | `openai`, `azure_openai`, `openai_compatible`, or `gemini` |
+| `LLM_API_KEY` | unset | OpenAI / Azure / compatible secret (`SecretStr`); not used for Gemini |
+| `LLM_MODEL` | `gpt-4o-mini` | Chat model or Azure deployment model name |
+| `LLM_BASE_URL` | unset | OpenAI override, Azure endpoint, or compatible base URL |
+| `LLM_AZURE_DEPLOYMENT` | unset | Required for `azure_openai` |
+| `LLM_AZURE_API_VERSION` | `2024-10-21` | Azure OpenAI API version |
+| `LLM_TIMEOUT_SECONDS` | `20` | Outbound provider timeout |
+| `LLM_MAX_TOKENS` | `1200` | Completion token cap |
+| `LLM_MAX_RETRIES` | `2` | Bounded retries for transient provider failures |
+| `LLM_CACHE_MAX_ENTRIES` | `128` | In-process identical-prompt cache (`0` disables) |
+| `LLM_CACHE_TTL_SECONDS` | `3600` | Cache TTL seconds |
+| `GEMINI_API_KEY` | unset | Gemini Developer API key; required when `LLM_PROVIDER=gemini` and enabled |
+| `GEMINI_MODEL` | `gemini-3.5-flash-lite` | Gemini model id (currently supported default) |
+
+Full LLM / Gemini setup: [docs/llm-provider.md](../docs/llm-provider.md). Never commit real keys.
 
 `uv.lock` is the canonical dependency graph. `requirements.txt` is the
 hash-checked, production-only export used by the Docker build. Refresh both
@@ -104,6 +120,8 @@ All routes live under `/api/v1`. See [docs/api-contract.md](../docs/api-contract
 | GET | `/api/v1/matches/overview` | Counts from seeded data; the analysis moment count requires scoring coordinates |
 | GET | `/api/v1/system-metrics` | Stored API-operation telemetry; filters: `range`, `operation` |
 | GET | `/api/v1/matches/{id}/events/{event_id}/decision-analysis` | Geometric decision analysis |
+| GET | `/api/v1/matches/{id}/events/{event_id}/decision-analysis/narrative` | Composed analysis + verifier + Narrator |
+| GET | `/api/v1/matches/{id}/events/{event_id}/event-intelligence` | Evidence briefing; optional LLM enrichment |
 | GET | `/api/v1/matches/{id}/events/{event_id}/decision-analysis/evidence` | Verified claims + evidence catalog |
 | POST | `/api/v1/matches/{id}/events/{event_id}/decision-analysis/verify` | Validate caller-supplied claims |
 

@@ -34,6 +34,15 @@ properties:
             value: "8000"
           - name: CORS_ORIGINS
             value: "REPLACE_WITH_FRONTEND_ORIGIN"
+          # Optional Gemini enrichment — add ACA secret gemini-api-key first, then uncomment:
+          # - name: LLM_ENABLED
+          #   value: "true"
+          # - name: LLM_PROVIDER
+          #   value: gemini
+          # - name: GEMINI_MODEL
+          #   value: gemini-3.5-flash-lite
+          # - name: GEMINI_API_KEY
+          #   secretRef: gemini-api-key
         resources:
           cpu: 0.5
           memory: 1Gi

@@ -6,6 +6,137 @@
   width: min(100%, 1440px);
   margin-inline: auto;
 }
+.briefingPanel {
+  gap: var(--space-4);
+  border-color: rgba(107, 189, 69, 0.22);
+  background:
+    radial-gradient(70% 100% at 0% 0%, rgba(107, 189, 69, 0.1), transparent 55%),
+    linear-gradient(160deg, var(--plate), var(--mist));
+}
+.briefingGrid {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.briefingHeadline {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  font-stretch: 108%;
+  letter-spacing: -0.02em;
+}
+.briefingBlock {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid rgba(11, 15, 12, 0.08);
+  border-radius: var(--radius-md);
+  background: rgba(247, 249, 244, 0.72);
+}
+.briefingBlockTitle {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 0.72rem;
+  font-weight: 750;
+  font-stretch: 70%;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.briefingList {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.briefingList li + li {
+  margin-top: 0.35rem;
+}
+.llmBadge {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-inline-start: 3px solid var(--lime);
+  border-radius: var(--radius-sm);
+  background: var(--lime-wash);
+  color: var(--ink-2);
+  font-size: 0.8rem;
+}
+.statementSection {
+  display: grid;
+  gap: var(--space-3);
+}
+.statementList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.statementItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: start;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgba(11, 15, 12, 0.08);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.55);
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+.tierChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.64rem;
+  font-weight: 700;
+  font-stretch: 70%;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.tierFact {
+  border-color: rgba(107, 189, 69, 0.35);
+}
+.tierFact .tierChip {
+  color: var(--lime-ink);
+  background: var(--lime-wash);
+}
+.tierMetric {
+  border-color: rgba(78, 179, 216, 0.4);
+}
+.tierMetric .tierChip {
+  color: #0a3a4a;
+  background: var(--sky-wash);
+}
+.tierHypothesis {
+  border-color: rgba(240, 180, 41, 0.45);
+}
+.tierHypothesis .tierChip {
+  color: #4a3408;
+  background: var(--signal-wash);
+}
+.tierMissing {
+  border-color: rgba(255, 83, 64, 0.35);
+}
+.tierMissing .tierChip {
+  color: #5a1510;
+  background: var(--flare-wash);
+}
+.askAgentsPanel {
+  margin-top: var(--space-2);
+  gap: var(--space-3);
+}
+@media (min-width: 900px) {
+  .briefingGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .briefingHeadline {
+    grid-column: 1 / -1;
+  }
+}
 .panel select {
   width: 100%;
   min-height: 42px;
@@ -337,6 +468,36 @@
 }
 .pipelinePanel {
   gap: var(--space-4);
+}
+.advancedSummary {
+  display: grid;
+  gap: var(--space-1);
+  cursor: pointer;
+  list-style: none;
+}
+.advancedSummary::-webkit-details-marker {
+  display: none;
+}
+.advancedSummary .panelTitle {
+  display: block;
+  margin: 0;
+}
+.advancedSummary .panelNote {
+  margin: 0;
+}
+.rankingPanel {
+  gap: var(--space-3);
+}
+.rankingPanel[open],
+.askAgentsPanel[open],
+.pipelinePanel[open] {
+  gap: var(--space-4);
+}
+.pipelineInner {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+  min-width: 0;
 }
 .pipelineSummary {
   padding: var(--space-3) var(--space-4);

@@ -1,20 +1,38 @@
 import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { Route, Routes } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { DecisionExplorerPanel } from '../components/decision/DecisionExplorerPanel'
 import { STRINGS } from '../i18n/strings'
 import { SYNTHETIC_DECISION_ANALYSES } from '../mocks/decisionAnalysis'
+import * as matchServices from '../services/matches'
 import type {
   ActionScore,
   DecisionNarrativeResponse,
+  EventIntelligence,
   MatchFrame,
   MatchSummary,
 } from '../types'
 import { renderWithProviders } from '../test/render'
+import { DecisionExplorerPage } from './DecisionExplorerPage'
+
+function setPersonaMode(mode: 'fan' | 'analyst') {
+  window.localStorage.setItem(
+    'rematch.persona.v1',
+    JSON.stringify({
+      mode,
+      favoriteTeamId: null,
+      favoritePlayerId: null,
+      playerFocusId: null,
+    }),
+  )
+}
 
 afterEach(() => {
   cleanup()
   window.localStorage.setItem('rematch.locale', 'en')
+  setPersonaMode('fan')
+  vi.restoreAllMocks()
 })
 
 const base = SYNTHETIC_DECISION_ANALYSES[
@@ -233,6 +251,7 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
   })
 
   it('renders backend-returned English and Arabic narrative without treating reference checks as claim truth', async () => {
+    setPersonaMode('analyst')
     renderWithProviders(
       <DecisionExplorerPanel
         analysis={analysis}
@@ -263,8 +282,19 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
     expect(
       screen.getByRole('heading', { name: STRINGS.en.decisionPipelineNarratorAgent }),
     ).toBeInTheDocument()
-    expect(screen.getByText('not_assessed')).toBeInTheDocument()
+    expect(
+      screen.getByText(STRINGS.en.decisionClaimSupportNotAssessed),
+    ).toBeInTheDocument()
     expect(screen.getByText(STRINGS.en.decisionPipelineVerifierNote)).toBeInTheDocument()
+    expect(screen.getByTestId('decision-advanced-tools')).not.toHaveAttribute('open')
+    expect(screen.getByTestId('decision-ranking-disclosure')).not.toHaveAttribute('open')
+    expect(screen.getByTestId('decision-ask-agents-disclosure')).not.toHaveAttribute('open')
+    expect(screen.queryByTestId('decision-analyst-chat-disclosure')).not.toBeInTheDocument()
+    expect(screen.getByTestId('floating-ask-chat')).toBeInTheDocument()
+    expect(screen.getByTestId('floating-ask-launcher')).toHaveTextContent(
+      STRINGS.en.floatingAskAnalystLauncher,
+    )
+    expect(screen.getByTestId('decision-analyst-chat')).toBeInTheDocument()
     expect(screen.getByText(STRINGS.en.decisionPipelineFooter)).toBeInTheDocument()
     expect(screen.getAllByText(STRINGS.en.decisionPipelineKeyPoints)).toHaveLength(2)
     expect(screen.getAllByText(STRINGS.en.decisionPipelineLimitation)).toHaveLength(2)
@@ -282,6 +312,7 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
     expect(screen.getAllByText(/Narrative provenance: Synthetic data/).length).toBeGreaterThan(0)
 
     window.localStorage.setItem('rematch.locale', 'ar')
+    setPersonaMode('analyst')
     cleanup()
     renderWithProviders(
       <DecisionExplorerPanel
@@ -308,7 +339,220 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
     })
   })
 
+  it('keeps Fan view focused on briefing and Pick Your Pass without the analyst pipeline', () => {
+    setPersonaMode('fan')
+    renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        narrativeState={{ status: 'idle' }}
+        onAskAgents={() => undefined}
+      />,
+    )
+
+    expect(screen.getByTestId('decision-view-fan')).toBeInTheDocument()
+    expect(screen.getByTestId('decision-moment-briefing')).toBeInTheDocument()
+    expect(screen.getByTestId('decision-briefing-empty')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: STRINGS.en.decisionPipelineHeading }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: STRINGS.en.askAgentsHeading }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByTestId('decision-advanced-tools')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('decision-ranking-disclosure')).not.toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: STRINGS.en.pickPassHeading }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('floating-ask-launcher')).toHaveTextContent(
+      STRINGS.en.floatingAskAgentLauncher,
+    )
+  })
+
+  it('explains mock briefing unavailability without fabricating content', () => {
+    setPersonaMode('fan')
+    renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        intelligenceState={{
+          status: 'unavailable',
+          matchId: base.matchId,
+          eventId: base.eventId,
+          message: 'Event intelligence is unavailable in mock mode.',
+        }}
+      />,
+    )
+
+    const empty = screen.getByTestId('decision-briefing-empty')
+    expect(empty).toHaveTextContent(STRINGS.en.decisionIntelUnavailable)
+    expect(empty).toHaveTextContent(STRINGS.en.decisionIntelEmptyHint)
+    expect(empty).toHaveTextContent('Event intelligence is unavailable in mock mode.')
+  })
+
+  it('surfaces event intelligence tiers and LLM honesty when disconnected', () => {
+    setPersonaMode('fan')
+    renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        intelligenceState={{
+          status: 'ready',
+          matchId: base.matchId,
+          eventId: base.eventId,
+          intelligence: {
+            matchId: base.matchId,
+            eventId: base.eventId,
+            eventType: 'carry',
+            provenance: 'synthetic',
+            analysisMethod: 'deterministic_event_intelligence_v1',
+            llmConnected: false,
+            decisionCandidate: true,
+            english: {
+              headline: 'Carry at 64′',
+              keyObservations: ['A carry was recorded.'],
+              limitations: ['Synthetic fixture.'],
+              whatHappened: ['The match log records a carry.'],
+              whyItMattered: ['It progressed play in the final third.'],
+              whatCouldHaveHappened: ['A pass alternative scored higher geometrically.'],
+            },
+            arabic: {
+              headline: 'حمل الكرة في 64′',
+              keyObservations: ['سُجّل حمل للكرة.'],
+              limitations: ['تركيب اصطناعي.'],
+              whatHappened: ['يسجّل سجل المباراة حمل الكرة.'],
+              whyItMattered: ['تقدّم اللعب في الثلث الأخير.'],
+              whatCouldHaveHappened: ['بديل تمريرة سجّل أعلى هندسياً.'],
+            },
+            statements: [
+              {
+                tier: 'fact',
+                english: 'At minute 64, the match log records a carry.',
+                arabic: 'في الدقيقة 64 يسجّل السجل حمل الكرة.',
+              },
+              {
+                tier: 'hypothesis',
+                english: 'A higher-scoring pass alternative exists under the method.',
+                arabic: 'يوجد بديل تمريرة أعلى درجة وفق الطريقة.',
+              },
+            ],
+            missingEvidence: [],
+            limitations: ['Deterministic templates only.'],
+            decisionAnalysis: null,
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByText(STRINGS.en.decisionLlmDisconnected)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionWhatHappened)).toBeInTheDocument()
+    expect(screen.getByText('The match log records a carry.')).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionTierFact)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionTierHypothesis)).toBeInTheDocument()
+  })
+
+  it('shows LLM connected copy only when the API sets llmConnected true', () => {
+    setPersonaMode('fan')
+    renderWithProviders(
+      <DecisionExplorerPanel
+        analysis={analysis}
+        intelligenceState={{
+          status: 'ready',
+          matchId: base.matchId,
+          eventId: base.eventId,
+          intelligence: {
+            matchId: base.matchId,
+            eventId: base.eventId,
+            eventType: 'pass',
+            provenance: 'synthetic',
+            analysisMethod: 'llm_grounded_event_intelligence_v1',
+            llmConnected: true,
+            decisionCandidate: true,
+            english: {
+              headline: 'Enriched pass briefing',
+              keyObservations: ['Grounded observation.'],
+              limitations: ['Verified evidence only.'],
+              whatHappened: ['A pass was recorded.'],
+              whyItMattered: ['Geometry favoured progression.'],
+              whatCouldHaveHappened: ['Hypothesis: another target ranked higher.'],
+            },
+            arabic: {
+              headline: 'إحاطة تمريرة مُثرَاة',
+              keyObservations: ['ملاحظة مبنية على الأدلة.'],
+              limitations: ['أدلة موثّقة فقط.'],
+              whatHappened: ['سُجّلت تمريرة.'],
+              whyItMattered: ['الهندسة فضّلت التقدّم.'],
+              whatCouldHaveHappened: ['فرضية: هدف آخر أعلى ترتيباً.'],
+            },
+            statements: [],
+            missingEvidence: [],
+            limitations: ['Provider enriched wording from verified evidence.'],
+            decisionAnalysis: null,
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByText(STRINGS.en.decisionLlmConnected)).toBeInTheDocument()
+    expect(screen.queryByText(STRINGS.en.decisionLlmDisconnected)).not.toBeInTheDocument()
+  })
+
+  it('still shows the moment briefing when geometric analysis is unavailable', () => {
+    setPersonaMode('fan')
+    renderWithProviders(
+      <DecisionExplorerPanel
+        matchId={base.matchId}
+        eventId="evt-ng-possession-52"
+        decisionUnavailable={{
+          kind: 'insufficient-evidence',
+          message: 'Event type is not analyzable.',
+          retryable: true,
+        }}
+        intelligenceState={{
+          status: 'ready',
+          matchId: base.matchId,
+          eventId: 'evt-ng-possession-52',
+          intelligence: {
+            matchId: base.matchId,
+            eventId: 'evt-ng-possession-52',
+            eventType: 'possession_change',
+            provenance: 'synthetic',
+            analysisMethod: 'deterministic_event_intelligence_v1',
+            llmConnected: false,
+            decisionCandidate: false,
+            english: {
+              headline: 'Possession change',
+              keyObservations: ['Possession changed.'],
+              limitations: [],
+              whatHappened: ['Possession changed sides.'],
+              whyItMattered: ['It reset attacking structure.'],
+              whatCouldHaveHappened: [],
+            },
+            arabic: {
+              headline: 'تغيير الاستحواذ',
+              keyObservations: ['تغير الاستحواذ.'],
+              limitations: [],
+              whatHappened: ['تغير طرف الاستحواذ.'],
+              whyItMattered: ['أعاد هيكل الهجوم.'],
+              whatCouldHaveHappened: [],
+            },
+            statements: [],
+            missingEvidence: [],
+            limitations: [],
+            decisionAnalysis: null,
+          },
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Possession changed sides.')).toBeInTheDocument()
+    expect(
+      screen.getByText(STRINGS.en.decisionAnalysisUnavailable, { exact: false }),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: STRINGS.en.pickPassHeading }),
+    ).not.toBeInTheDocument()
+  })
+
   it('offers an explicit Ask the Agents action before calling the workflow', async () => {
+    setPersonaMode('analyst')
     const askAgents = vi.fn()
     renderWithProviders(
       <DecisionExplorerPanel
@@ -326,6 +570,7 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
   })
 
   it('labels a partial agent result only when the backend response is partial', () => {
+    setPersonaMode('analyst')
     const partialResponse: DecisionNarrativeResponse = {
       ...narrativeResponse,
       analysis: {
@@ -359,6 +604,7 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
   })
 
   it('shows narrative unavailability explicitly and lets API errors retry', async () => {
+    setPersonaMode('analyst')
     const retry = vi.fn()
     const { rerender } = renderWithProviders(
       <DecisionExplorerPanel
@@ -395,5 +641,153 @@ describe('DecisionExplorerPanel Pick Your Pass', () => {
       screen.getAllByRole('button', { name: STRINGS.en.decisionNarrativeRetry })[0]!,
     )
     expect(retry).toHaveBeenCalledOnce()
+  })
+})
+
+describe('DecisionExplorerPage dual-source loading', () => {
+  function renderPage(matchId: string, eventId: string) {
+    return renderWithProviders(
+      <Routes>
+        <Route
+          path="/matches/:matchId/decisions/:eventId"
+          element={<DecisionExplorerPage />}
+        />
+      </Routes>,
+      { initialEntries: [`/matches/${matchId}/decisions/${eventId}`] },
+    )
+  }
+
+  it('shows a non-decision briefing when geometric analysis is unavailable', async () => {
+    setPersonaMode('fan')
+    const intelligence: EventIntelligence = {
+      matchId: 'm-northgate-riverside-2401',
+      eventId: 'evt-ng-possession-52',
+      eventType: 'possession_change',
+      provenance: 'synthetic',
+      analysisMethod: 'deterministic_event_intelligence_v1',
+      llmConnected: false,
+      decisionCandidate: false,
+      english: {
+        headline: 'Possession change',
+        keyObservations: ['Possession changed.'],
+        limitations: [],
+        whatHappened: ['Possession changed sides.'],
+        whyItMattered: ['It reset attacking structure.'],
+        whatCouldHaveHappened: [],
+      },
+      arabic: {
+        headline: 'تغيير الاستحواذ',
+        keyObservations: ['تغير الاستحواذ.'],
+        limitations: [],
+        whatHappened: ['تغير طرف الاستحواذ.'],
+        whyItMattered: ['أعاد هيكل الهجوم.'],
+        whatCouldHaveHappened: [],
+      },
+      statements: [
+        {
+          tier: 'fact',
+          english: 'Possession changed according to the match log.',
+          arabic: 'تغير الاستحواذ وفق سجل المباراة.',
+        },
+      ],
+      missingEvidence: [],
+      limitations: [],
+      decisionAnalysis: null,
+    }
+
+    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockRejectedValue(
+      new matchServices.DecisionInsufficientEvidenceError(
+        'Event type is not analyzable.',
+        'm-northgate-riverside-2401',
+        'evt-ng-possession-52',
+      ),
+    )
+    vi.spyOn(matchServices.matchService, 'getEventIntelligence').mockResolvedValue(
+      intelligence,
+    )
+    vi.spyOn(matchServices.matchService, 'getMatchById').mockResolvedValue({
+      id: 'm-northgate-riverside-2401',
+      homeTeam: {
+        id: 't-home',
+        name: 'Northgate FC',
+        shortName: 'NG',
+      },
+      awayTeam: {
+        id: 't-away',
+        name: 'Riverside',
+        shortName: 'RV',
+      },
+      kickoffAt: '2024-01-01T00:00:00.000Z',
+      competition: 'Demo',
+      venue: 'Demo',
+      status: 'finished',
+      score: { home: 1, away: 0 },
+      provenance: 'synthetic',
+      scenarioId: 'demo',
+    } as MatchSummary)
+    vi.spyOn(matchServices.matchService, 'getMatchEvents').mockResolvedValue([])
+    vi.spyOn(matchServices.matchService, 'getMatchPlayers').mockResolvedValue([])
+    vi.spyOn(matchServices.matchService, 'getMatchFrames').mockResolvedValue([])
+
+    renderPage('m-northgate-riverside-2401', 'evt-ng-possession-52')
+
+    await waitFor(() => {
+      expect(screen.getByText('Possession changed sides.')).toBeInTheDocument()
+    })
+    expect(screen.getByText(STRINGS.en.decisionLlmDisconnected)).toBeInTheDocument()
+    expect(screen.getByText(STRINGS.en.decisionTierFact)).toBeInTheDocument()
+    expect(
+      screen.getByText(STRINGS.en.decisionAnalysisUnavailable, { exact: false }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('decision-view-fan')).toBeInTheDocument()
+  })
+
+  it('does not fabricate a briefing when event intelligence is unavailable', async () => {
+    setPersonaMode('fan')
+    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(
+      analysis,
+    )
+    vi.spyOn(matchServices.matchService, 'getEventIntelligence').mockRejectedValue(
+      new matchServices.EventIntelligenceUnavailableError(
+        'Event intelligence is unavailable in mock mode.',
+        analysis.matchId,
+        analysis.eventId,
+      ),
+    )
+    vi.spyOn(matchServices.matchService, 'getMatchById').mockResolvedValue({
+      id: analysis.matchId,
+      homeTeam: {
+        id: 't-home',
+        name: 'Northgate FC',
+        shortName: 'NG',
+      },
+      awayTeam: {
+        id: 't-away',
+        name: 'Riverside',
+        shortName: 'RV',
+      },
+      kickoffAt: '2024-01-01T00:00:00.000Z',
+      competition: 'Demo',
+      venue: 'Demo',
+      status: 'finished',
+      score: { home: 1, away: 0 },
+      provenance: 'synthetic',
+      scenarioId: 'demo',
+    } as MatchSummary)
+    vi.spyOn(matchServices.matchService, 'getMatchEvents').mockResolvedValue([])
+    vi.spyOn(matchServices.matchService, 'getMatchPlayers').mockResolvedValue([])
+    vi.spyOn(matchServices.matchService, 'getMatchFrames').mockResolvedValue([])
+
+    renderPage(analysis.matchId, analysis.eventId)
+
+    await waitFor(() => {
+      expect(screen.getByTestId('decision-briefing-empty')).toBeInTheDocument()
+    })
+    expect(screen.getByTestId('decision-briefing-empty')).toHaveTextContent(
+      STRINGS.en.decisionIntelEmptyHint,
+    )
+    expect(
+      screen.getByRole('heading', { name: STRINGS.en.pickPassHeading }),
+    ).toBeInTheDocument()
   })
 })

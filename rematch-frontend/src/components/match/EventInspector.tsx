@@ -22,6 +22,8 @@ export interface EventInspectorProps {
     missing?: string
     decisionCta?: string
     decisionHint?: string
+    briefingCta?: string
+    briefingHint?: string
     fields?: {
       type: string
       minute: string
@@ -97,10 +99,12 @@ export function EventInspector({
   const heading = labels.heading ?? 'Event details'
   const empty = labels.empty ?? 'Select an event to inspect its details.'
   const missing = labels.missing ?? 'Not available'
-  const decisionCta = labels.decisionCta ?? 'Open Decision Explorer'
+  const decisionCta = labels.decisionCta ?? t('matchAnalysisDecisionCta')
   const decisionHint =
-    labels.decisionHint ??
-    'Compare the observed action with geometric alternatives from the decision engine.'
+    labels.decisionHint ?? t('matchAnalysisDecisionHint')
+  const briefingCta = labels.briefingCta ?? t('matchAnalysisBriefingCta')
+  const briefingHint =
+    labels.briefingHint ?? t('matchAnalysisBriefingHint')
   const fields = labels.fields ?? {
     type: t('eventFieldType'),
     minute: t('eventFieldMinute'),
@@ -147,7 +151,7 @@ export function EventInspector({
       ? event.outcome
       : undefined
 
-  const showDecision = isDecisionCandidate(event)
+  const decisionCandidate = isDecisionCandidate(event)
 
   return (
     <section className={styles.root} aria-label={heading}>
@@ -249,17 +253,17 @@ export function EventInspector({
         />
       </dl>
 
-      {showDecision ? (
-        <div className={styles.decision}>
-          <p className={styles.decisionNote}>{decisionHint}</p>
-          <Button
-            variant="secondary"
-            to={`/matches/${matchId}/decisions/${event.id}`}
-          >
-            {decisionCta}
-          </Button>
-        </div>
-      ) : null}
+      <div className={styles.decision}>
+        <p className={styles.decisionNote}>
+          {decisionCandidate ? decisionHint : briefingHint}
+        </p>
+        <Button
+          variant="secondary"
+          to={`/matches/${matchId}/decisions/${event.id}`}
+        >
+          {decisionCandidate ? decisionCta : briefingCta}
+        </Button>
+      </div>
     </section>
   )
 }

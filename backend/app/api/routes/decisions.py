@@ -7,8 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db_dep
+from app.schemas.ask import AskRequest, AskResponse
 from app.schemas.common import ErrorResponse
 from app.schemas.match_intelligence import MatchIntelligenceNarrativeResponseSchema
+from app.schemas.event_intelligence import EventIntelligenceSchema
 from app.schemas.decision import (
     ClaimVerificationRequest,
     ClaimVerificationResponseSchema,
@@ -16,6 +18,7 @@ from app.schemas.decision import (
     EvidenceBundleSchema,
     EvidenceReferenceSchema,
 )
+from app.services.ask import answer_ask
 from app.services.decision import (
     EventNotFoundError,
     InsufficientEvidenceError,
@@ -25,6 +28,7 @@ from app.services.decision import (
     evidence_to_schema,
 )
 from app.services.decision.evidence import Claim, EvidenceReference, verify_claims
+from app.services.event_intelligence import build_event_intelligence
 from app.services.match_intelligence import build_match_intelligence_narrative
 from app.services.operational_metrics import MetricOperation, record_operation
 
@@ -126,6 +130,38 @@ def _recorded_operation(
     return response
 
 
+@router.post(
+    "/{match_id}/ask",
+    response_model=AskResponse,
+    responses={
+        404: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+    },
+)
+def post_match_ask(
+    match_id: MatchIdPath,
+    body: AskRequest,
+    db: Annotated[Session, Depends(get_db_dep)],
+) -> AskResponse:
+    """Grounded Ask-the-Crew answers for Match Studio.
+
+    Routes greetings and capability questions to honest scope messages. Routes
+    decision narratives and evidence checks through Decision + Verifier +
+    Narrator. Local event facts come from the selected event record. Optional
+    Gemini enrichment is only used via the existing event-intelligence path
+    when a non-decision (or fallback) briefing is required. Never invents
+    match facts or accepts unrestricted chat.
+    """
+    try:
+        return _recorded_operation(
+            db,
+            operation="analysis",
+            execute=lambda: answer_ask(db, match_id, body),
+        )
+    except (MatchNotFoundError, EventNotFoundError, InsufficientEvidenceError) as exc:
+        raise _http_for_engine(exc) from None
+
+
 @router.get(
     "/{match_id}/events/{event_id}/decision-analysis",
     response_model=DecisionAnalysisSchema,
@@ -171,6 +207,34 @@ def get_decision_narrative(
             execute=lambda: build_match_intelligence_narrative(db, match_id, event_id),
         )
     except (MatchNotFoundError, EventNotFoundError, InsufficientEvidenceError) as exc:
+        raise _http_for_engine(exc) from None
+
+
+@router.get(
+    "/{match_id}/events/{event_id}/event-intelligence",
+    response_model=EventIntelligenceSchema,
+    responses={
+        404: {"model": ErrorResponse},
+    },
+)
+def get_event_intelligence(
+    match_id: MatchIdPath,
+    event_id: EventIdPath,
+    db: Annotated[Session, Depends(get_db_dep)],
+) -> EventIntelligenceSchema:
+    """Evidence-grounded briefing for any event type.
+
+    Uses deterministic templates, optionally enriched by a server-side LLM when
+    configured. Never invents statistics; ``llmConnected`` reflects a real
+    successful provider call only.
+    """
+    try:
+        return _recorded_operation(
+            db,
+            operation="analysis",
+            execute=lambda: build_event_intelligence(db, match_id, event_id),
+        )
+    except (MatchNotFoundError, EventNotFoundError) as exc:
         raise _http_for_engine(exc) from None
 
 

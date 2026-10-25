@@ -3,78 +3,58 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  min-height: 128px;
-  padding: var(--space-5);
+  min-height: 7rem;
+  height: 100%;
+  padding: var(--space-4);
   overflow: hidden;
-  background:
-    linear-gradient(145deg, rgba(107, 189, 69, 0.05), transparent 42%),
-    var(--plate);
-  border: 1px solid rgba(11, 15, 12, 0.06);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-plate);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   text-align: start;
-  transition:
-    transform var(--duration-normal) var(--ease-out),
-    box-shadow var(--duration-normal) var(--ease-out),
-    border-color var(--duration-normal) var(--ease-out);
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  inset-inline: 18% 35%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--lime), transparent);
-  opacity: 0.7;
-}
-
-.card::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--lime-hot), var(--lime-deep));
+  transition: background var(--duration-fast) var(--ease-out);
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(107, 189, 69, 0.28);
-  box-shadow: var(--shadow-lift);
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .labelRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-2);
+  min-height: 1.5rem;
 }
 
 .label {
   color: var(--ink-3);
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 10px;
+  font-weight: 750;
   font-stretch: 70%;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+  line-height: 1.3;
 }
 
 .value {
   position: relative;
   z-index: 1;
   margin-top: auto;
-  font-size: 2.35rem;
+  font-size: 1.85rem;
   font-weight: 800;
-  font-stretch: 118%;
+  font-stretch: 115%;
   font-style: italic;
-  letter-spacing: -0.02em;
-  line-height: 0.94;
+  letter-spacing: -0.025em;
+  line-height: 1;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
 
 .hint {
-  font-size: 0.78rem;
+  min-height: 2.1rem;
+  font-size: 0.7rem;
+  line-height: 1.4;
   color: var(--ink-3);
 }

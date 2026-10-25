@@ -136,6 +136,11 @@ export interface LocalizedNarrative {
   headline: string
   keyObservations: string[]
   limitations: string[]
+  /** Progressive-disclosure sections (empty when not composed). */
+  whatHappened?: string[]
+  whyItMattered?: string[]
+  whatCouldHaveHappened?: string[]
+  analysisMethod?: string
 }
 
 /** Bilingual deterministic narrative payload nested in the composed response. */

@@ -98,6 +98,8 @@ The Container Apps free grants are subscription-level allowances, not a zero-cos
    ```
 
    If Azure cannot create the ACR pull role assignment automatically, assign only the app identity's `AcrPull` role on this registry before continuing. In the Azure Portal, add ACA secret `api-bearer-token` using the local token, then configure container environment variable `API_BEARER_TOKEN` as a secret reference to it. Do not paste the token into chat, YAML, Docker build arguments, Git, logs, or a normal environment value. Keep ingress disabled until that secret reference is configured.
+
+   Optional Gemini event-intelligence enrichment (server-side only): add ACA secret `gemini-api-key`, then set env `GEMINI_API_KEY` as a secret reference plus `LLM_ENABLED=true`, `LLM_PROVIDER=gemini`, and optional `GEMINI_MODEL=gemini-3.5-flash-lite`. Never put `GEMINI_API_KEY` in the frontend, image layers, or plaintext YAML. The API boots without Gemini when enrichment is left disabled.
 6. Replace the image placeholder in `backend/containerapp.yaml` with `$image`, then apply the YAML to set external HTTPS ingress, scale limits, and TCP probes:
 
    ```powershell

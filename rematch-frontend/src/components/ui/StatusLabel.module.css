@@ -1,13 +1,16 @@
 .label {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-1);
-  padding: 0.28rem 0.55rem;
+  min-height: 1.5rem;
+  padding: 0 0.55rem;
   border: 0;
+  box-sizing: border-box;
   font-size: 10px;
   font-weight: 780;
   font-stretch: 75%;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
   white-space: nowrap;
   clip-path: var(--cut);
@@ -26,8 +29,8 @@
 }
 
 .live .dot {
+  background: var(--flare);
   animation: pulse 1.2s steps(2, jump-none) infinite;
-  box-shadow: 0 0 0 0 rgba(255, 83, 64, 0.45);
 }
 
 .finished {
@@ -42,7 +45,7 @@
 
 .demo {
   color: var(--color-demo);
-  background: var(--color-demo-bg);
+  background: var(--signal-wash);
   text-transform: none;
   letter-spacing: 0.01em;
   font-weight: 550;
@@ -51,8 +54,29 @@
   border-radius: var(--radius-sm);
 }
 
+:global([data-status='live']) .demo {
+  color: var(--signal);
+  background: rgba(240, 180, 41, 0.16);
+}
+
+:global([data-status='live']) .finished {
+  color: var(--cream-mute);
+  background: rgba(241, 244, 237, 0.08);
+}
+
+:global([data-status='live']) .live {
+  color: #ffb4a8;
+  background: rgba(255, 83, 64, 0.2);
+}
+
 @keyframes pulse {
   50% {
-    opacity: 0.2;
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live .dot {
+    animation: none;
   }
 }

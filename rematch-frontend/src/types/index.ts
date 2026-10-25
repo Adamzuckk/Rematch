@@ -72,3 +72,18 @@ export type {
   MatchIntelligence,
   MatchIntelligenceKeyMoment,
 } from './matchIntelligence'
+export type {
+  EvidenceTier,
+  EvidenceStatement,
+  EventIntelligence,
+} from './eventIntelligence'
+export type {
+  AskStatus,
+  AskIntent,
+  AskFactClass,
+  AskLanguage,
+  AskRequest,
+  AskAnswerBody,
+  AskEvidenceRef,
+  AskResponse,
+} from './ask'
