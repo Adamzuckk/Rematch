@@ -169,42 +169,210 @@ export function DashboardPage() {
   return (
     <div className={styles.page}>
       <header className={styles.hero}>
-        <div className={styles.heroGlow} aria-hidden="true" />
-        <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>
-            <span className={styles.eyebrowMark} aria-hidden="true" />
-            {t('dashboardEyebrow')}
-          </p>
-          <h1 className={styles.title}>
-            {t('dashboardTitle')}{' '}
-            <span className={styles.titleAccent}>{t('dashboardTitleAccent')}</span>
-          </h1>
-          <p className={styles.intro}>{t('dashboardIntro')}</p>
-          {isReady ? (
-            <p className={styles.seed}>
-              {t('dashboardSeed')}: {ready.dataset.scenarioId} ·{' '}
-              {t('dashboardProvenance')}: {ready.dataset.provenance}
-            </p>
-          ) : null}
+        <div className={styles.heroStage} aria-hidden="true">
+          <div className={styles.heroVoid} />
+          <div className={styles.heroGrid} />
+          <div className={styles.heroScan} />
+          <div className={styles.heroBloom} />
+          <div className={styles.heroSlice} />
+          <svg className={styles.decisionGraph} viewBox="0 0 640 420" fill="none">
+            <defs>
+              <linearGradient id="dashPathObserved" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#82d45c" stopOpacity="0.15" />
+                <stop offset="55%" stopColor="#6bbd45" stopOpacity="0.95" />
+                <stop offset="100%" stopColor="#82d45c" stopOpacity="0.35" />
+              </linearGradient>
+              <linearGradient id="dashPathAlt" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#4eb3d8" stopOpacity="0.1" />
+                <stop offset="100%" stopColor="#4eb3d8" stopOpacity="0.75" />
+              </linearGradient>
+              <linearGradient id="dashPathHot" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0%" stopColor="#f0b429" stopOpacity="0.1" />
+                <stop offset="100%" stopColor="#f0b429" stopOpacity="0.85" />
+              </linearGradient>
+              <filter id="dashGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {/* Pitch frame */}
+            <rect
+              x="48"
+              y="36"
+              width="544"
+              height="348"
+              rx="18"
+              stroke="rgba(241,244,237,0.14)"
+              strokeWidth="1.5"
+            />
+            <line
+              x1="320"
+              y1="36"
+              x2="320"
+              y2="384"
+              stroke="rgba(241,244,237,0.1)"
+              strokeWidth="1"
+            />
+            <circle
+              cx="320"
+              cy="210"
+              r="54"
+              stroke="rgba(241,244,237,0.12)"
+              strokeWidth="1"
+            />
+            <circle cx="320" cy="210" r="3" fill="rgba(241,244,237,0.35)" />
+
+            {/* Alternative lanes */}
+            <path
+              className={styles.pathAlt}
+              d="M168 248 C 240 210, 300 148, 392 118"
+              stroke="url(#dashPathAlt)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray="6 10"
+            />
+            <path
+              className={styles.pathHot}
+              d="M168 248 C 250 268, 330 292, 424 306"
+              stroke="url(#dashPathHot)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeDasharray="5 9"
+            />
+            <path
+              className={styles.pathObserved}
+              d="M168 248 C 250 236, 340 214, 448 188"
+              stroke="url(#dashPathObserved)"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              filter="url(#dashGlow)"
+            />
+
+            {/* Carrier */}
+            <circle
+              className={styles.carrierRing}
+              cx="168"
+              cy="248"
+              r="22"
+              stroke="rgba(107,189,69,0.45)"
+              strokeWidth="1.5"
+            />
+            <circle cx="168" cy="248" r="9" fill="#6bbd45" filter="url(#dashGlow)" />
+            <circle className={styles.ballPulse} cx="168" cy="248" r="3.5" fill="#f1f4ed" />
+
+            {/* Option nodes */}
+            <g className={styles.nodeAlt}>
+              <circle cx="392" cy="118" r="11" fill="#0a0e0c" stroke="#4eb3d8" strokeWidth="2" />
+              <text x="412" y="114" className={styles.graphLabel}>
+                +2.4
+              </text>
+              <text x="412" y="130" className={styles.graphMeta}>
+                ALT · 01
+              </text>
+            </g>
+            <g className={styles.nodeHot}>
+              <circle cx="424" cy="306" r="11" fill="#0a0e0c" stroke="#f0b429" strokeWidth="2" />
+              <text x="444" y="302" className={styles.graphLabel}>
+                +1.1
+              </text>
+              <text x="444" y="318" className={styles.graphMeta}>
+                ALT · 02
+              </text>
+            </g>
+            <g className={styles.nodeObserved}>
+              <circle cx="448" cy="188" r="13" fill="#6bbd45" />
+              <circle cx="448" cy="188" r="4" fill="#071008" />
+              <text x="470" y="184" className={styles.graphLabelHot}>
+                OBS
+              </text>
+              <text x="470" y="200" className={styles.graphMeta}>
+                14.1 · R3
+              </text>
+            </g>
+
+            {/* AI scan reticule */}
+            <g className={styles.reticule}>
+              <circle
+                cx="320"
+                cy="210"
+                r="118"
+                stroke="rgba(107,189,69,0.18)"
+                strokeWidth="1"
+                strokeDasharray="3 14"
+              />
+              <path
+                d="M320 78 L328 94 L312 94 Z"
+                fill="rgba(107,189,69,0.55)"
+              />
+            </g>
+          </svg>
         </div>
 
-        <div className={styles.heroAside}>
-          {isReady ? (
-            <div className={styles.heroReadout} aria-label={t('dashboardCatalogueReadout')}>
-              <span className={styles.readoutValue}>{ready.totalCount}</span>
-              <div className={styles.readoutCopy}>
-                <span className={styles.readoutLabel}>{t('dashboardCatalogueReadout')}</span>
-                <span className={styles.readoutSub}>{t('dashboardEvidenceFirst')}</span>
-              </div>
+        <div className={styles.heroContent}>
+          <div className={styles.heroCopy}>
+            <p className={styles.brandLockup}>
+              <span className={styles.brandMark} />
+              <span className={styles.brandName}>{t('appName')}</span>
+              <span className={styles.brandSlash} aria-hidden="true">
+                /
+              </span>
+              <span className={styles.brandSignal}>{t('dashboardEvidenceFirst')}</span>
+            </p>
+            <p className={styles.eyebrow}>
+              <span className={styles.eyebrowMark} aria-hidden="true" />
+              {t('dashboardEyebrow')}
+            </p>
+            <h1 className={styles.title}>
+              {t('dashboardTitle')}{' '}
+              <span className={styles.titleAccent}>{t('dashboardTitleAccent')}</span>
+            </h1>
+            <p className={styles.intro}>{t('dashboardIntro')}</p>
+            <div className={styles.heroMeta}>
+              {isReady ? (
+                <p className={styles.seed}>
+                  {t('dashboardSeed')}: {ready.dataset.scenarioId} ·{' '}
+                  {t('dashboardProvenance')}: {ready.dataset.provenance}
+                </p>
+              ) : null}
+              {isReady ? (
+                <div
+                  className={styles.heroReadout}
+                  aria-label={t('dashboardCatalogueReadout')}
+                >
+                  <span className={styles.readoutValue}>{ready.totalCount}</span>
+                  <div className={styles.readoutCopy}>
+                    <span className={styles.readoutLabel}>
+                      {t('dashboardCatalogueReadout')}
+                    </span>
+                    <span className={styles.readoutSub}>
+                      {t('dashboardEvidenceFirst')}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.heroReadoutGhost} aria-hidden="true" />
+              )}
             </div>
-          ) : (
-            <div className={styles.heroReadoutGhost} aria-hidden="true" />
-          )}
-          <div className={styles.pitchMark} aria-hidden="true">
-            <span className={styles.pitchArc} />
-            <span className={styles.pitchLine} />
-            <span className={styles.pitchDot} />
-            <span className={styles.pitchRunner} />
+          </div>
+
+          <div className={styles.heroAside}>
+            <div className={styles.legend} aria-hidden="true">
+              <span className={styles.legendItem}>
+                <i className={styles.legendObserved} />
+                OBS
+              </span>
+              <span className={styles.legendItem}>
+                <i className={styles.legendAlt} />
+                ALT
+              </span>
+              <span className={styles.legendItem}>
+                <i className={styles.legendScan} />
+                AI
+              </span>
+            </div>
           </div>
         </div>
       </header>

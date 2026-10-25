@@ -5,35 +5,262 @@
   text-align: start;
 }
 
-/* —— Hero masthead —— */
+/* —— Hero: Decision Lens —— */
 .hero {
   position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(13rem, 0.7fr);
-  gap: var(--space-6) var(--space-8);
-  align-items: end;
-  padding: 0 0 var(--space-6);
-  border-bottom: 1px solid rgba(11, 15, 12, 0.08);
+  align-content: start;
+  min-height: clamp(26rem, 58vh, 34rem);
+  padding: clamp(1.35rem, 2.8vw, 2.25rem) clamp(1.25rem, 2.6vw, 2.5rem)
+    clamp(1.25rem, 2.4vw, 2rem);
+  border: 1px solid rgba(241, 244, 237, 0.1);
+  border-radius: var(--radius-xl);
+  box-shadow:
+    var(--shadow-chrome),
+    inset 0 1px 0 rgba(241, 244, 237, 0.06);
+  color: var(--cream);
+  background: var(--void);
 }
 
-.heroGlow {
+.heroStage {
   pointer-events: none;
   position: absolute;
-  inset: -18% -8% auto auto;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.heroVoid {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 62% 58% at 82% 46%, rgba(107, 189, 69, 0.2), transparent 60%),
+    radial-gradient(ellipse 40% 36% at 14% 72%, rgba(78, 179, 216, 0.1), transparent 55%),
+    radial-gradient(ellipse 42% 28% at 36% 0%, rgba(240, 180, 41, 0.07), transparent 55%),
+    linear-gradient(165deg, #070b08 0%, #050706 52%, #0b1310 100%);
+}
+
+.heroGrid {
+  position: absolute;
+  inset: -8% -8% -36% 28%;
+  background-image:
+    linear-gradient(rgba(241, 244, 237, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(241, 244, 237, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 72% at 55% 40%, #000 18%, transparent 74%);
+  transform: perspective(900px) rotateX(58deg) scale(1.28);
+  transform-origin: 50% 0%;
+  opacity: 0.8;
+  animation: hero-grid-drift 22s linear infinite;
+}
+
+.heroScan {
+  position: absolute;
+  inset-inline: 42% 4%;
+  top: -18%;
+  height: 40%;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(107, 189, 69, 0.07),
+    transparent
+  );
+  animation: hero-scan 7.5s var(--ease-in-out) infinite;
+}
+
+.heroBloom {
+  position: absolute;
+  top: 8%;
+  inset-inline-end: 4%;
   width: min(42vw, 22rem);
   height: min(42vw, 22rem);
-  background: radial-gradient(circle, rgba(107, 189, 69, 0.14), transparent 70%);
-  filter: blur(2px);
-  opacity: 0.9;
+  background: radial-gradient(circle, rgba(107, 189, 69, 0.26), transparent 68%);
+  filter: blur(18px);
+  animation: hero-bloom 8s var(--ease-in-out) infinite alternate;
+}
+
+.heroSlice {
+  position: absolute;
+  top: 22%;
+  inset-inline: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 8%,
+    rgba(107, 189, 69, 0.28) 28%,
+    rgba(241, 244, 237, 0.28) 48%,
+    rgba(78, 179, 216, 0.35) 70%,
+    transparent 94%
+  );
+  opacity: 0.65;
+  animation: hero-slice 5.5s var(--ease-in-out) infinite alternate;
+}
+
+.decisionGraph {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: clamp(0.5rem, 2vw, 1.75rem);
+  width: min(52%, 34rem);
+  height: auto;
+  max-height: 88%;
+  transform: translateY(-50%);
+  opacity: 0.94;
+  filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.42));
+}
+
+.pathObserved,
+.pathAlt,
+.pathHot {
+  stroke-dashoffset: 0;
+}
+
+.pathObserved {
+  animation: path-draw 3.8s var(--ease-out) infinite alternate;
+}
+
+.pathAlt {
+  animation: path-dash 4.6s linear infinite;
+}
+
+.pathHot {
+  animation: path-dash 5.2s linear infinite reverse;
+}
+
+.carrierRing {
+  transform-origin: 168px 248px;
+  animation: carrier-pulse 2.8s var(--ease-in-out) infinite;
+}
+
+.ballPulse {
+  animation: ball-glow 1.8s var(--ease-in-out) infinite;
+}
+
+.reticule {
+  transform-origin: 320px 210px;
+  animation: reticule-spin 28s linear infinite;
+}
+
+.nodeObserved,
+.nodeAlt,
+.nodeHot {
+  animation: node-breathe 3.4s var(--ease-in-out) infinite;
+}
+
+.nodeAlt {
+  animation-delay: 0.4s;
+}
+
+.nodeHot {
+  animation-delay: 0.8s;
+}
+
+.graphLabel,
+.graphLabelHot,
+.graphMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.graphLabel {
+  fill: rgba(241, 244, 237, 0.78);
+  font-weight: 600;
+}
+
+.graphLabelHot {
+  fill: #82d45c;
+  font-weight: 700;
+}
+
+.graphMeta {
+  fill: rgba(241, 244, 237, 0.42);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(11rem, 0.92fr);
+  gap: clamp(1rem, 2.5vw, 2rem) clamp(1.25rem, 3vw, 2.75rem);
+  align-items: start;
+  align-self: start;
+  width: 100%;
+  max-width: 100%;
 }
 
 .heroCopy {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  max-width: 40rem;
+  align-items: flex-start;
+  gap: 0.7rem;
+  max-width: 34rem;
+  padding: 0.15rem 0.85rem 0.35rem 0.1rem;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    115deg,
+    rgba(5, 7, 6, 0.72) 0%,
+    rgba(5, 7, 6, 0.42) 42%,
+    rgba(5, 7, 6, 0.08) 78%,
+    transparent 100%
+  );
+  backdrop-filter: blur(8px);
+}
+
+.brandLockup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.65rem;
+  margin: 0;
+  animation: hero-rise 700ms var(--ease-out) both;
+}
+
+.brandMark {
+  position: relative;
+  top: 0.12em;
+  flex: 0 0 auto;
+  width: 0.72rem;
+  height: 0.72rem;
+  background: linear-gradient(135deg, var(--lime-hot), var(--lime-deep));
+  clip-path: var(--cut-sharp);
+  box-shadow:
+    0 0 0 3px rgba(107, 189, 69, 0.18),
+    0 0 24px rgba(107, 189, 69, 0.45);
+  animation: brand-pulse 2.6s var(--ease-in-out) infinite;
+}
+
+.brandName {
+  font-size: clamp(2.1rem, 4.6vw, 3.35rem);
+  font-weight: 860;
+  font-stretch: 124%;
+  font-style: italic;
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: var(--cream);
+  text-shadow: 0 0 42px rgba(107, 189, 69, 0.28);
+}
+
+.brandSlash {
+  color: rgba(107, 189, 69, 0.7);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 300;
+  line-height: 1;
+  transform: translateY(-0.12em);
+}
+
+.brandSignal {
+  align-self: center;
+  color: var(--cream-mute);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .eyebrow {
@@ -41,113 +268,142 @@
   align-items: center;
   gap: var(--space-2);
   width: fit-content;
-  color: var(--lime-deep);
-  font-size: 11px;
+  margin: 0.15rem 0 0;
+  color: var(--lime-hot);
+  font-size: 10px;
   font-weight: 750;
   font-stretch: 70%;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  animation: hero-rise 700ms var(--ease-out) 80ms both;
 }
 
 .eyebrowMark {
-  width: 0.45rem;
-  height: 0.45rem;
+  width: 0.4rem;
+  height: 0.4rem;
   background: var(--lime);
   clip-path: var(--cut-sharp);
   box-shadow: 0 0 0 3px var(--lime-wash);
 }
 
 .title {
-  max-width: 12ch;
-  font-size: clamp(2.5rem, 5.5vw, 3.75rem);
-  font-weight: 800;
-  font-stretch: 118%;
+  max-width: 10ch;
+  margin: 0;
+  font-size: clamp(1.85rem, 3.8vw, 2.65rem);
+  font-weight: 780;
+  font-stretch: 112%;
   font-style: italic;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
+  line-height: 0.92;
+  letter-spacing: -0.028em;
   text-transform: uppercase;
-  color: var(--ink);
+  color: var(--cream);
+  animation: hero-rise 750ms var(--ease-out) 120ms both;
 }
 
 .titleAccent {
   font-weight: 300;
-  font-stretch: 118%;
-  color: var(--ink-3);
+  font-stretch: 112%;
+  color: rgba(241, 244, 237, 0.4);
 }
 
 .intro {
-  max-width: 34rem;
-  color: var(--ink-2);
-  font-size: 15px;
-  line-height: 1.6;
+  max-width: 30rem;
+  margin: 0.1rem 0 0;
+  color: var(--cream-dim);
+  font-size: clamp(0.88rem, 1.15vw, 0.95rem);
+  line-height: 1.58;
+  animation: hero-rise 800ms var(--ease-out) 180ms both;
+}
+
+.heroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 32rem;
+  margin-top: 0.55rem;
+  animation: hero-rise 850ms var(--ease-out) 220ms both;
 }
 
 .seed {
   display: inline-flex;
+  align-items: center;
   width: fit-content;
   max-width: 100%;
-  margin-top: var(--space-1);
-  padding: 0.4rem 0.7rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
   color: var(--cream-dim);
-  background: var(--void-2);
-  border: 1px solid rgba(241, 244, 237, 0.08);
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(241, 244, 237, 0.12);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
+  line-height: 1.35;
   overflow-wrap: anywhere;
 }
 
 .heroAside {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: var(--space-3);
-  align-content: end;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding-top: 0.15rem;
+  animation: hero-rise 900ms var(--ease-out) 160ms both;
 }
 
 .heroReadout {
   display: flex;
+  flex: 1 1 12rem;
   align-items: center;
-  gap: var(--space-3);
-  min-height: 3.75rem;
-  padding: var(--space-3) var(--space-4);
-  background: var(--void);
-  border: 1px solid rgba(241, 244, 237, 0.1);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  gap: 0.7rem;
+  min-height: 3.35rem;
+  min-width: 0;
+  padding: 0.65rem 0.85rem;
+  background: rgba(10, 14, 12, 0.78);
+  border: 1px solid rgba(107, 189, 69, 0.35);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 0 0 1px rgba(107, 189, 69, 0.08),
+    0 12px 28px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
 }
 
 .heroReadoutGhost {
-  min-height: 3.75rem;
-  background: rgba(11, 15, 12, 0.04);
-  border-radius: var(--radius-lg);
+  flex: 1 1 12rem;
+  min-height: 3.35rem;
+  background: rgba(241, 244, 237, 0.04);
+  border: 1px solid rgba(241, 244, 237, 0.08);
+  border-radius: var(--radius-md);
 }
 
 .readoutValue {
   display: grid;
-  min-width: 2.4rem;
-  height: 2.4rem;
+  flex: 0 0 auto;
+  min-width: 2.3rem;
+  height: 2.3rem;
   place-items: center;
   color: var(--lime-ink);
   background: linear-gradient(135deg, var(--lime-hot), var(--lime));
   border-radius: var(--radius-sm);
-  font-size: 1rem;
+  clip-path: var(--cut-sharp);
+  font-size: 0.95rem;
   font-weight: 800;
   font-style: italic;
   font-stretch: 110%;
   font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 20px rgba(107, 189, 69, 0.32);
 }
 
 .readoutCopy {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.12rem;
   min-width: 0;
 }
 
 .readoutLabel {
   color: var(--cream);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 750;
   font-stretch: 72%;
   letter-spacing: 0.1em;
@@ -156,64 +412,56 @@
 
 .readoutSub {
   color: var(--cream-mute);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   font-stretch: 80%;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-.pitchMark {
-  position: relative;
-  min-height: 5.5rem;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 72% 34%, rgba(107, 189, 69, 0.16), transparent 46%),
-    linear-gradient(155deg, #101912, #050706 62%);
-  border: 1px solid rgba(241, 244, 237, 0.08);
-  border-radius: var(--radius-lg);
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  max-width: 14rem;
 }
 
-.pitchArc {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 38%;
-  aspect-ratio: 1;
-  border: 1px solid rgba(241, 244, 237, 0.14);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.55rem;
+  color: var(--cream-mute);
+  background: rgba(5, 7, 6, 0.55);
+  border: 1px solid rgba(241, 244, 237, 0.12);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.12em;
 }
 
-.pitchLine {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 50%;
-  width: 1px;
-  background: rgba(241, 244, 237, 0.12);
-}
-
-.pitchDot {
-  position: absolute;
-  top: 48%;
-  left: 44%;
-  width: 0.45rem;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: var(--lime);
-  box-shadow: 0 0 0 0.15rem var(--lime-wash);
-  animation: pitch-ball 6s var(--ease-in-out) infinite alternate;
-}
-
-.pitchRunner {
-  position: absolute;
-  top: 32%;
-  left: 30%;
+.legendItem i {
   width: 0.4rem;
-  aspect-ratio: 1;
+  height: 0.4rem;
   border-radius: 50%;
+}
+
+.legendObserved {
+  background: var(--lime);
+  box-shadow: 0 0 0 3px var(--lime-wash);
+}
+
+.legendAlt {
   background: var(--sky);
-  animation: pitch-runner 7s var(--ease-in-out) infinite alternate;
+  box-shadow: 0 0 0 3px var(--sky-wash);
+}
+
+.legendScan {
+  background: var(--signal);
+  box-shadow: 0 0 0 3px var(--signal-wash);
 }
 
 /* —— Pulse overview —— */
@@ -522,38 +770,156 @@
   animation: loading-ball 1.2s var(--ease-in-out) infinite;
 }
 
-@keyframes pitch-ball {
-  from {
-    transform: translate(0, 0);
-  }
-  to {
-    transform: translate(3.5rem, -1.6rem);
-  }
-}
-
-@keyframes pitch-runner {
-  to {
-    transform: translate(2.4rem, 2rem);
-  }
-}
-
 @keyframes loading-ball {
   50% {
     transform: translateX(1rem) scale(0.75);
   }
 }
 
+@keyframes hero-grid-drift {
+  from {
+    background-position: 0 0, 0 0;
+  }
+  to {
+    background-position: 0 48px, 48px 0;
+  }
+}
+
+@keyframes hero-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  45% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateY(210%);
+    opacity: 0.2;
+  }
+}
+
+@keyframes hero-bloom {
+  from {
+    transform: scale(0.92) translate(0, 0);
+    opacity: 0.65;
+  }
+  to {
+    transform: scale(1.08) translate(-4%, 3%);
+    opacity: 1;
+  }
+}
+
+@keyframes hero-slice {
+  from {
+    transform: translateX(-2%);
+    opacity: 0.45;
+  }
+  to {
+    transform: translateX(2%);
+    opacity: 0.9;
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes brand-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(107, 189, 69, 0.18),
+      0 0 18px rgba(107, 189, 69, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px rgba(107, 189, 69, 0.28),
+      0 0 32px rgba(107, 189, 69, 0.55);
+  }
+}
+
+@keyframes path-draw {
+  from {
+    stroke-dasharray: 12 220;
+    stroke-dashoffset: 40;
+  }
+  to {
+    stroke-dasharray: 220 12;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes path-dash {
+  to {
+    stroke-dashoffset: -120;
+  }
+}
+
+@keyframes carrier-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+}
+
+@keyframes ball-glow {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes reticule-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes node-breathe {
+  0%,
+  100% {
+    opacity: 0.82;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 1023px) {
   .hero {
+    min-height: min(64vh, 34rem);
+  }
+
+  .heroContent {
     grid-template-columns: 1fr;
   }
 
   .heroAside {
-    max-width: 24rem;
+    max-width: 22rem;
   }
 
-  .pitchMark {
-    min-height: 4.75rem;
+  .decisionGraph {
+    width: min(72%, 28rem);
+    opacity: 0.55;
+    inset-block: auto 0;
+    inset-inline-end: -4%;
+    bottom: -6%;
   }
 
   .pulseRail {
@@ -575,8 +941,26 @@
   }
 
   .hero {
-    padding-bottom: var(--space-5);
+    min-height: auto;
+    padding: 1.25rem 1.1rem 1.4rem;
+  }
+
+  .heroContent {
     gap: var(--space-5);
+  }
+
+  .decisionGraph {
+    width: 120%;
+    opacity: 0.28;
+    inset-inline-end: -28%;
+  }
+
+  .brandName {
+    font-size: clamp(1.7rem, 9vw, 2.35rem);
+  }
+
+  .title {
+    font-size: clamp(2.05rem, 10vw, 2.7rem);
   }
 
   .pulseRail {
@@ -590,10 +974,6 @@
 
   .pulseRail > *:last-child {
     border-bottom: 0;
-  }
-
-  .title {
-    font-size: clamp(2.2rem, 11vw, 2.85rem);
   }
 
   .sectionTitle {
@@ -618,8 +998,36 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pitchDot,
-  .pitchRunner {
+  .heroGrid,
+  .heroScan,
+  .heroBloom,
+  .heroSlice,
+  .pathObserved,
+  .pathAlt,
+  .pathHot,
+  .carrierRing,
+  .ballPulse,
+  .reticule,
+  .nodeObserved,
+  .nodeAlt,
+  .nodeHot,
+  .brandMark,
+  .brandLockup,
+  .eyebrow,
+  .title,
+  .intro,
+  .seed,
+  .heroAside {
     animation: none;
+  }
+
+  .brandLockup,
+  .eyebrow,
+  .title,
+  .intro,
+  .seed,
+  .heroAside {
+    opacity: 1;
+    transform: none;
   }
 }
