@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, HTTPException, Path, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db_dep
-from app.schemas.ask import AskRequest, AskResponse
 from app.schemas.common import ErrorResponse
 from app.schemas.match_intelligence import MatchIntelligenceNarrativeResponseSchema
 from app.schemas.event_intelligence import EventIntelligenceSchema
@@ -18,7 +17,6 @@ from app.schemas.decision import (
     EvidenceBundleSchema,
     EvidenceReferenceSchema,
 )
-from app.services.ask import answer_ask
 from app.services.decision import (
     EventNotFoundError,
     InsufficientEvidenceError,
@@ -128,38 +126,6 @@ def _recorded_operation(
         verification_statuses=_verification_statuses(response),
     )
     return response
-
-
-@router.post(
-    "/{match_id}/ask",
-    response_model=AskResponse,
-    responses={
-        404: {"model": ErrorResponse},
-        422: {"model": ErrorResponse},
-    },
-)
-def post_match_ask(
-    match_id: MatchIdPath,
-    body: AskRequest,
-    db: Annotated[Session, Depends(get_db_dep)],
-) -> AskResponse:
-    """Grounded Ask-the-Crew answers for Match Studio.
-
-    Routes greetings and capability questions to honest scope messages. Routes
-    decision narratives and evidence checks through Decision + Verifier +
-    Narrator. Local event facts come from the selected event record. Optional
-    Gemini enrichment is only used via the existing event-intelligence path
-    when a non-decision (or fallback) briefing is required. Never invents
-    match facts or accepts unrestricted chat.
-    """
-    try:
-        return _recorded_operation(
-            db,
-            operation="analysis",
-            execute=lambda: answer_ask(db, match_id, body),
-        )
-    except (MatchNotFoundError, EventNotFoundError, InsufficientEvidenceError) as exc:
-        raise _http_for_engine(exc) from None
 
 
 @router.get(

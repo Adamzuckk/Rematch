@@ -1,5 +1,7 @@
 # LIVE / ASK Tabs Report
 
+> Historical report: its proposed `/api/v1/matches/{match_id}/ask` path is not active. Ask-the-Agent/Analyst now uses the Azure Function `/api/orchestrate`; see `AGENTS_INTEGRATION_STATUS.md`.
+
 **Date:** 2026-10-24  
 **Workspace:** `/home/0xNajjar/Desktop/Rematch` (Linux checkout of Rematch-main)  
 **Scope:** Match Studio LIVE + ASK tabs on the match analysis page  

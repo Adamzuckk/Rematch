@@ -296,31 +296,6 @@ Runs Match Intelligence once, retains that analysis's in-memory evidence catalog
 
 The response contains `matchId`, `eventId`, `provenance`, the unchanged `analysis` object, native Agent 3 `verificationResults`, and `narrative` with English and Arabic headline, observations, and limitations. Each verification result keeps `evidenceValidationStatus` separate from `claimSupportStatus`, which is always `not_assessed`. The analysis's legacy claim statuses describe evidence validation; neither they nor valid references prove natural-language truth. The route is read-only and has the same 404 and 422 analysis error behavior.
 
-### `POST /api/v1/matches/{match_id}/ask`
-
-Grounded Ask-the-Crew endpoint for Match Studio. Request body:
-
-```json
-{
-  "question": "string (1–500, trimmed)",
-  "eventId": "string | null",
-  "language": "en | ar",
-  "clientRequestId": "string | null"
-}
-```
-
-Routes intents without inventing match facts:
-
-| Intent | Behavior |
-|--------|----------|
-| Greeting / help | Capability explanation (`status: answered`, `factClasses` includes `capability`) |
-| Local facts | Selected event + roster fields only |
-| Narrative / why | Decision + Verifier + Narrator for pass/shot/carry; otherwise event-intelligence briefing (optional Gemini enrichment only on that established path) |
-| Verification | Decision + Verifier + Narrator evidence checks |
-| What-if / tactics / other free-form | Explicit `unsupported` / `unavailable` with bilingual limitations |
-
-Response includes bilingual `answer`, `status`, `intent`, `evidence`, `factClasses`, optional `verificationResults`, and `reason`. This is **not** unrestricted AI chat.
-
 ---
 
 ## Provenance

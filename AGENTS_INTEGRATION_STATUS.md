@@ -2,6 +2,8 @@
 
 ## Verified findings
 
+> The original website-integration notes below were written before the chat integration. Current chat wiring is summarized here; older statements about there being no question endpoint are historical.
+
 The repository contains three local, deterministic components described as agents:
 
 | Component | Implementation | Verified behavior |
@@ -12,23 +14,13 @@ The repository contains three local, deterministic components described as agent
 
 `build_match_intelligence_narrative` in `backend/app/services/match_intelligence.py` composes these components for `GET /api/v1/matches/{match_id}/events/{event_id}/decision-analysis/narrative`. It invokes the decision analysis, passes its real evidence catalog to the verifier, and passes the assembled truth pack to the Narrator. This is a working local composition, but there is no separately named Orchestrator service, background workflow, streaming protocol, or generic question-answering endpoint.
 
-Optional **server-side** LLM enrichment for `GET .../event-intelligence` lives in `backend/app/services/llm/`. Providers include OpenAI-compatible HTTP APIs and Google Gemini (`LLM_PROVIDER=gemini` with `GEMINI_API_KEY` via the official `google-genai` SDK). It is disabled unless `LLM_ENABLED=true` and provider secrets are configured on the API host. Decision Explorer Fan/Analyst briefings use this path; Ask Agents remains the deterministic decision + Narrator + verifier composition. `llmConnected` is true only after a validated provider response; failures keep the deterministic briefing. Keys must never appear in the frontend. See `docs/llm-provider.md`.
+Optional **server-side** LLM enrichment for `GET .../event-intelligence` lives in `backend/app/services/llm/`. Providers include OpenAI-compatible HTTP APIs and Google Gemini (`LLM_PROVIDER=gemini` with `GEMINI_API_KEY` via the official `google-genai` SDK). It is disabled unless `LLM_ENABLED=true` and provider secrets are configured on the API host. This event-intelligence enrichment is separate from chat. All user-facing Ask-the-Analyst / Ask-the-Agent messages go through `rematch-frontend/src/services/orchestrator/orchestratorClient.ts` to the Azure Function `/api/orchestrate`; the obsolete backend `/api/v1/matches/{match_id}/ask` endpoint and service have been removed. No Gemini/OpenAI key or direct provider call is present in frontend runtime code. Keys must never appear in the frontend. See `docs/llm-provider.md`.
 
 Microsoft Foundry material remains documentation and an OpenAPI export for an **external** agent that calls Rematch tools. That path is separate from in-process enrichment.
 
 ## Website integration
 
-The frontend already has the typed `MatchService.getDecisionNarrative` API boundary and `useDecisionNarrative` hook. The Decision Explorer now exposes it as an explicit **Ask the agents** action for the selected match event:
-
-- The action requests only the existing composed narrative endpoint.
-- It does not accept arbitrary questions or create a free-form chat surface because the backend has no such workflow.
-- It shows loading only while that request is pending.
-- It shows the backend-returned local narrative and evidence-validation results on success.
-- It marks a result partial only when the returned analysis completeness is not `complete` or a returned evidence-validation status is not `verified`.
-- It surfaces backend unavailability and request errors without mock fallback; errors can be retried.
-- Static mock mode remains explicitly unavailable because it has no backend-composed narrative.
-
-No browser credential handling was added. The website can call this workflow in the existing API mode when the API is safely reachable without exposing a privileged bearer token. A bearer-protected remote API needs a server-side authenticated proxy/session boundary before browser integration; placing `API_BEARER_TOKEN` in Vite configuration or browser code would be unsafe.
+The Decision Explorer also has a free-form **Ask the Analyst** chat. Its only chat transport is `rematch-frontend/src/services/orchestrator/orchestratorClient.ts`, which calls the Azure Function `POST /api/orchestrate`; the Function obtains a Managed Identity token and calls Foundry server-side. The legacy backend `/api/v1/matches/{match_id}/ask` route was removed. The browser sends only the user's message and current match/event IDs, and has no provider credentials. Match scores and narrative data continue to come from the existing backend APIs; there is no local chat-answer fallback.
 
 ## Changed files
 
@@ -59,6 +51,4 @@ The backend run reports one existing FastAPI/Starlette TestClient deprecation wa
 
 ## Limitations and next required step
 
-The current feature is an event-scoped deterministic composition, not conversational AI and not an externally hosted multi-agent runtime. There is no endpoint that accepts an arbitrary user question, no external-agent execution to monitor, and no named orchestrator to display.
-
-If arbitrary authenticated remote access is required, the smallest safe next step is a backend-owned authenticated session/proxy endpoint that authorizes the user and invokes the existing composed workflow without ever sending the API bearer token to the browser. Any broader question-answering capability would first require a new backend contract defining allowed inputs, evidence grounding, response schema, limits, and failure semantics.
+The backend decision narrative remains a deterministic Match Intelligence, Verifier, and Narrator composition. Chat is handled separately by the Foundry Orchestrator Function; no Foundry call or token is made from frontend runtime code.

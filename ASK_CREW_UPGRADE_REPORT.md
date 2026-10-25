@@ -1,5 +1,7 @@
 # ASK Crew Upgrade Report
 
+> Superseded wiring note: the historical `/api/v1/matches/{match_id}/ask` endpoint described below has been removed. Current Ask-the-Agent/Analyst chat uses the Azure Function `/api/orchestrate` through `orchestratorClient`; this report's proposed endpoint is not an active integration.
+
 **Date:** 2026-10-24  
 **Workspace:** `/home/0xNajjar/Desktop/Rematch` (Linux checkout of Rematch-main)  
 **Scope:** Match Studio ASK tab → “Ask the crew” evidence-grounded assistant UX  

@@ -11,6 +11,10 @@ NORTHGATE = "m-northgate-riverside-2401"
 OAKWOOD = "m-oakwood-silvermere-2403"
 
 
+def test_legacy_chat_endpoint_is_not_exposed(client: TestClient) -> None:
+    assert "/api/v1/matches/{match_id}/ask" not in client.app.openapi()["paths"]
+
+
 def test_decision_analysis_pass(client: TestClient) -> None:
     response = client.get(
         f"/api/v1/matches/{NORTHGATE}/events/evt-ng-pass-12/decision-analysis"

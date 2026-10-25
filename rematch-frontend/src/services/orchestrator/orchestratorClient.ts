@@ -52,11 +52,6 @@ export function extractOrchestratorReply(payload: unknown): string {
   return ''
 }
 
-export function isRetryableOrchestratorError(error: unknown): boolean {
-  if (!(error instanceof OrchestratorClientError)) return true
-  return error.status == null || error.status >= 500
-}
-
 export async function askOrchestrator(
   request: OrchestratorRequest,
 ): Promise<string> {

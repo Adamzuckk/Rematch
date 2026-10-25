@@ -2,7 +2,6 @@ import { cleanup, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FloatingAskChat } from './FloatingAskChat'
-import * as matchServices from '../../services/matches'
 import * as orchestratorClient from '../../services/orchestrator/orchestratorClient'
 import { SYNTHETIC_DECISION_ANALYSES } from '../../mocks/decisionAnalysis'
 import type { DecisionAnalysis } from '../../types'
@@ -89,7 +88,7 @@ describe('FloatingAskChat', () => {
   })
 
   it('keeps analyst conversation while the popup is toggled closed and open', async () => {
-    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    vi.spyOn(orchestratorClient, 'askOrchestrator').mockResolvedValue('Teammates in frame: 10')
     const user = userEvent.setup()
     renderWithProviders(
       <FloatingAskChat
@@ -115,7 +114,7 @@ describe('FloatingAskChat', () => {
   })
 
   it('sends on Enter and inserts a newline on Shift+Enter in analyst mode', async () => {
-    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    vi.spyOn(orchestratorClient, 'askOrchestrator').mockResolvedValue('Decision reply')
     const user = userEvent.setup()
     renderWithProviders(
       <FloatingAskChat
@@ -189,7 +188,7 @@ describe('FloatingAskChat', () => {
     expect(within(panel).queryByText(/invented/i)).not.toBeInTheDocument()
   })
   it('surfaces a context-changed notice when the analyst event id changes', async () => {
-    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    vi.spyOn(orchestratorClient, 'askOrchestrator').mockResolvedValue('Orchestrator help')
     const user = userEvent.setup()
     const { rerender } = renderWithProviders(
       <FloatingAskChat
@@ -205,7 +204,7 @@ describe('FloatingAskChat', () => {
     const panel = screen.getByTestId('floating-ask-panel')
     await user.type(within(panel).getByRole('textbox'), 'help')
     await user.click(within(panel).getByRole('button', { name: STRINGS.en.analystSend }))
-    expect(await within(panel).findByText(STRINGS.en.analystHelp)).toBeInTheDocument()
+    expect(await within(panel).findByText('Orchestrator help')).toBeInTheDocument()
 
     rerender(
       <FloatingAskChat
