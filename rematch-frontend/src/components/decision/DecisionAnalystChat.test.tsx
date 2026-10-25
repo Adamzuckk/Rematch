@@ -147,6 +147,8 @@ describe('DecisionAnalystChat', () => {
     const getNarrative = vi.spyOn(matchServices.matchService, 'getDecisionNarrative').mockResolvedValue(narrativeResponse)
     const user = await openChat()
     await user.click(screen.getByRole('button', { name: STRINGS.en.analystChipVerification }))
+    expect(screen.getByRole('textbox')).toHaveValue(STRINGS.en.analystChipVerification)
+    await user.click(screen.getByRole('button', { name: STRINGS.en.analystSend }))
     expect(await screen.findByText(/claimSupportStatus is not_assessed/)).toBeInTheDocument()
     expect(screen.getByText(/Verification results: 2/)).toBeInTheDocument()
     await askTyped(user, 'are the evidence claims true?')
@@ -162,6 +164,7 @@ describe('DecisionAnalystChat', () => {
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: STRINGS.ar.analystOpen }))
     await user.click(screen.getByRole('button', { name: STRINGS.ar.analystChipSummary }))
+    await user.click(screen.getByRole('button', { name: STRINGS.ar.analystSend }))
     expect(await screen.findByText(/ملخص القرار من الخادم/)).toBeInTheDocument()
     await askTyped(user, 'نتائج التحقق لهذه اللحظة')
     expect(await screen.findByText(/claimSupportStatus هو not_assessed/)).toBeInTheDocument()
@@ -177,6 +180,19 @@ describe('DecisionAnalystChat', () => {
     expect(getAnalysis).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: STRINGS.en.analystChipFrame })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: STRINGS.en.analystCitation })).not.toBeInTheDocument()
+  })
+
+  it('shows a grounded welcome state and can start a fresh conversation', async () => {
+    vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
+    const user = await openChat()
+    expect(screen.getByRole('heading', { name: STRINGS.en.analystWelcome })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: STRINGS.en.analystChipRanking }))
+    expect(screen.getByRole('textbox')).toHaveValue(STRINGS.en.analystChipRanking)
+    await user.click(screen.getByRole('button', { name: STRINGS.en.analystSend }))
+    expect(await screen.findByText(/#1 Alternative One/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: STRINGS.en.analystClear }))
+    expect(screen.getByRole('heading', { name: STRINGS.en.analystWelcome })).toBeInTheDocument()
+    expect(screen.queryByText(/#1 Alternative One/)).not.toBeInTheDocument()
   })
 
   it('keeps limitations short and does not merge duplicate narrative limitations', async () => {

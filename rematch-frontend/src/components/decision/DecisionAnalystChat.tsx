@@ -24,6 +24,12 @@ type ChatMessage = {
   source?: 'analysis' | 'narrative' | 'match'
   showChips?: boolean
 }
+
+function textDirection(text: string, fallback: 'en' | 'ar'): 'rtl' | 'ltr' {
+  if (/[\u0600-\u06FF]/.test(text)) return 'rtl'
+  if (/[A-Za-z]/.test(text)) return 'ltr'
+  return fallback === 'ar' ? 'rtl' : 'ltr'
+}
 type SessionCache = {
   key: string
   analysis?: DecisionAnalysis
@@ -33,7 +39,7 @@ type SessionCache = {
 type Translator = ReturnType<typeof useLocale>['t']
 
 function detectIntent(query: string): Intent {
-  const text = query.trim().toLocaleLowerCase()
+  const text = query.trim().toLocaleLowerCase().normalize('NFKC').replace(/[\u064B-\u065F\u0670]/g, '')
   if (/^(hi|hello|hey|good morning|good afternoon|السلام عليكم|مرحبا|أهلا|اهلا|صباح الخير|مساء الخير)[!?.،\s]*$/.test(text)) return 'greeting'
   if (/alternat|other options|list options|top\s*\d+|البدائل|بدائل|خيارات أخرى|خيارات اخرى/.test(text)) return 'alternatives'
   if (/how many.*(?:players?|teammates?|opponents?|people|in the frame)|number of (?:players?|teammates?|opponents?)|players? (?:here|in the frame)|teammates?|opponents?|frame|completeness|aligned frame|كم لاعب|عدد اللاعبين|اللاعبين|الزملاء|الخصوم|إطار|اطار|اكتمال/.test(text)) return 'frame'
@@ -205,6 +211,18 @@ export function DecisionAnalystChat({
   const sessionCache = useRef<SessionCache>({ key: `${matchId}::${eventId}`, match, analysis: initialAnalysis, narrative: initialNarrative })
   const cacheKey = `${matchId}::${eventId}`
 
+  function clearConversation() {
+    setMessages([])
+    setInput('')
+    setMessageId(0)
+    inputRef.current?.focus()
+  }
+
+  function useStarter(label: string) {
+    setInput(label)
+    inputRef.current?.focus()
+  }
+
   useEffect(() => {
     if (!open) return
     inputRef.current?.focus()
@@ -313,14 +331,13 @@ export function DecisionAnalystChat({
     }
   }
 
-  const starters: { intent: Intent; label: string }[] = [
-    { intent: 'summary', label: t('analystChipSummary') },
-    { intent: 'ranking', label: t('analystChipRanking') },
-    { intent: 'alternatives', label: t('analystChipAlternatives') },
-    { intent: 'match', label: t('analystChipMatch') },
-    { intent: 'frame', label: t('analystChipFrame') },
-    { intent: 'verification', label: t('analystChipVerification') },
-    { intent: 'limitations', label: t('analystChipLimitations') },
+  const starters = [
+    t('analystChipSummary'),
+    t('analystChipRanking'),
+    t('analystChipAlternatives'),
+    t('analystChipFrame'),
+    t('analystChipVerification'),
+    t('analystChipLimitations'),
   ]
   const showChips = messages.length === 0 || messages[messages.length - 1]?.showChips
 
@@ -336,32 +353,50 @@ export function DecisionAnalystChat({
           <aside className={styles.drawer} role="dialog" aria-modal="true" aria-labelledby="decision-analyst-title" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
             <header className={styles.header}>
               <div>
+                <span className={styles.eyebrow}>{t('analystContextLabel')}</span>
                 <h2 id="decision-analyst-title">{t('analystTitle')}</h2>
                 <p>{t('analystSubtitle')}</p>
               </div>
-              <button type="button" className={styles.close} aria-label={t('analystClose')} onClick={() => setOpen(false)}>×</button>
+              <div className={styles.headerActions}>
+                {messages.length > 0 ? <button type="button" className={styles.clear} disabled={loading} onClick={clearConversation}>{t('analystClear')}</button> : null}
+                <button type="button" className={styles.close} aria-label={t('analystClose')} onClick={() => setOpen(false)}>×</button>
+              </div>
             </header>
             <div className={styles.thread} ref={threadRef} aria-live="polite">
+              {messages.length === 0 ? (
+                <section className={styles.welcome} aria-label={t('analystWelcome')}>
+                  <span className={styles.assistantAvatar} aria-hidden="true">✦</span>
+                  <div>
+                    <h3>{t('analystWelcome')}</h3>
+                    <p>{t('analystWelcomeNote')}</p>
+                  </div>
+                </section>
+              ) : null}
               {messages.map((message) => (
-                <div key={message.id} className={`${styles.message} ${message.role === 'user' ? styles.userMessage : styles.assistantMessage}`}>
-                  <p>{message.text}</p>
-                  {message.source ? <a href={message.source === 'match' ? matchRoute : route} className={styles.citation}>{message.source === 'narrative' ? t('analystNarrativeCitation') : message.source === 'match' ? t('analystMatchCitation') : t('analystCitation')}</a> : null}
+                <div key={message.id} className={`${styles.messageRow} ${message.role === 'user' ? styles.userRow : styles.assistantRow}`}>
+                  {message.role === 'assistant' ? <span className={styles.assistantAvatar} aria-hidden="true">✦</span> : null}
+                  <div className={`${styles.message} ${message.role === 'user' ? styles.userMessage : styles.assistantMessage}`}>
+                    <span className={styles.messageLabel}>{message.role === 'user' ? t('analystYou') : t('analystAssistant')}</span>
+                    <p dir={textDirection(message.text, locale)}>{message.text}</p>
+                    {message.source ? <a href={message.source === 'match' ? matchRoute : route} className={styles.citation}>{message.source === 'narrative' ? t('analystNarrativeCitation') : message.source === 'match' ? t('analystMatchCitation') : t('analystCitation')}</a> : null}
+                  </div>
                 </div>
               ))}
               {showChips ? (
-                <div className={styles.starters}>
-                  {starters.map(({ intent, label }) => (
-                    <button key={intent} type="button" disabled={loading} onClick={() => void ask(label, intent)}>{label}</button>
+                <div className={styles.starters} aria-label={t('analystSuggestions')}>
+                  <span>{t('analystSuggestions')}</span>
+                  {starters.map((label) => (
+                    <button key={label} type="button" disabled={loading} onClick={() => useStarter(label)}>{label}</button>
                   ))}
                 </div>
               ) : null}
-              {loading ? <p className={styles.loading} role="status">{t('analystLoading')}</p> : null}
+              {loading ? <div className={styles.loading} role="status"><span className={styles.assistantAvatar} aria-hidden="true">✦</span><span>{t('analystLoading')}</span><span className={styles.typingDots} aria-hidden="true"><i /><i /><i /></span></div> : null}
             </div>
             <form className={styles.composer} onSubmit={(event) => {
               event.preventDefault()
               void ask(input)
             }}>
-              <input ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} placeholder={t('analystPlaceholder')} aria-label={t('analystPlaceholder')} maxLength={500} disabled={loading} />
+              <input ref={inputRef} value={input} onChange={(event) => setInput(event.target.value)} placeholder={t('analystPlaceholder')} aria-label={t('analystPlaceholder')} maxLength={500} disabled={loading} dir={textDirection(input, locale)} />
               <button type="submit" disabled={loading || !input.trim()}>{t('analystSend')}</button>
             </form>
           </aside>
