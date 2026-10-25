@@ -6,6 +6,7 @@ import {
   type KeyboardEvent,
 } from 'react'
 import { matchService } from '../../services/matches'
+import { askOrchestrator, isRetryableOrchestratorError } from '../../services/orchestrator/orchestratorClient'
 import type { DecisionAnalysis, DecisionNarrativeResponse, MatchSummary } from '../../types'
 import type { DecisionNarrativeState } from '../../hooks/useDecisionNarrative'
 import { useLocale } from '../../i18n/useLocale'
@@ -303,39 +304,57 @@ export function DecisionAnalystChat({
     setInput('')
     setLastFailedPrompt(null)
     const intent = forcedIntent ?? detectIntent(question)
-    if (intent === 'greeting' || intent === 'help') {
-      const response = intent === 'greeting' ? t('analystGreeting') : t('analystHelp')
-      setMessages((current) => [
-        ...current,
-        {
-          id: assistantId,
-          role: 'assistant',
-          text: response,
-          showChips: true,
-          createdAt: Date.now(),
-        },
-      ])
-      setMessageId(assistantId)
-      return
-    }
-
-    if (import.meta.env.VITE_MATCH_DATA_SOURCE !== 'api') {
-      setMessages((current) => [
-        ...current,
-        {
-          id: assistantId,
-          role: 'assistant',
-          text: t('analystApiModeRequired'),
-          showChips: true,
-          createdAt: Date.now(),
-        },
-      ])
-      setMessageId(assistantId)
-      return
-    }
-
     setLoading(true)
     try {
+      try {
+        const reply = await askOrchestrator({ message: question, matchId, eventId })
+        setMessages((current) => [
+          ...current,
+          {
+            id: assistantId,
+            role: 'assistant',
+            text: reply,
+            createdAt: Date.now(),
+          },
+        ])
+        setMessageId(assistantId)
+        return
+      } catch (error) {
+        if (!isRetryableOrchestratorError(error)) throw error
+      }
+
+      // Keep the existing deterministic API-backed answer path as an outage fallback.
+      if (intent === 'greeting' || intent === 'help') {
+        const response = intent === 'greeting' ? t('analystGreeting') : t('analystHelp')
+        setMessages((current) => [
+          ...current,
+          {
+            id: assistantId,
+            role: 'assistant',
+            text: response,
+            showChips: true,
+            createdAt: Date.now(),
+          },
+        ])
+        setMessageId(assistantId)
+        return
+      }
+
+      if (import.meta.env.VITE_MATCH_DATA_SOURCE !== 'api') {
+        setMessages((current) => [
+          ...current,
+          {
+            id: assistantId,
+            role: 'assistant',
+            text: t('analystApiModeRequired'),
+            showChips: true,
+            createdAt: Date.now(),
+          },
+        ])
+        setMessageId(assistantId)
+        return
+      }
+
       if (sessionCache.current.key !== cacheKey) {
         sessionCache.current = { key: cacheKey, match, analysis: initialAnalysis, narrative: initialNarrative }
       }
@@ -414,7 +433,7 @@ export function DecisionAnalystChat({
         {
           id: assistantId,
           role: 'assistant',
-          text: t('analystError'),
+          text: t('analystOrchestratorError'),
           showChips: true,
           createdAt: Date.now(),
           retryPrompt: question,
@@ -548,7 +567,7 @@ export function DecisionAnalystChat({
         ) : null}
         {loading ? (
           <div className={styles.loading} role="status">
-            <span>{t('analystLoading')}</span>
+            <span>{t('analystOrchestratorLoading')}</span>
             <span className={styles.typingDots} aria-hidden="true">
               <i />
               <i />

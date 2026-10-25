@@ -84,7 +84,10 @@ const narrativeResponse: DecisionNarrativeResponse = {
 }
 
 describe('DecisionAnalystChat', () => {
-  beforeEach(() => vi.stubEnv('VITE_MATCH_DATA_SOURCE', 'api'))
+  beforeEach(() => {
+    vi.stubEnv('VITE_MATCH_DATA_SOURCE', 'api')
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network unavailable')))
+  })
 
   async function openChat(user = userEvent.setup()) {
     renderWithProviders(
@@ -102,6 +105,51 @@ describe('DecisionAnalystChat', () => {
     if (!send) throw new Error('Send button was not found')
     await user.click(send)
   }
+
+  it('sends free-form chat to the orchestrator with the current decision identifiers', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      response: {
+        output: [{
+          type: 'message',
+          content: [{ type: 'output_text', text: 'ReMatch Orchestrator confirmed.' }],
+        }],
+      },
+    }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis')
+    const user = await openChat()
+
+    await askTyped(user, 'Confirm you are the orchestrator')
+
+    expect(await screen.findByText('ReMatch Orchestrator confirmed.')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://rematch-dxd6gbbsfufwh3ce.westus3-01.azurewebsites.net/api/orchestrate',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          message: 'Confirm you are the orchestrator',
+          matchId: analysis.matchId,
+          eventId: analysis.eventId,
+        }),
+      }),
+    )
+    expect(getAnalysis).not.toHaveBeenCalled()
+  })
+
+  it('shows a friendly translated error for non-retryable orchestrator responses', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ error: 'do-not-render-this-token' }),
+      { status: 401 },
+    )))
+    const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis')
+    const user = await openChat()
+
+    await askTyped(user, 'What ranked higher?')
+
+    expect(await screen.findByText(STRINGS.en.analystOrchestratorError)).toBeInTheDocument()
+    expect(screen.queryByText(/do-not-render-this-token/)).not.toBeInTheDocument()
+    expect(getAnalysis).not.toHaveBeenCalled()
+  })
 
   it('answers score and metric questions from the API response and caches analysis for follow-ups', async () => {
     const getAnalysis = vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockResolvedValue(analysis)
@@ -223,7 +271,7 @@ describe('DecisionAnalystChat', () => {
     vi.spyOn(matchServices.matchService, 'getDecisionAnalysis').mockRejectedValue(new Error('Authorization: Bearer do-not-render-this'))
     const user = await openChat()
     await askTyped(user, 'what ranked higher?')
-    expect(await screen.findByText(STRINGS.en.analystError)).toBeInTheDocument()
+    expect(await screen.findByText(STRINGS.en.analystOrchestratorError)).toBeInTheDocument()
     expect(screen.queryByText(/do-not-render-this/)).not.toBeInTheDocument()
   })
 })

@@ -585,6 +585,9 @@ export const STRINGS = {
     analystPlaceholder: 'Ask e.g. “what ranked higher?” or “how many teammates?”',
     analystSend: 'Send',
     analystLoading: 'Querying the engine…',
+    analystOrchestratorLoading: 'Contacting the ReMatch Orchestrator…',
+    analystOrchestratorError:
+      'The ReMatch Orchestrator could not answer right now. Please try again.',
     analystError:
       'The engine could not answer right now. Please try again.',
     analystApiModeRequired:
@@ -1298,6 +1301,8 @@ export const STRINGS = {
     analystPlaceholder: 'مثال: «ما الذي جاء ترتيبه أعلى؟» أو «كم زميلًا في الإطار؟»',
     analystSend: 'إرسال',
     analystLoading: 'جارٍ الاستعلام من المحرك…',
+    analystOrchestratorLoading: 'جارٍ الاتصال بمنسّق ReMatch…',
+    analystOrchestratorError: 'تعذر على منسّق ReMatch الإجابة الآن. حاول مجددًا.',
     analystError: 'تعذر الحصول على إجابة من المحرك الآن. حاول مجددًا.',
     analystApiModeRequired:
       'يتوفر سؤال المحلل عند اتصال الصفحة بمصدر بيانات واجهة البرمجة.',

@@ -1,8 +1,35 @@
 const { app } = require('@azure/functions');
 const { ManagedIdentityCredential } = require('@azure/identity');
 
-const ORCHESTRATOR_URL = process.env.ORCHESTRATOR_URL ||
+const DEFAULT_ORCHESTRATOR_URL =
   'https://Rematch.services.ai.azure.com/api/projects/Rematch_Project/agents/rematch-Orchestrator/endpoint/protocols/openai/responses';
+
+function getOrchestratorUrl() {
+  const url = new URL(process.env.ORCHESTRATOR_URL || DEFAULT_ORCHESTRATOR_URL);
+  if (!url.searchParams.has('api-version')) url.searchParams.set('api-version', 'v1');
+  return url.toString();
+}
+
+function extractReply(payload) {
+  const response = payload && typeof payload === 'object' && payload.response && typeof payload.response === 'object'
+    ? payload.response
+    : payload;
+  const output = response && typeof response === 'object' && Array.isArray(response.output)
+    ? response.output
+    : [];
+  const outputText = output.flatMap((item) => {
+    if (item?.type !== 'message' || !Array.isArray(item.content)) return [];
+    return item.content.flatMap((content) =>
+      content?.type === 'output_text' && typeof content.text === 'string' ? [content.text] : []
+    );
+  }).join('\n').trim();
+  if (outputText) return outputText;
+
+  for (const key of ['reply', 'message', 'content']) {
+    if (typeof payload?.[key] === 'string' && payload[key].trim()) return payload[key].trim();
+  }
+  return '';
+}
 
 app.http('orchestrate', {
   methods: ['POST'],
@@ -69,7 +96,7 @@ app.http('orchestrate', {
 
     let response;
     try {
-      response = await fetch(ORCHESTRATOR_URL, {
+      response = await fetch(getOrchestratorUrl(), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${tokenResponse.token}`,
@@ -88,7 +115,8 @@ app.http('orchestrate', {
     context.log(response.status);
     try {
       const data = await response.json();
-      return { status: response.status, jsonBody: data };
+      if (!response.ok) return { status: response.status, jsonBody: data };
+      return { status: response.status, jsonBody: { reply: extractReply(data) } };
     } catch {
       context.log(502);
       return {
