@@ -194,3 +194,51 @@
     display: inline-flex;
   }
 }
+
+
+a.title {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+a.title:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+
+a.title:hover {
+  color: var(--lime-ink);
+}
+
+
+@media (max-width: 719px) {
+  .title {
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .modeSwitch {
+    flex-shrink: 0;
+  }
+
+  .modeBtn,
+  .modeActive {
+    min-height: 36px;
+    padding-inline: 0.55rem;
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 479px) {
+  .end {
+    gap: var(--space-2);
+  }
+
+  .foundryBadge span {
+    display: none;
+  }
+}

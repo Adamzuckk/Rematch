@@ -15,20 +15,31 @@
 }
 
 .brand {
+  text-decoration: none;
+  color: inherit;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: 0 0 var(--space-5);
-  border-bottom: 1px solid var(--border-chrome);
-  text-align: start;
+  gap: var(--space-2);
+  border-radius: var(--radius-sm);
+  outline-offset: 3px;
 }
+
+.brand:focus-visible {
+  outline: 2px solid var(--lime);
+}
+
 
 .brandMark {
   position: relative;
   display: flex;
   width: 100%;
   min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 0 0 var(--space-5);
+  border-bottom: 1px solid var(--border-chrome);
+  text-align: start;
 }
 
 .brandMark::after {

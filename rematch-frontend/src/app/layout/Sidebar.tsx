@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { Activity, Gavel, LayoutDashboard, Table2, X } from 'lucide-react'
 import rematchLogo from '../../assets/brand/rematch_logo_transparent.png'
 import { useLocale } from '../../i18n/locale'
@@ -37,17 +37,25 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </Button>
       </div>
 
-      <div className={styles.brand}>
+      <Link
+        to="/dashboard"
+        className={styles.brand}
+        onClick={onClose}
+        aria-label={t('navDashboard')}
+      >
         <div className={styles.brandMark}>
           <img
             src={rematchLogo}
             alt={t('appName')}
             className={styles.logoMark}
+            width={160}
+            height={48}
             decoding="async"
+            fetchPriority="high"
           />
         </div>
         <p className={styles.brandTag}>{t('tagline')}</p>
-      </div>
+      </Link>
 
       <nav className={styles.nav} aria-label="Main">
         <p className={styles.navLabel}>{t('navExplore')}</p>

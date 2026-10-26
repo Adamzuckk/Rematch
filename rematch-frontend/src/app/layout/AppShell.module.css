@@ -118,6 +118,8 @@
   width: min(100%, calc(var(--content-max) + var(--space-16)));
   margin-inline: auto;
   padding: var(--space-10) var(--space-8) var(--space-14);
+  min-width: 0;
+  overflow-x: clip;
   animation: rematch-enter var(--duration-cinematic) var(--ease-out) both;
 }
 
@@ -145,6 +147,11 @@
     grid-template-columns: 1fr;
   }
 
+  .mainColumn {
+    min-height: 100svh;
+    min-height: 100dvh;
+  }
+
   .content {
     padding: var(--space-6) var(--space-4) var(--space-10);
   }
@@ -164,5 +171,24 @@
     background: rgba(5, 7, 6, 0.72);
     backdrop-filter: blur(4px);
     cursor: pointer;
+  }
+}
+
+
+@media (max-width: 479px) {
+  .content {
+    padding: var(--space-5) var(--space-3) max(var(--space-10), env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit,
+  .orbitLate,
+  .scan {
+    animation: none;
+  }
+
+  .content {
+    animation: none;
   }
 }

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Menu } from 'lucide-react'
 import rematchMark from '../../assets/brand/rematch-mark.svg'
 import microsoftFoundryMark from '../../assets/brand/microsoft-foundry.svg'
@@ -32,7 +33,7 @@ export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
           <Menu size={20} aria-hidden="true" />
         </Button>
         <Breadcrumbs />
-        <span className={styles.title}>
+        <Link to="/dashboard" className={styles.title} aria-label={t('navDashboard')}>
           <img
             src={rematchMark}
             alt=""
@@ -42,7 +43,7 @@ export function TopBar({ onOpenNav, navOpen }: TopBarProps) {
             decoding="async"
           />
           {t('appName')}
-        </span>
+        </Link>
       </div>
       <div className={styles.end}>
         <div
