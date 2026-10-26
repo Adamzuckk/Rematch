@@ -11,8 +11,7 @@
   [![Backend: FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](backend)
   [![SWA API Proxy](https://img.shields.io/badge/SWA%20API-Azure%20Functions-0078D4?logo=azurefunctions&logoColor=white)](api)
   [![Data: Synthetic](https://img.shields.io/badge/Data-Synthetic-7C3AED)](#the-data-behind-the-demo)
-  [![Status: In development](https://img.shields.io/badge/Status-In%20development-F59E0B)](#roadmap)
-
+[![Status: Completed](https://img.shields.io/badge/Status-Completed-22C55E)](#roadmap)
   [Get started](#run-it-locally) · [Features](#features) · [API](#api-at-a-glance) · [Docs](#documentation)
 </div>
 
