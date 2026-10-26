@@ -10,7 +10,7 @@ afterEach(() => {
 })
 
 describe('TableStatsPage', () => {
-  it('renders standings from finished mock fixtures and switches to player stats', async () => {
+  it('renders complete standings including zero-point teams and event-derived player stats', async () => {
     const user = userEvent.setup()
     renderWithProviders(<TableStatsPage />)
 
@@ -28,18 +28,25 @@ describe('TableStatsPage', () => {
 
     expect(await screen.findByText('Oakwood Wanderers')).toBeInTheDocument()
     expect(screen.getByText('Crestvale Rovers')).toBeInTheDocument()
-    expect(screen.queryByText('Lakeside Town')).not.toBeInTheDocument()
+    expect(screen.getByText('Lakeside Town')).toBeInTheDocument()
+    expect(screen.getByText('Northgate FC')).toBeInTheDocument()
+    expect(screen.queryByText('OAK')).not.toBeInTheDocument()
 
     const legend = screen.getByLabelText(STRINGS.en.tableStatsLegendTitle)
     expect(within(legend).getByText(/Matches Played/i)).toBeInTheDocument()
 
     await user.click(playersTab)
     expect(playersTab).toHaveAttribute('aria-selected', 'true')
-    expect(tableTab).toHaveAttribute('aria-selected', 'false')
+
+    const clubSelect = screen.getByRole('combobox', {
+      name: STRINGS.en.tableStatsClubLabel,
+    })
+    expect(within(clubSelect).getAllByRole('option').length).toBeGreaterThan(1)
+    expect(within(clubSelect).getByRole('option', { name: 'Oakwood Wanderers' })).toBeInTheDocument()
 
     expect(
-      screen.getByRole('combobox', { name: STRINGS.en.tableStatsMetricLabel }),
-    ).toHaveValue('goals')
+      await screen.findByText('Kai Benton'),
+    ).toBeInTheDocument()
 
     await user.selectOptions(
       screen.getByRole('combobox', { name: STRINGS.en.tableStatsMetricLabel }),
@@ -55,5 +62,6 @@ describe('TableStatsPage', () => {
     expect(
       screen.getByRole('combobox', { name: STRINGS.en.tableStatsMetricLabel }),
     ).toHaveValue('goals')
+    expect(clubSelect).toHaveValue('all')
   })
 })

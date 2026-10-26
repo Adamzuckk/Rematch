@@ -12,8 +12,7 @@ import { EmptyState } from '../components/ui/EmptyState'
 import { useLocale } from '../i18n/locale'
 import type { MessageKey } from '../i18n/strings'
 import {
-  aggregatePlayerStats,
-  clubsFromPlayers,
+  aggregatePlayerStatsFromSources,
   isMetricSupported,
   rankPlayersByMetric,
   type AggregatedPlayerStat,
@@ -22,12 +21,13 @@ import {
 } from '../lib/playerStatRankings'
 import {
   buildStandings,
-  competitionsWithCompletedMatches,
+  competitionsFromMatches,
+  teamsFromMatches,
   type FormResult,
   type TeamStanding,
 } from '../lib/standings'
 import { matchService } from '../services/matches'
-import type { MatchContext, MatchSummary } from '../types'
+import type { MatchSummary, Team } from '../types'
 import styles from './TableStatsPage.module.css'
 
 type PageTab = 'table' | 'playerStats'
@@ -135,25 +135,34 @@ export function TableStatsPage() {
       try {
         const catalogue = await matchService.getMatches()
         if (cancelled) return
-        setMatches(catalogue)
 
-        const finished = catalogue.filter(
-          (item) => item.status === 'finished' && item.score != null,
+        const sources = await Promise.all(
+          catalogue.map(async (item) => {
+            const [events, matchPlayers, context] = await Promise.all([
+              matchService.getMatchEvents(item.id).catch(() => []),
+              matchService.getMatchPlayers(item.id).catch(() => []),
+              matchService.getMatchContext(item.id).catch(() => null),
+            ])
+            const contextPlayers = context
+              ? [...context.homePlayers, ...context.awayPlayers]
+              : []
+            const byId = new Map<string, (typeof matchPlayers)[number]>()
+            for (const player of [...matchPlayers, ...contextPlayers]) {
+              byId.set(player.id, player)
+            }
+            return {
+              match: item,
+              players: Array.from(byId.values()),
+              events,
+              playerStats: context?.playerStats ?? null,
+            }
+          }),
         )
-        const contexts = (
-          await Promise.all(
-            finished.map(async (item) => {
-              try {
-                return await matchService.getMatchContext(item.id)
-              } catch {
-                return null
-              }
-            }),
-          )
-        ).filter((ctx): ctx is MatchContext => ctx != null)
 
         if (cancelled) return
-        setPlayers(aggregatePlayerStats(contexts))
+        // Single consistent publish — avoid progressive partial standings.
+        setMatches(catalogue)
+        setPlayers(aggregatePlayerStatsFromSources(sources))
         setError(null)
       } catch (cause: unknown) {
         if (cancelled) return
@@ -170,7 +179,7 @@ export function TableStatsPage() {
   }, [reloadToken, t])
 
   const competitions = useMemo(
-    () => (matches ? competitionsWithCompletedMatches(matches) : []),
+    () => (matches ? competitionsFromMatches(matches) : []),
     [matches],
   )
 
@@ -181,10 +190,14 @@ export function TableStatsPage() {
     })
   }, [competition, matches])
 
-  const clubs = useMemo(
-    () => (players ? clubsFromPlayers(players) : []),
-    [players],
-  )
+  const clubs = useMemo((): Team[] => {
+    if (!matches) return []
+    const scoped =
+      competition === 'all'
+        ? matches
+        : matches.filter((item) => item.competition === competition)
+    return teamsFromMatches(scoped)
+  }, [competition, matches])
 
   const rankings = useMemo(() => {
     if (!players) return []
@@ -369,13 +382,13 @@ function TableSection({
                   <th scope="col" className={styles.num}>
                     L
                   </th>
-                  <th scope="col" className={styles.num}>
+                  <th scope="col" className={styles.center}>
                     GF:GA
                   </th>
                   <th scope="col" className={styles.num}>
                     GD
                   </th>
-                  <th scope="col" className={styles.num}>
+                  <th scope="col" className={styles.center}>
                     Pts
                   </th>
                   <th scope="col">{t('tableStatsColForm')}</th>
@@ -386,27 +399,20 @@ function TableSection({
                   <tr key={row.team.id}>
                     <td className={styles.num}>{index + 1}</td>
                     <td>
-                      <div className={styles.teamCell}>
-                        <span className={styles.teamName}>{row.team.name}</span>
-                        {row.team.shortName ? (
-                          <span className={styles.teamShort}>
-                            {row.team.shortName}
-                          </span>
-                        ) : null}
-                      </div>
+                      <span className={styles.teamName}>{row.team.name}</span>
                     </td>
                     <td className={styles.num}>{row.played}</td>
                     <td className={styles.num}>{row.won}</td>
                     <td className={styles.num}>{row.drawn}</td>
                     <td className={styles.num}>{row.lost}</td>
-                    <td className={styles.num}>
+                    <td className={styles.center}>
                       {row.goalsFor}:{row.goalsAgainst}
                     </td>
                     <td className={styles.num}>
                       {row.goalDifference > 0 ? '+' : ''}
                       {row.goalDifference}
                     </td>
-                    <td className={styles.num}>{row.points}</td>
+                    <td className={styles.center}>{row.points}</td>
                     <td>
                       <FormStrip form={row.form} />
                     </td>
@@ -475,14 +481,15 @@ function FormStrip({ form }: { form: FormResult[] }) {
   return (
     <span className={styles.form} aria-label={t('tableStatsColForm')}>
       {form.map((result, index) => (
-        <span
+        <button
           key={`${result}-${index}`}
+          type="button"
           className={`${styles.formBadge} ${formClass(result)}`}
           title={t(FORM_LABEL[result])}
           aria-label={t(FORM_LABEL[result])}
         >
           {result}
-        </span>
+        </button>
       ))}
     </span>
   )
@@ -624,8 +631,6 @@ function unavailableBodyKey(metric: PlayerStatMetric): MessageKey {
       return 'tableStatsUnavailablePenaltiesSaved'
     case 'minutesPlayed':
       return 'tableStatsUnavailableMinutes'
-    case 'ownGoals':
-      return 'tableStatsUnavailableOwnGoals'
     default:
       return 'tableStatsUnavailableGeneric'
   }

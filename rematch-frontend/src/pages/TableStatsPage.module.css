@@ -178,20 +178,15 @@
   font-variant-numeric: tabular-nums;
 }
 
-.teamCell {
-  display: grid;
-  gap: 0.1rem;
-  min-width: 8rem;
+.table td.center,
+.table th.center {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .teamName {
   color: var(--ink);
   font-weight: 700;
-}
-
-.teamShort {
-  color: var(--ink-3);
-  font-size: 0.75rem;
 }
 
 .form {
@@ -201,32 +196,64 @@
 }
 
 .formBadge {
+  appearance: none;
+  border: 0;
   display: inline-grid;
   place-items: center;
   width: 1.35rem;
   height: 1.35rem;
+  padding: 0;
   border-radius: 0.25rem;
+  font: inherit;
   font-size: 0.65rem;
   font-weight: 800;
   line-height: 1;
   color: #fff;
+  cursor: default;
+  transition: box-shadow 160ms ease, filter 160ms ease;
+}
+
+.formBadge:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .formW {
   background: var(--lime-deep);
 }
 
+.formW:hover,
+.formW:focus-visible {
+  box-shadow: 0 0 0 1px rgba(63, 143, 40, 0.35), 0 0 10px rgba(107, 189, 69, 0.55);
+}
+
 .formD {
   background: var(--ink-3);
+}
+
+.formD:hover,
+.formD:focus-visible {
+  box-shadow: 0 0 0 1px rgba(102, 112, 104, 0.35), 0 0 10px rgba(102, 112, 104, 0.5);
 }
 
 .formL {
   background: var(--flare);
 }
 
+.formL:hover,
+.formL:focus-visible {
+  box-shadow: 0 0 0 1px rgba(255, 83, 64, 0.35), 0 0 10px rgba(255, 83, 64, 0.5);
+}
+
 .formEmpty {
   background: var(--mist-3);
   color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .formBadge {
+    transition: none;
+  }
 }
 
 .legend {
