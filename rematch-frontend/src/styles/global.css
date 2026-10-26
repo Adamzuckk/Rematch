@@ -226,3 +226,20 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+@media (max-width: 479px) {
+  :root {
+    --space-8: 1rem;
+    --space-10: 1.15rem;
+  }
+}
