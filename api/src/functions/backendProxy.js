@@ -8,6 +8,7 @@ const ROUTES = [
   { method: 'GET', pattern: /^\/api\/v1\/matches(?:\/(?:dataset|overview))?$/ },
   { method: 'GET', pattern: /^\/api\/v1\/matches\/[^/]+(?:\/(?:events|players|frames|intelligence))?$/ },
   { method: 'GET', pattern: /^\/api\/v1\/matches\/[^/]+\/events\/[^/]+\/decision-analysis(?:\/(?:narrative|evidence))?$/ },
+  { method: 'GET', pattern: /^\/api\/v1\/matches\/[^/]+\/events\/[^/]+\/event-intelligence$/ },
   { method: 'POST', pattern: /^\/api\/v1\/matches\/[^/]+\/events\/[^/]+\/decision-analysis\/verify$/ },
 ]
 
