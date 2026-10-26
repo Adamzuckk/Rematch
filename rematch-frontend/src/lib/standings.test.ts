@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import type { MatchSummary } from '../types'
 import {
   buildStandings,
+  competitionsFromMatches,
   competitionsWithCompletedMatches,
   extractCompletedResults,
+  teamsFromMatches,
 } from './standings'
 
 const team = (id: string, name: string) => ({ id, name, shortName: id })
@@ -163,11 +165,66 @@ describe('buildStandings', () => {
     ]
 
     expect(competitionsWithCompletedMatches(matches)).toEqual(['Cup', 'League One'])
+    expect(competitionsFromMatches(matches)).toEqual(['Cup', 'League One'])
 
     const leagueOne = buildStandings(matches, { competition: 'League One' })
     expect(leagueOne).toHaveLength(2)
     expect(leagueOne[0].team.id).toBe('a')
     expect(leagueOne[0].points).toBe(3)
     expect(leagueOne[1].points).toBe(0)
+  })
+
+  it('includes teams with no completed matches at zero points', () => {
+    const a = team('a', 'Alpha')
+    const b = team('b', 'Beta')
+    const c = team('c', 'Gamma')
+    const d = team('d', 'Delta')
+    const matches = [
+      match({
+        id: 'm1',
+        status: 'finished',
+        homeTeam: a,
+        awayTeam: b,
+        score: { home: 2, away: 0 },
+      }),
+      match({
+        id: 'm2',
+        status: 'live',
+        homeTeam: c,
+        awayTeam: a,
+        score: { home: 1, away: 1 },
+      }),
+      match({
+        id: 'm3',
+        status: 'upcoming',
+        homeTeam: d,
+        awayTeam: b,
+      }),
+    ]
+
+    expect(teamsFromMatches(matches).map((row) => row.id).sort()).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+    ])
+
+    const standings = buildStandings(matches)
+    expect(standings).toHaveLength(4)
+    const delta = standings.find((row) => row.team.id === 'd')
+    expect(delta).toMatchObject({
+      played: 0,
+      won: 0,
+      drawn: 0,
+      lost: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+      goalDifference: 0,
+      points: 0,
+      form: [],
+    })
+    const gamma = standings.find((row) => row.team.id === 'c')
+    expect(gamma?.played).toBe(0)
+    expect(gamma?.points).toBe(0)
   })
 })

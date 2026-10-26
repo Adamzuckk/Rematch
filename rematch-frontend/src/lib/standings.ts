@@ -44,6 +44,19 @@ function resultForSide(goalsFor: number, goalsAgainst: number): FormResult {
 }
 
 /**
+ * Authoritative club list for the current catalogue scope: every unique
+ * home/away team from the provided matches (finished, live, or upcoming).
+ */
+export function teamsFromMatches(matches: readonly MatchSummary[]): Team[] {
+  const map = new Map<string, Team>()
+  for (const match of matches) {
+    map.set(match.homeTeam.id, match.homeTeam)
+    map.set(match.awayTeam.id, match.awayTeam)
+  }
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/**
  * Extract one result row per participating team from completed fixtures only.
  * Upcoming, live, postponed-style, and unscored matches are excluded.
  */
@@ -93,7 +106,8 @@ function compareStandings(a: TeamStanding, b: TeamStanding): number {
 }
 
 /**
- * Build league standings from completed match results.
+ * Build league standings for every team in the scoped catalogue.
+ * Teams without completed scored matches appear with zeros and empty form.
  * Tie-breakers: points → goal difference → goals scored → team name.
  */
 export function buildStandings(
@@ -106,9 +120,8 @@ export function buildStandings(
     : matches
 
   const teamById = new Map<string, Team>()
-  for (const match of scoped) {
-    teamById.set(match.homeTeam.id, match.homeTeam)
-    teamById.set(match.awayTeam.id, match.awayTeam)
+  for (const team of teamsFromMatches(scoped)) {
+    teamById.set(team.id, team)
   }
 
   const results = extractCompletedResults(scoped)
@@ -125,8 +138,8 @@ export function buildStandings(
     }
   >()
 
-  for (const row of results) {
-    const existing = byTeam.get(row.teamId) ?? {
+  for (const teamId of teamById.keys()) {
+    byTeam.set(teamId, {
       played: 0,
       won: 0,
       drawn: 0,
@@ -134,7 +147,12 @@ export function buildStandings(
       goalsFor: 0,
       goalsAgainst: 0,
       formSource: [],
-    }
+    })
+  }
+
+  for (const row of results) {
+    const existing = byTeam.get(row.teamId)
+    if (!existing) continue
     existing.played += 1
     existing.goalsFor += row.goalsFor
     existing.goalsAgainst += row.goalsAgainst
@@ -142,7 +160,6 @@ export function buildStandings(
     else if (row.result === 'D') existing.drawn += 1
     else existing.lost += 1
     existing.formSource.push(row)
-    byTeam.set(row.teamId, existing)
   }
 
   const standings: TeamStanding[] = []
@@ -172,7 +189,18 @@ export function buildStandings(
   return standings.sort(compareStandings)
 }
 
-/** Competitions that have at least one completed scored fixture. */
+/** Competitions that appear in the catalogue (any fixture status). */
+export function competitionsFromMatches(
+  matches: readonly MatchSummary[],
+): string[] {
+  const set = new Set<string>()
+  for (const match of matches) {
+    if (match.competition.trim()) set.add(match.competition)
+  }
+  return Array.from(set).sort((a, b) => a.localeCompare(b))
+}
+
+/** @deprecated Prefer competitionsFromMatches for the table filter. */
 export function competitionsWithCompletedMatches(
   matches: readonly MatchSummary[],
 ): string[] {
