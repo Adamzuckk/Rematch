@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="logo/1x/Artboard%201.png" alt="ReMatch" width="320" />
+  <img src="logo/1x/logo.png" alt="ReMatch" width="320" />
 
   # ReMatch
 
