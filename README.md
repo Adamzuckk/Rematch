@@ -66,6 +66,7 @@ Every decision analysis is grounded in one observable frame of synthetic match d
 
 | Agent | Role |
 |---|---|
+| **Orchestrator** | Coordinates the full pipeline and agent handoffs |
 | **Decision analysis** | Geometric scoring (`geometric_progression_v1`) and alternative ranking from seeded events/frames. |
 | **Narrator** | Deterministic English/Arabic narrative from a typed truth pack—no model call. |
 | **Verifier** | Evidence-reference and registered-calculation checks; natural-language claim support is always `not_assessed`. |
