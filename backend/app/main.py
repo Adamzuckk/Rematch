@@ -45,11 +45,7 @@ def create_app() -> FastAPI:
         title=settings.app_name,
         version=__version__,
         description=(
-            "ReMatch API — seeded synthetic match catalogue, events, frames, "
-            "and deterministic decision analysis with evidence verification. "
-            "Optional server-side LLM enrichment for event briefings when "
-            "LLM_* / GEMINI_* environment variables are configured "
-            "(OpenAI-compatible or Google Gemini); synthetic demo data only."
+            "ReMatch API — synthetic match catalogue with deterministic decision analysis and evidence verification. Multi-agent explanation (Foundry + A2A): Orchestrator → Match Intelligence → Verifier → Narrator. Code calculates; AI only explains. Bearer auth required. Synthetic data only."
         ),
         lifespan=lifespan,
         docs_url="/docs" if settings.docs_enabled else None,
