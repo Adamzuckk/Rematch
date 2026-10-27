@@ -154,10 +154,12 @@ This syncs dependencies, runs migrations, seeds the synthetic catalogue, then st
 
 | Service | Default URL |
 |---|---|
-| Frontend (API mode) | http://127.0.0.1:5173/ |
-| Backend API | http://127.0.0.1:8000/ |
-| Interactive docs | http://127.0.0.1:8000/docs |
-| Health | http://127.0.0.1:8000/api/v1/health |
+| Frontend | https://victorious-cliff-080f51e0f.4.azurestaticapps.net/ |
+| Backend API | https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io |
+| Interactive docs | https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io/docs |
+| Health | https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io/api/v1/health |
+
+Note: Backend API is Bearer-token protected. The live frontend reaches it through an Azure Functions proxy (token stays server-side). Direct access to /docs or API routes needs a valid Bearer token.
 
 Press Ctrl+C to stop both.
 
