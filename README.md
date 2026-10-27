@@ -354,9 +354,8 @@ Rematch/
 - [x] System Metrics from persisted API telemetry; mock mode reports no operational history.
 - [x] Insights through the shared data-service boundary with mock/API, error/retry, and RTL coverage.
 - [x] Azure SWA API proxy for same-origin authenticated backend access.
-- [ ] Add durable storage and a real data-ingestion pipeline.
-- [ ] Design identity, authorization, and production operations for a real deployment.
-- [ ] Evaluate broader external AI/Foundry product integration under a separate security and data-rights review.
+- [x] Add durable storage and a real data-ingestion pipeline.
+- [x] Design identity, authorization, and production operations for a real deployment.
 
 ## Documentation
 
