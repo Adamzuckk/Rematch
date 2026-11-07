@@ -1,382 +1,349 @@
 <div align="center">
-  <img src="logo/1x/logo.png" alt="ReMatch" width="360" />
 
-  # ReMatch
+  # Backly
 
-  ### Rewind the moment. See the options. Follow the evidence.
+  ### Clone it. Configure it. Build anything on top.
 
-  **An evidence-first football intelligence experience for exploring _why_ a decision mattered.**
+  **A modular, production-oriented Node.js backend foundation for starting new backend projects without rebuilding the core every time.**
 
-  [![Frontend: React + TypeScript](https://img.shields.io/badge/Frontend-React%20%2B%20TypeScript-61DAFB?logo=react&logoColor=white)](rematch-frontend)
-  [![Backend: FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?logo=fastapi&logoColor=white)](backend)
-  [![SWA API Proxy](https://img.shields.io/badge/SWA%20API-Azure%20Functions-0078D4?logo=azurefunctions&logoColor=white)](api)
-  [![Data: Synthetic](https://img.shields.io/badge/Data-Synthetic-7C3AED)](#the-data-behind-the-demo)
-[![Status: Completed](https://img.shields.io/badge/Status-Completed-22C55E)](#roadmap)
-  [Get started](#run-it-locally) · [Features](#features) · [API](#api-at-a-glance) · [Docs](#documentation)
+  [![Runtime: Node.js 22+](https://img.shields.io/badge/Runtime-Node.js%2022%2B-339933?logo=nodedotjs&logoColor=white)](package.json)
+  [![Framework: Express 5](https://img.shields.io/badge/Framework-Express%205-000000?logo=express&logoColor=white)](src/app.js)
+  [![Logging: pino](https://img.shields.io/badge/Logging-pino-687634)](src/core/logger.js)
+  [![Tests: node:test](https://img.shields.io/badge/Tests-node%3Atest%20%2B%20supertest-22C55E)](tests)
+  [![Database: None](https://img.shields.io/badge/Database-None-7C3AED)](#what-is-intentionally-not-here)
+  [![Status: v0.1.0 Foundation](https://img.shields.io/badge/Status-v0.1.0%20Foundation-F59E0B)](#roadmap)
+
+  [Get started](#run-it-locally) · [Features](#features) · [API](#api-at-a-glance) · [Documentation](#documentation)
 </div>
 
 ---
 
 ## The idea
 
-Most match products can tell you that a pass was played. ReMatch lets you stop on that moment, see the frame around it, compare the action with the options that were actually present, and trace every computed claim back to evidence.
+Most backend starters give you a folder with `app.listen()` and call it a foundation. Backly gives you the parts that every real backend ends up needing anyway: validated configuration, predictable middleware, one error format, structured logs, health checks, graceful shutdown, and tests that run without a server.
 
-It is deliberately opinionated about what it will _not_ pretend to know. ReMatch is a deterministic geometry-based explainer—not xG, a pass-completion model, betting advice, or proof that a footballer made the objectively “right” choice.
+It is deliberately opinionated about what it will _not_ pretend to be. Backly is not a framework, not a full platform, and not production-ready out of the box for every workload. It is a small, readable starting point that stays independent of any application domain, so a completely different project can be built on top of it without touching the core.
 
 ```mermaid
 flowchart LR
-  A["01 · Pick a moment"] --> B["02 · Inspect the frame"]
-  B --> C["03 · Compare available actions"]
-  C --> D["04 · Verify the evidence"]
+  A["01 · Clone"] --> B["02 · Configure (.env)"]
+  B --> C["03 · Add your routes"]
+  C --> D["04 · Ship with tests"]
 ```
 
 ## Features
 
-### Product surfaces
+### Current capabilities
 
-| Experience | What it gives you |
+| Capability | What it gives you |
 |---|---|
-| **Dashboard** | Searchable synthetic fixture catalogue, status filters, and dataset overview stats. |
-| **Match Centre** | Pitch replay, event timeline, highlights, score race, team/player analytics, and Match Studio. |
-| **Fan / Analyst views** | Presentation toggle (local preference): pitch-first Fan experience vs denser Analyst workspace—same underlying match state. |
-| **Match Studio** | LIVE chronological event feed (seek on select) and ASK for event-scoped agent narrative—no free-form match Q&A. |
-| **Decision Explorer** | Backend-scored observed actions and frame-backed alternatives, ranked with transparent calculations. |
-| **Ask the agents** | Composed decision analysis + evidence verifier + bilingual Narrator for the selected event. |
-| **Event intelligence** | Evidence-grounded moment briefing for any stored event; optional server-side LLM enrichment (OpenAI-compatible or Gemini). |
-| **Pick Your Pass** | Interactive inspection of alternatives already returned by the engine—no browser-side recalculation. |
-| **Judge Mode** | Guided path for reviewers: open a seeded match, replay events, inspect decisions. |
-| **Insights** | Match-level insights routed through the shared data-service boundary (mock/API, error/retry, RTL). |
-| **System Metrics** | Persisted, measured API-operation telemetry (latency, success rates, verification totals)—not derived from fixture fiction. |
-| **Broadcast overlay** | Optional timed strip + downloadable overlay JSON for a moment (synthetic). |
-| **i18n / RTL** | English and Arabic UI strings with RTL layout support. |
+| **Application factory** | `createApp()` builds the Express app without starting a server, so it can be tested in-process and reused by different entry points. |
+| **Environment configuration** | Centralised, validated at startup with zod. All problems are reported at once, and the config object is immutable. Supports `development`, `test`, and `production`. |
+| **Middleware pipeline** | Request ID, request logging, security headers, CORS, rate limiting, and JSON parsing, always in the same predictable order. |
+| **Centralised error handling** | One `AppError` class, one JSON error shape, a 404 fallback, and correct HTTP status codes. |
+| **Structured logging** | JSON logs with levels, per-request correlation through the request ID, and redaction of common secret fields. |
+| **Health endpoints** | Separate liveness and readiness endpoints, with a registry for future readiness checks. |
+| **API versioning** | Routes are mounted under `/api/v1`, ready for `/api/v2` later. |
+| **Graceful shutdown** | Handles `SIGTERM` and `SIGINT`, drains in-flight requests, and forces exit after a timeout. |
+| **Automated tests** | Unit and integration tests on Node's built-in test runner. The HTTP layer is tested without a running server. |
+| **CI** | A GitHub Actions workflow runs `npm ci` and `npm test` on every push to `main` and every pull request. |
 
 ### Built to show its working
 
-Every decision analysis is grounded in one observable frame of synthetic match data:
+Backly is written so that its behaviour can be checked, not just trusted:
 
-- The backend, not an AI model or the UI, calculates scores and ranks.
-- Alternatives are created only for teammates positioned in the event’s aligned frame.
-- Claims include references to source events, frames, positions, and registered calculations.
-- The verifier validates evidence/reference membership and calculation consistency; it does not certify free-form football truth.
-- Optional LLM enrichment may rewrite briefing wording from a verified evidence pack only; `llmConnected` is true only after a validated provider response.
-- The client keeps mock and API modes separate. An API failure is shown to the user—it never silently swaps in mock data.
+- Configuration is validated before the server starts. If anything is wrong, the process prints every problem and exits with code 1.
+- Unexpected errors always return a generic `500` with the message `Internal Server Error`. The real error and stack trace are only written to the logs.
+- Request logs record the method, path (without the query string), status, and duration. Headers and bodies are never logged, and fields such as `authorization`, `cookie`, `password`, `token`, `secret`, and `apiKey` are redacted.
+- Readiness never claims that a dependency is healthy unless a check actually ran. With no registered checks, it reports an empty `checks` list.
+- While shutting down, readiness returns `503` so a load balancer can stop sending traffic, while liveness stays up until the process exits.
 
-### Local “agents” (deterministic composition)
+### Core modules
 
-| Agent | Role |
+| Module | Role |
 |---|---|
-| **Orchestrator** | Coordinates the full pipeline and agent handoffs |
-| **Decision analysis** | Geometric scoring (`geometric_progression_v1`) and alternative ranking from seeded events/frames. |
-| **Narrator** | Deterministic English/Arabic narrative from a typed truth pack—no model call. |
-| **Verifier** | Evidence-reference and registered-calculation checks; natural-language claim support is always `not_assessed`. |
+| **`config`** | Reads and validates environment variables and returns an immutable config object. Pure: it takes an `env` object and never reads files itself. |
+| **`core`** | Logger creation, server startup, graceful shutdown, and the small shared lifecycle state. |
+| **`middleware`** | Reusable Express middleware and the registration order. |
+| **`routes`** | Route registration, health routes, and versioned routers. |
+| **`errors`** | `AppError`, stable error codes, and factories for common HTTP errors. |
+| **`services`** | Framework-independent logic. Currently the health service. |
+| **`utils`** | Small shared helpers. |
 
-Microsoft Foundry remains an **external** tooling path (OpenAPI export + agent instructions under `docs/`). The web app does not embed Foundry credentials or call cloud agents by default.
+## How a request flows
 
-## How scoring works
-
-The current method, `geometric_progression_v1`, asks a narrow and explainable question: **how far does an action progress toward the opponent’s goal in this coordinate system?**
+The middleware order is fixed and intentional. Each step relies on the ones before it.
 
 ```text
-composite score = progressive distance + goal-proximity gain
+request ID  →  request logger  →  security headers  →  CORS  →  rate limiter  →  JSON parser  →  routes  →  404  →  error handler
 ```
 
-`progressive distance` measures movement in the team’s attacking direction. `goal-proximity gain` measures the reduction in Euclidean distance to the centre of the opponent’s goal. Higher values mean more geometric progression—nothing more.
-
-Recorded outcomes, xG, pressure estimates, passing-lane clearance, and completion probability are not mixed into this score. See the full [decision-engine notes](docs/decision-engine.md) for formulas, examples, evidence rules, and known limits.
+1. **Request ID** is propagated from a valid incoming `X-Request-Id`, or generated as a UUID. Invalid values are replaced.
+2. **Request logger** attaches a request-scoped logger and writes one line when the response finishes.
+3. **Security headers** are set with Helmet's default policy, and `X-Powered-By` is removed.
+4. **CORS** answers preflight requests before anything expensive runs. It is disabled unless origins are configured.
+5. **Rate limiter** rejects abusive traffic before request bodies are parsed. Health endpoints are exempt.
+6. **JSON parser** enforces a configurable body size limit.
+7. **Routes** run your handlers. Async errors are caught automatically (Express 5).
+8. **404 and error handler** turn anything unmatched or thrown into the standard error response.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  S["Deterministic synthetic generator"] --> B["FastAPI backend"]
-  B --> D["Decision engine"]
-  D --> V["Evidence catalogue & verifier"]
-  D --> N["Deterministic EN / AR narrator"]
-  B --> E["Optional LLM enrichment"]
-  B --> R["React + TypeScript experience"]
-  D --> R
-  V --> R
-  N --> R
-  P["Azure SWA Functions proxy"] -.->|"deployed same-origin /api"| B
-  R -.->|"local API mode"| B
-  R -.->|"Azure Static Web App"| P
+  E["Environment (.env)"] --> C["Config validation (zod)"]
+  C --> L["Structured logger (pino)"]
+  C --> A["createApp()"]
+  L --> A
+  A --> M["Middleware pipeline"]
+  M --> R["Routes: /health · /api/v1"]
+  R --> H["Health service"]
+  M --> X["Centralised error handler"]
+  A --> S["HTTP server"]
+  S --> G["Graceful shutdown (SIGTERM / SIGINT)"]
 ```
 
-| Layer | Stack | Responsibility |
+| Layer | Location | Responsibility |
 |---|---|---|
-| **Frontend** (`rematch-frontend/`) | React 19, TypeScript, Vite | Dark-mode football analysis UI, Fan/Analyst modes, EN/AR RTL, mock/API switching. |
-| **Backend / API** (`backend/`) | FastAPI, Pydantic, SQLAlchemy, Alembic | Versioned `/api/v1` catalogue, decision analysis, narratives, evidence, event intelligence, metrics. |
-| **SWA API proxy** (`api/`) | Azure Functions v4 | Same-origin `/api/v1` proxy for Azure Static Web Apps; injects bearer auth server-side. Not required for local Vite → FastAPI. |
-| **Data** | SQLite locally (Postgres-compatible URL) | Idempotent synthetic seeds, fictional teams, typed events, aligned player frames. |
-| **Delivery** | Docker, `uv`, Azure Container Apps template | Reproducible backend image and a reviewable deployment starting point. |
+| **Entry point** | `src/server.js` | Loads `.env`, validates config, creates the logger and app, starts the server, registers shutdown handlers. |
+| **App factory** | `src/app.js` | Builds the Express app with middleware, routes, and error handling in the right order. |
+| **Config** | `src/config/` | Environment loading and validation. |
+| **Core** | `src/core/` | Logger, server startup, shutdown, lifecycle state. |
+| **Middleware** | `src/middleware/` | Request ID, logging, security, CORS, rate limiting, 404, error handler. |
+| **Routes** | `src/routes/` | Health routes and the versioned API router. |
+| **Errors** | `src/errors/` | Error class, error codes, HTTP error factories. |
+| **Services** | `src/services/` | Logic that does not depend on Express. |
+| **Tests** | `tests/` | Unit tests, in-process integration tests, and a few real-server tests. |
 
-## Microsoft technologies used
+## Technologies used
 
-Built for the **Microsoft Inside the Game Hackathon**. Rematch runs on Azure, uses GitHub for source control and automation, and exposes its decision-analysis API to a Microsoft Foundry agent as OpenAPI tools. Each row names the product, its role in this project, and where to verify it in the repository.
-
-```mermaid
-flowchart LR
-  GH["GitHub repository"] --> GA["GitHub Actions<br/>CI · security · deploy"]
-  GA -->|"OIDC sign-in<br/>(Microsoft Entra ID)"| ACR["Azure Container Registry"]
-  ACR --> ACA["Azure Container Apps<br/>FastAPI backend"]
-  GA --> SWA["Azure Static Web Apps<br/>React frontend"]
-  SWA --> FN["Azure Functions<br/>same-origin API proxy"]
-  FN --> ACA
-  FD["Microsoft Foundry agent"] -->|"OpenAPI tools"| ACA
-```
-
-| Product | What it does in Rematch | Where to verify |
+| Technology | What it does in Backly | Where to verify |
 |---|---|---|
-| <img src="rematch-frontend/src/assets/brand/microsoft-foundry.svg" alt="Microsoft Foundry" height="18" /> **Microsoft Foundry** | Hosts the Rematch agent. The agent calls the decision-analysis endpoints as OpenAPI tools and is instructed to explain only from tool output, never to invent numbers. | `docs/FOUNDRY_AGENT_INSTRUCTIONS.md`, `docs/rematch-foundry-openapi.json`, `docs/FOUNDRY_*.md` |
-| ![Azure Container Apps](https://img.shields.io/badge/Azure%20Container%20Apps-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Runs the FastAPI backend: read-only API, secret references for the bearer token, ingress and health probes. | `backend/containerapp.yaml`, `docs/AZURE_CONTAINER_APPS.md` |
-| ![Azure Container Registry](https://img.shields.io/badge/Azure%20Container%20Registry-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Stores the commit-tagged `rematch-api` image. The Container App pulls it with a system-assigned managed identity. | `.github/workflows/rematch-AutoDeployTrigger-*.yml` |
-| ![Azure Static Web Apps](https://img.shields.io/badge/Azure%20Static%20Web%20Apps-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Hosts the React frontend with single-page-app fallback routing. | `rematch-frontend/public/staticwebapp.config.json`, `.github/workflows/azure-static-web-apps-*.yml` |
-| ![Azure Functions](https://img.shields.io/badge/Azure%20Functions-0062AD?style=for-the-badge&logo=azurefunctions&logoColor=white) | Static Web Apps managed API: a same-origin proxy that injects the bearer token on the server, allows only listed routes, and bounds request size, so no secret reaches the browser. | `api/src/functions/backendProxy.js` |
-| ![Microsoft Entra ID](https://img.shields.io/badge/Microsoft%20Entra%20ID-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Passwordless deployment: GitHub Actions signs in to Azure through OIDC federation, and the Container App uses a managed identity instead of stored registry credentials. | `azure/login` step in the deploy workflow |
-| ![Azure CLI](https://img.shields.io/badge/Azure%20CLI-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white) | Deployment pre-checks, registry login, and Container App updates inside the pipeline. | `.github/workflows/rematch-AutoDeployTrigger-*.yml` |
-| ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white) | Source control, pull requests, and the project repository. | This repository |
-| ![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white) | CI (backend tests; frontend tests and build), security (Python dependency audit and container vulnerability scan), and automated deployment to Azure. | `.github/workflows/ci.yml`, `security.yml`, deploy workflows |
-| ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white) | The language of the entire frontend, with strict typed API contracts. | `rematch-frontend/` |
-
-> Microsoft, Azure, Microsoft Foundry, Microsoft Entra, GitHub, and TypeScript are trademarks of Microsoft Corporation or its affiliates. Logos and names appear only to identify the technologies used. Rematch is an independent hackathon submission and does not imply Microsoft endorsement.
+| **Node.js 22+** | Runtime. ES Modules throughout. Built-in test runner and `.env` loading, with no extra packages. | `package.json`, `.nvmrc` |
+| **Express 5** | HTTP framework. Automatic handling of async errors in route handlers. | `src/app.js` |
+| **Helmet** | Security headers. | `src/middleware/security.js` |
+| **cors** | Allowlist-based CORS, disabled by default. | `src/middleware/cors.js` |
+| **express-rate-limit** | Configurable rate limiting with the standard error response. | `src/middleware/rateLimit.js` |
+| **pino** | Structured JSON logging with redaction. | `src/core/logger.js` |
+| **zod** | Environment variable validation. | `src/config/loadConfig.js` |
+| **supertest** (dev) | Tests the Express app in-process, without opening a port. | `tests/integration/` |
+| **GitHub Actions** | Runs the test suite on every push to `main` and every pull request. | `.github/workflows/ci.yml` |
 
 ## Run it locally
 
-**Prerequisites:** Node.js 22+ (frontend), Python 3.11–3.14, and [uv](https://docs.astral.sh/uv/). The production image uses Python 3.12. Azure Functions Core Tools are only needed if you develop the SWA `api/` proxy itself.
+**Prerequisites:** Node.js 22 or newer. An `.nvmrc` is included if you use nvm.
 
-### One command (backend API + frontend)
-
-```bash
-./scripts/run-local.sh
-```
-
-This syncs dependencies, runs migrations, seeds the synthetic catalogue, then starts:
-
-| Service | Default URL |
-|---|---|
-| Frontend | https://victorious-cliff-080f51e0f.4.azurestaticapps.net/ |
-| Backend API | https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io |
-| Interactive docs | https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io/docs |
-| Health | https://rematch.whiteocean-a7603848.eastus.azurecontainerapps.io/api/v1/health |
-
-Note: Backend API is Bearer-token protected. The live frontend reaches it through an Azure Functions proxy (token stays server-side). Direct access to /docs or API routes needs a valid Bearer token.
-
-Press Ctrl+C to stop both.
-
-If port `8000` is already taken:
+### Quick start
 
 ```bash
-REMATCH_API_PORT=8001 ./scripts/run-local.sh
-```
-
-Optional: `REMATCH_FE_PORT`, `REMATCH_API_HOST`, `REMATCH_FE_HOST`, or `--skip-setup` to skip sync/migrate/seed.
-
-### Start each piece manually
-
-#### 1. Backend (FastAPI — this is the local API)
-
-```bash
-cd backend
-uv sync --locked --all-extras
-cp .env.example .env
-uv run alembic upgrade head
-uv run rematch-seed
-uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
-```
-
-#### 2. Frontend (API mode)
-
-```bash
-cd rematch-frontend
-npm ci
-npm run dev:api -- --host 127.0.0.1 --port 5173
-```
-
-`dev:api` uses the checked-in `.env.api` configuration and connects to the local backend. CORS defaults allow local Vite hosts on ports 5173 and 5174.
-
-Sample Decision Explorer journey:
-
-```text
-http://127.0.0.1:5173/matches/m-p8-harbor-eastbridge-002/decisions/m-p8-harbor-eastbridge-002-evt-001-pass
-```
-
-#### 3. SWA API proxy (`api/`) — Azure deploy path
-
-The `api/` package is the **Azure Static Web Apps** Functions proxy. Local day-to-day development does **not** need it: point the frontend at the FastAPI backend with `VITE_API_BASE_URL`.
-
-For Static Web App deployment, the proxy:
-
-- Allows a fixed allow-list of `/api/v1` routes
-- Forwards to the configured Container Apps backend over HTTPS
-- Attaches `API_BEARER_TOKEN` on the server (never in the browser)
-
-```bash
-cd api
-npm ci
-# Requires Azure Functions Core Tools + BACKEND_BASE_URL / API_BEARER_TOKEN
-# for the deployed Container Apps host — see docs/AZURE_CONTAINER_APPS.md
-```
-
-### Or work entirely offline (frontend mock mode)
-
-```bash
-cd rematch-frontend
-npm ci
+git clone <your-repository-url> backly
+cd backly
+npm install
+cp .env.example .env   # optional: every variable has a default
 npm run dev
 ```
 
-Mock mode is the default. It uses bundled synthetic fixtures. Those fixtures intentionally have no aligned frames, so the Decision Explorer correctly has no alternatives to compare.
+| Service | Default URL |
+|---|---|
+| API | http://127.0.0.1:3000 |
+| Health | http://127.0.0.1:3000/health |
+| Liveness | http://127.0.0.1:3000/health/live |
+| Readiness | http://127.0.0.1:3000/health/ready |
+| API v1 | http://127.0.0.1:3000/api/v1 |
+
+Press Ctrl+C to stop. Backly drains in-flight requests before exiting.
+
+### Try it
+
+```bash
+curl localhost:3000/health         # status and runtime info
+curl localhost:3000/health/live    # liveness
+curl localhost:3000/health/ready   # readiness
+curl localhost:3000/api/v1         # API version check
+curl localhost:3000/nope           # standard 404 error response
+```
+
+### Start it manually
+
+```bash
+npm start                         # run once, no file watching
+NODE_ENV=production npm start     # production mode
+PORT=8080 npm start               # different port
+```
+
+Logs are JSON lines on stdout. For readable output during development you can pipe them through a tool such as `pino-pretty` (not included as a dependency).
+
+### Commands
+
+| Command | Description |
+|---|---|
+| `npm start` | Start the server. |
+| `npm run dev` | Start with automatic restart on file changes. |
+| `npm test` | Run all tests. |
+| `npm run test:unit` | Run unit tests only. |
+| `npm run test:integration` | Run integration tests only. |
+| `npm run test:coverage` | Run all tests with Node's experimental coverage report. |
 
 ## Configuration
 
-### Backend
-
-Copy `backend/.env.example` to `backend/.env` for local overrides. Never commit this file or any secret.
+Copy `.env.example` to `.env` for local overrides. Never commit `.env` or any secret. Real environment variables always take precedence over the file, and empty values count as "not set".
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `APP_NAME` | `ReMatch API` | API title. |
-| `APP_ENV` | `development` | `production` / `prod` disables interactive API documentation. |
-| `REQUIRE_API_AUTH` | `false` | Require a bearer token for every `/api/v1` endpoint. |
-| `API_BEARER_TOKEN` | unset | Required with authentication; must be at least 32 characters. |
-| `DATABASE_URL` | `sqlite:///./rematch.db` | SQLAlchemy database URL. |
-| `CORS_ORIGINS` | local Vite hosts | Comma-separated browser origins; empty disables CORS middleware. |
-| `DEFAULT_PAGE_LIMIT` / `MAX_PAGE_LIMIT` | `50` / `100` | Pagination defaults and ceiling. |
-| `LLM_ENABLED` | `false` | Optional event-intelligence enrichment. |
-| `LLM_PROVIDER` | `openai` | `openai`, `azure_openai`, `openai_compatible`, or `gemini`. |
-| `LLM_API_KEY` / `LLM_MODEL` / `LLM_BASE_URL` | — | OpenAI / Azure / compatible provider settings. |
-| `GEMINI_API_KEY` / `GEMINI_MODEL` | unset / `gemini-3.5-flash-lite` | Gemini Developer API (when `LLM_PROVIDER=gemini`). |
+| `NODE_ENV` | `development` | `development`, `test`, or `production`. |
+| `APP_NAME` | `nodeforge` | Service name used in logs and health output. |
+| `HOST` | `127.0.0.1` | Bind address. Use `0.0.0.0` inside containers. |
+| `PORT` | `3000` | Listening port. |
+| `LOG_LEVEL` | by environment | `fatal`, `error`, `warn`, `info`, `debug`, `trace`, or `silent`. Default: `debug` (development), `info` (production), `silent` (test). |
+| `JSON_BODY_LIMIT` | `100kb` | Maximum JSON request body size, such as `100kb` or `1mb`. |
+| `CORS_ORIGINS` | empty | Comma-separated allowed origins, or `*`. Empty disables CORS. |
+| `RATE_LIMIT_ENABLED` | `true` | Enable or disable rate limiting. |
+| `RATE_LIMIT_WINDOW_MS` | `60000` | Rate limit window. |
+| `RATE_LIMIT_MAX` | `100` | Maximum requests per client per window. |
+| `TRUST_PROXY` | `0` | Number of reverse proxies in front of the app. |
+| `SHUTDOWN_TIMEOUT_MS` | `10000` | Maximum wait for in-flight requests on shutdown. |
 
-Full LLM setup: [docs/llm-provider.md](docs/llm-provider.md). Keys stay on the API host only—never under `VITE_*` or the frontend.
-
-### Frontend
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `VITE_MATCH_DATA_SOURCE` | `mock` | `mock` for bundled fixtures or `api` for FastAPI. |
-| `VITE_API_BASE_URL` | empty | Required in API mode, for example `http://127.0.0.1:8000`. |
+Set `APP_NAME=backly` in your `.env` to use the Backly name in logs and health output.
 
 ## API at a glance
 
-All application endpoints are JSON under `/api/v1`; list endpoints use `{ items, total, limit, offset }`.
+Application endpoints are JSON. Operational endpoints are unversioned on purpose, so probes do not depend on API versions.
 
 | Method | Endpoint | Use it for |
 |---|---|---|
-| `GET` | `/health` | Liveness check. |
-| `GET` | `/matches` | Paginated, searchable fixture catalogue. |
-| `GET` | `/matches/dataset` | Metadata for the preferred seeded scenario. |
-| `GET` | `/matches/overview` | Dashboard statistics. |
-| `GET` | `/matches/{match_id}` | Match summary. |
-| `GET` | `/matches/{match_id}/events` | Event timeline. |
-| `GET` | `/matches/{match_id}/frames` | Aligned player frames. |
-| `GET` | `/matches/{match_id}/players` | Players referenced by that match. |
-| `GET` | `/matches/{match_id}/context` | Coaches, form, squads, player stats. |
-| `GET` | `/matches/{match_id}/player-stats` | Per-player match stats. |
-| `GET` | `/matches/{match_id}/intelligence` | Match-level aggregates from seeded events/frames. |
-| `POST` | `/matches/{match_id}/start` | Start an upcoming synthetic match on request. |
-| `GET` | `/system-metrics` | Measured API-operation telemetry. |
-| `GET` | `…/events/{event_id}/decision-analysis` | Observed action, alternatives, scores, rankings, claims. |
-| `GET` | `…/decision-analysis/narrative` | Deterministic bilingual agent composition. |
-| `GET` | `…/decision-analysis/evidence` | Evidence bundle and validation context. |
-| `POST` | `…/decision-analysis/verify` | Validate supplied evidence references and calculations. |
-| `GET` | `…/event-intelligence` | Evidence briefing; optional LLM enrichment. |
+| `GET` | `/health` | Service name, version, environment, uptime, Node version, and memory. Returns `503` while shutting down. |
+| `GET` | `/health/live` | Liveness. The process is running. Never checks dependencies. |
+| `GET` | `/health/ready` | Readiness. Runs registered checks. Returns `503` if any fail or while shutting down. |
+| `GET` | `/api/v1` | API version check. Confirms versioned routing works. |
 
-Exact request/response shapes: [API contract](docs/api-contract.md).
+### Error response format
 
-## The data behind the demo
+Every error uses the same shape:
 
-Everything bundled with ReMatch is fictional and labelled as synthetic.
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Route GET /nope not found",
+    "requestId": "be8a425d-091b-4f55-867a-612fee4cbceb"
+  }
+}
+```
 
-- Compatibility and generated scenarios are seeded together (idempotent). Preferred catalogue metadata is returned by `GET /matches/dataset`.
-- Rich demo fixtures include live clocks, finished matches, upcoming start-on-request, assists, cards, substitutions, coaches, and form history.
-- Phase 8-style generated matches retain full 11v11 rosters and aligned decision frames for Decision Explorer journeys.
-- Alternatives exist only where an event has an aligned frame with eligible teammate positions. Missing options are never inferred.
-- The generator is deterministic: the same seed and parameters produce the same logical dataset.
+`details` appears only when an error explicitly provides client-safe details. The `requestId` matches the `X-Request-Id` response header and the request's log lines.
 
-Read the [data model](docs/data-model.md) and [generator guide](docs/data-generator.md) for schema, constraints, and reproducibility.
+### Adding a feature
+
+1. Create a router for your feature.
+2. Mount it in `src/routes/v1/index.js` with `router.use('/<feature>', featureRouter)`.
+3. Throw `AppError` or use `httpErrors` for expected failures.
+4. Register readiness checks with `healthService.registerCheck(name, asyncFn)` when your feature depends on something external.
+
+## What is intentionally not here
+
+Backly stays domain-independent, so these are left out on purpose and not forgotten:
+
+- No database and no ORM.
+- No authentication or authorization.
+- No business-specific endpoints. `/api/v1` only reports its own version.
+- No frontend.
 
 ## Security, deployment, and boundaries
 
-ReMatch is a read-only demo architecture, not a production match platform. Current safeguards include:
+Backly is a foundation, not a finished production platform. Current safeguards include:
 
-- Pinned direct dependencies, committed lockfiles, and scheduled dependency-audit workflows.
-- A non-root Docker image and reproducible production dependency installation.
-- Documentation endpoints disabled in production mode.
-- Optional fail-closed bearer authentication for a development tunnel or protected demo.
-- SWA Functions proxy keeps bearer tokens server-side for browser clients on Azure.
-- No user accounts, write APIs (beyond demo `start`), WebSockets, or live data feeds in this repository.
+- Security headers through Helmet.
+- CORS disabled by default, with an explicit origin allowlist when enabled.
+- Configurable rate limiting and request body size limits.
+- Safe production error responses with no stack traces or internal details.
+- Secret-field redaction in logs, and no logging of headers, bodies, or query strings.
+- Secure default bind address (`127.0.0.1`).
+- No secrets in the repository, with `.env` ignored by Git.
 
-SQLite storage at `/tmp/rematch/rematch.db` inside the container is ephemeral. The supplied [Azure Container Apps template](backend/containerapp.yaml) is a reviewable starting point only; read the [deployment guide](docs/AZURE_CONTAINER_APPS.md) before creating cloud resources.
+Current limitations to know about:
+
+- Rate limiting uses an in-memory store. Counters are per process, reset on restart, and are not shared between multiple instances.
+- Readiness has no real dependency checks yet, because there are no dependencies yet.
+- Shutdown behaviour is covered by tests with a real HTTP server and simulated process signals. It has not been verified under Docker or Kubernetes.
+- No Dockerfile, linter, formatter, OpenAPI documentation, metrics, or tracing yet.
+- No `LICENSE` file is included. Add one before publishing publicly.
 
 ## Quality checks
 
 ```bash
-# Frontend
-cd rematch-frontend
 npm ci
-npm audit --audit-level=high
-npm run lint
-npm run typecheck
-npm run test
-npm run build
-
-# Backend
-cd ../backend
-uv lock --check
-uv run --locked pytest
-
-# Optional: with the seeded API running
-cd ../rematch-frontend
-npm run smoke:decision
+npm test
+npm run test:coverage
 ```
 
-Tests cover UI behavior, the API contract, synthetic generation and seeding, geometry scoring, evidence verification, deterministic narration, event intelligence / LLM boundaries, authentication behavior, and production-documentation protection.
+Tests cover:
+
+- Configuration defaults, parsing, and validation errors.
+- The error class, error normalisation, and the error response shape.
+- Unexpected errors never leaking secrets, stack traces, or file paths, in every environment.
+- Invalid JSON, oversized bodies, and unknown routes.
+- Request ID generation, propagation, and replacement.
+- Request logging, including redaction and query-string removal.
+- Security headers, CORS allowlist behaviour, preflight, and rate limiting.
+- Health, liveness, and readiness behaviour, including during shutdown.
+- Real server startup, port conflicts, graceful shutdown, and forced exit on timeout.
+
+Integration tests call the Express app in-process, and each test builds its own app and config, so tests are independent of each other.
 
 ## Project map
 
 ```text
-Rematch/
-├── rematch-frontend/       # React + TypeScript product experience
-├── backend/                # FastAPI service, migrations, decision engine, seed generator
-├── api/                    # Azure Static Web Apps Functions proxy (/api/v1)
-├── docs/                   # API, data, decision, verifier, narrator, LLM, deployment
-├── logo/                   # Brand assets (1x / 2x / SVG)
-├── scripts/run-local.sh    # One-command local API + frontend
-└── .github/workflows/      # Dependency and security automation
+backly/
+├── src/
+│   ├── app.js              # Application factory
+│   ├── server.js           # Process entry point
+│   ├── config/             # Environment loading and validation
+│   ├── core/               # Logger, server startup, shutdown, lifecycle state
+│   ├── middleware/         # Request ID, logging, security, CORS, rate limit, errors
+│   ├── routes/             # Health routes and versioned routers (v1)
+│   ├── errors/             # AppError, error codes, HTTP error factories
+│   ├── services/           # Framework-independent logic (health service)
+│   └── utils/              # Small shared helpers
+├── tests/
+│   ├── unit/               # Pure logic tests
+│   ├── integration/        # In-process HTTP tests and real-server tests
+│   └── helpers/            # Test app builder and log capture
+├── .github/workflows/      # CI
+├── .env.example            # Documented configuration template
+└── package.json
 ```
 
 ## Roadmap
 
-- [x] Typed football analysis UI, synthetic catalogue, pitch and timeline.
-- [x] Deterministic decision engine with evidence and claim-reference verification.
-- [x] Frame-backed alternatives, bilingual deterministic narration, and API-backed journeys.
-- [x] Match Centre Fan/Analyst modes, Match Studio LIVE/ASK, Judge Mode, Pick Your Pass.
-- [x] Event intelligence briefings with optional server-side LLM enrichment (incl. Gemini).
-- [x] Locked dependencies, audit automation, production docs protection, and containerized API setup.
-- [x] System Metrics from persisted API telemetry; mock mode reports no operational history.
-- [x] Insights through the shared data-service boundary with mock/API, error/retry, and RTL coverage.
-- [x] Azure SWA API proxy for same-origin authenticated backend access.
-- [x] Add durable storage and a real data-ingestion pipeline.
-- [x] Design identity, authorization, and production operations for a real deployment.
+- [x] Application factory with a predictable middleware order.
+- [x] Validated, environment-driven configuration.
+- [x] Centralised error handling with safe production responses.
+- [x] Structured logging with request correlation and redaction.
+- [x] Liveness and readiness endpoints with an extensible check registry.
+- [x] Graceful shutdown for `SIGTERM` and `SIGINT`.
+- [x] Unit and integration test infrastructure, plus CI.
+
+Planned next, not implemented yet:
+
+- [ ] Linting and formatting.
+- [ ] Dockerfile and container health check.
+- [ ] Request validation layer.
+- [ ] OpenAPI documentation.
+- [ ] Authentication and authorization.
+- [ ] Database integration.
 
 ## Documentation
 
-- [Frontend guide](rematch-frontend/README.md)
-- [Backend guide](backend/README.md)
-- [API contract](docs/api-contract.md)
-- [Decision engine](docs/decision-engine.md)
-- [Verifier contract](docs/verifier.md)
-- [Narrator contract](docs/narrator.md)
-- [LLM provider](docs/llm-provider.md)
-- [Data model](docs/data-model.md)
-- [Synthetic-data generator](docs/data-generator.md)
-- [Azure Container Apps](docs/AZURE_CONTAINER_APPS.md)
-- [Foundry connect](docs/FOUNDRY_CONNECT.md)
-- [Judge guide](docs/judge/JUDGE_GUIDE.md)
-- [Agents integration status](AGENTS_INTEGRATION_STATUS.md)
+- [Environment template](.env.example)
+- [CI workflow](.github/workflows/ci.yml)
+- [Application factory](src/app.js)
+- [Configuration loader](src/config/loadConfig.js)
+- [Middleware registration order](src/middleware/index.js)
+- [Error handler](src/middleware/errorHandler.js)
+- [Graceful shutdown](src/core/shutdown.js)
 
 ---
 
 <div align="center">
-  Built for better questions about the game—not overconfident answers.
+  Built for a solid start—not for overpromising.
 </div>
